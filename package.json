@@ -1,0 +1,22 @@
+{
+    "name": "pict-section-flow",
+    "version": "0.0.1",
+    "description": "Pict Section Flow Diagram",
+    "main": "source/Pict-Section-Flow.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 0",
+        "start": "node source/Pict-Section-Flow.js",
+        "build": "npx quack build"
+    },
+    "author": "steven velozo <steven@velozo.com>",
+    "license": "MIT",
+    "dependencies": {
+        "pict-view": "^1.0.64",
+        "pict-provider": "^1.0.3",
+        "fable-serviceproviderbase": "^3.0.15"
+    },
+    "devDependencies": {
+        "pict": "^1.0.343",
+        "quackage": "^1.0.42"
+    }
+}

@@ -1,0 +1,22 @@
+{
+	"ProviderIdentifier": "Pict-Router",
+
+	"AutoInitialize": true,
+	"AutoInitializeOrdinal": 0,
+
+	"Routes":
+	[
+		{
+			"path": "/Home",
+			"template": "{~LV:Pict.PictApplication.showView(`FlowExample-MainWorkspace`)~}"
+		},
+		{
+			"path": "/About",
+			"template": "{~LV:Pict.PictApplication.showView(`FlowExample-About`)~}"
+		},
+		{
+			"path": "/Documentation",
+			"template": "{~LV:Pict.PictApplication.showView(`FlowExample-Documentation`)~}"
+		}
+	]
+}
