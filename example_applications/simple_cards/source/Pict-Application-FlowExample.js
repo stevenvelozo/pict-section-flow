@@ -43,7 +43,7 @@ class FlowExampleApplication extends libPictApplication
 			CurrentRoute: 'home'
 		};
 
-		// Initialize sample flow data
+		// Initialize sample flow data using FlowCard types
 		this.pict.AppData.FlowExample.SampleFlow =
 		{
 			Nodes:
@@ -52,7 +52,7 @@ class FlowExampleApplication extends libPictApplication
 					Hash: 'node-start',
 					Type: 'start',
 					X: 50,
-					Y: 150,
+					Y: 180,
 					Width: 140,
 					Height: 80,
 					Title: 'Start',
@@ -63,77 +63,126 @@ class FlowExampleApplication extends libPictApplication
 					Data: {}
 				},
 				{
-					Hash: 'node-process-1',
-					Type: 'default',
-					X: 300,
-					Y: 80,
+					Hash: 'node-fread',
+					Type: 'FREAD',
+					X: 270,
+					Y: 160,
 					Width: 180,
 					Height: 80,
-					Title: 'Validate',
+					Title: 'Read Config',
 					Ports:
 					[
-						{ Hash: 'port-proc1-in', Direction: 'input', Side: 'left', Label: 'In' },
-						{ Hash: 'port-proc1-out', Direction: 'output', Side: 'right', Label: 'Out' }
+						{ Hash: 'port-fread-in', Direction: 'input', Side: 'left', Label: 'Path' },
+						{ Hash: 'port-fread-data', Direction: 'output', Side: 'right', Label: 'Data' },
+						{ Hash: 'port-fread-err', Direction: 'output', Side: 'bottom', Label: 'Error' }
 					],
 					Data: {}
 				},
 				{
-					Hash: 'node-decision',
-					Type: 'decision',
-					X: 580,
-					Y: 100,
+					Hash: 'node-check',
+					Type: 'ITE',
+					X: 530,
+					Y: 140,
 					Width: 200,
 					Height: 100,
-					Title: 'Valid?',
+					Title: 'Has Items?',
 					Ports:
 					[
-						{ Hash: 'port-dec-in', Direction: 'input', Side: 'left', Label: 'In' },
-						{ Hash: 'port-dec-yes', Direction: 'output', Side: 'right', Label: 'Yes' },
-						{ Hash: 'port-dec-no', Direction: 'output', Side: 'bottom', Label: 'No' }
+						{ Hash: 'port-check-in', Direction: 'input', Side: 'left', Label: 'In' },
+						{ Hash: 'port-check-then', Direction: 'output', Side: 'right', Label: 'Then' },
+						{ Hash: 'port-check-else', Direction: 'output', Side: 'bottom', Label: 'Else' }
 					],
 					Data: {}
 				},
 				{
-					Hash: 'node-process-2',
-					Type: 'default',
-					X: 880,
-					Y: 80,
-					Width: 180,
-					Height: 80,
-					Title: 'Process',
+					Hash: 'node-each',
+					Type: 'EACH',
+					X: 810,
+					Y: 120,
+					Width: 200,
+					Height: 100,
+					Title: 'Process Items',
 					Ports:
 					[
-						{ Hash: 'port-proc2-in', Direction: 'input', Side: 'left', Label: 'In' },
-						{ Hash: 'port-proc2-out', Direction: 'output', Side: 'right', Label: 'Out' }
+						{ Hash: 'port-each-in', Direction: 'input', Side: 'left', Label: 'Collection' },
+						{ Hash: 'port-each-item', Direction: 'output', Side: 'right', Label: 'Item' },
+						{ Hash: 'port-each-done', Direction: 'output', Side: 'bottom', Label: 'Done' }
 					],
 					Data: {}
 				},
 				{
-					Hash: 'node-error',
-					Type: 'default',
-					X: 600,
-					Y: 320,
-					Width: 180,
+					Hash: 'node-set',
+					Type: 'SET',
+					X: 1090,
+					Y: 110,
+					Width: 170,
 					Height: 80,
-					Title: 'Error',
+					Title: 'Transform',
 					Ports:
 					[
-						{ Hash: 'port-err-in', Direction: 'input', Side: 'top', Label: 'In' },
-						{ Hash: 'port-err-out', Direction: 'output', Side: 'right', Label: 'Out' }
+						{ Hash: 'port-set-in', Direction: 'input', Side: 'left', Label: 'In' },
+						{ Hash: 'port-set-out', Direction: 'output', Side: 'right', Label: 'Out' }
+					],
+					Data: {}
+				},
+				{
+					Hash: 'node-log',
+					Type: 'LOG',
+					X: 1090,
+					Y: 260,
+					Width: 160,
+					Height: 80,
+					Title: 'Log Results',
+					Ports:
+					[
+						{ Hash: 'port-log-in', Direction: 'input', Side: 'left', Label: 'Values' },
+						{ Hash: 'port-log-out', Direction: 'output', Side: 'right', Label: 'Pass' }
+					],
+					Data: {}
+				},
+				{
+					Hash: 'node-fwrite',
+					Type: 'FWRITE',
+					X: 1340,
+					Y: 160,
+					Width: 180,
+					Height: 80,
+					Title: 'Write Output',
+					Ports:
+					[
+						{ Hash: 'port-fwrite-path', Direction: 'input', Side: 'left', Label: 'Path' },
+						{ Hash: 'port-fwrite-data', Direction: 'input', Side: 'left', Label: 'Data' },
+						{ Hash: 'port-fwrite-done', Direction: 'output', Side: 'right', Label: 'Done' },
+						{ Hash: 'port-fwrite-err', Direction: 'output', Side: 'bottom', Label: 'Error' }
 					],
 					Data: {}
 				},
 				{
 					Hash: 'node-end',
 					Type: 'end',
-					X: 1160,
-					Y: 150,
+					X: 1600,
+					Y: 180,
 					Width: 140,
 					Height: 80,
 					Title: 'End',
 					Ports:
 					[
 						{ Hash: 'port-end-in', Direction: 'input', Side: 'left', Label: 'In' }
+					],
+					Data: {}
+				},
+				{
+					Hash: 'node-log-err',
+					Type: 'LOG',
+					X: 530,
+					Y: 360,
+					Width: 160,
+					Height: 80,
+					Title: 'Log Error',
+					Ports:
+					[
+						{ Hash: 'port-logerr-in', Direction: 'input', Side: 'left', Label: 'Values' },
+						{ Hash: 'port-logerr-out', Direction: 'output', Side: 'right', Label: 'Pass' }
 					],
 					Data: {}
 				}
@@ -144,46 +193,86 @@ class FlowExampleApplication extends libPictApplication
 					Hash: 'conn-1',
 					SourceNodeHash: 'node-start',
 					SourcePortHash: 'port-start-out',
-					TargetNodeHash: 'node-process-1',
-					TargetPortHash: 'port-proc1-in',
+					TargetNodeHash: 'node-fread',
+					TargetPortHash: 'port-fread-in',
 					Data: {}
 				},
 				{
 					Hash: 'conn-2',
-					SourceNodeHash: 'node-process-1',
-					SourcePortHash: 'port-proc1-out',
-					TargetNodeHash: 'node-decision',
-					TargetPortHash: 'port-dec-in',
+					SourceNodeHash: 'node-fread',
+					SourcePortHash: 'port-fread-data',
+					TargetNodeHash: 'node-check',
+					TargetPortHash: 'port-check-in',
 					Data: {}
 				},
 				{
 					Hash: 'conn-3',
-					SourceNodeHash: 'node-decision',
-					SourcePortHash: 'port-dec-yes',
-					TargetNodeHash: 'node-process-2',
-					TargetPortHash: 'port-proc2-in',
+					SourceNodeHash: 'node-check',
+					SourcePortHash: 'port-check-then',
+					TargetNodeHash: 'node-each',
+					TargetPortHash: 'port-each-in',
 					Data: {}
 				},
 				{
 					Hash: 'conn-4',
-					SourceNodeHash: 'node-decision',
-					SourcePortHash: 'port-dec-no',
-					TargetNodeHash: 'node-error',
-					TargetPortHash: 'port-err-in',
+					SourceNodeHash: 'node-each',
+					SourcePortHash: 'port-each-item',
+					TargetNodeHash: 'node-set',
+					TargetPortHash: 'port-set-in',
 					Data: {}
 				},
 				{
 					Hash: 'conn-5',
-					SourceNodeHash: 'node-process-2',
-					SourcePortHash: 'port-proc2-out',
+					SourceNodeHash: 'node-set',
+					SourcePortHash: 'port-set-out',
+					TargetNodeHash: 'node-fwrite',
+					TargetPortHash: 'port-fwrite-data',
+					Data: {}
+				},
+				{
+					Hash: 'conn-6',
+					SourceNodeHash: 'node-each',
+					SourcePortHash: 'port-each-done',
+					TargetNodeHash: 'node-log',
+					TargetPortHash: 'port-log-in',
+					Data: {}
+				},
+				{
+					Hash: 'conn-7',
+					SourceNodeHash: 'node-log',
+					SourcePortHash: 'port-log-out',
+					TargetNodeHash: 'node-fwrite',
+					TargetPortHash: 'port-fwrite-path',
+					Data: {}
+				},
+				{
+					Hash: 'conn-8',
+					SourceNodeHash: 'node-fwrite',
+					SourcePortHash: 'port-fwrite-done',
 					TargetNodeHash: 'node-end',
 					TargetPortHash: 'port-end-in',
 					Data: {}
 				},
 				{
-					Hash: 'conn-6',
-					SourceNodeHash: 'node-error',
-					SourcePortHash: 'port-err-out',
+					Hash: 'conn-9',
+					SourceNodeHash: 'node-fread',
+					SourcePortHash: 'port-fread-err',
+					TargetNodeHash: 'node-log-err',
+					TargetPortHash: 'port-logerr-in',
+					Data: {}
+				},
+				{
+					Hash: 'conn-10',
+					SourceNodeHash: 'node-check',
+					SourcePortHash: 'port-check-else',
+					TargetNodeHash: 'node-log-err',
+					TargetPortHash: 'port-logerr-in',
+					Data: {}
+				},
+				{
+					Hash: 'conn-11',
+					SourceNodeHash: 'node-log-err',
+					SourcePortHash: 'port-logerr-out',
 					TargetNodeHash: 'node-end',
 					TargetPortHash: 'port-end-in',
 					Data: {}

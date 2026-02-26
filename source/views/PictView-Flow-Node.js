@@ -130,6 +130,70 @@ class PictViewFlowNode extends libPictView
 			tmpGroup.appendChild(tmpTypeLabel);
 		}
 
+		// FlowCard metadata: render icon and code in the node body
+		if (pNodeTypeConfig && pNodeTypeConfig.CardMetadata)
+		{
+			let tmpMeta = pNodeTypeConfig.CardMetadata;
+			let tmpBodyCenterY = tmpTitleBarHeight + (tmpHeight - tmpTitleBarHeight) / 2;
+
+			// Icon (displayed as text, left-of-center or centered if no code)
+			if (tmpMeta.Icon)
+			{
+				let tmpIconText = this._createSVGElement('text');
+				tmpIconText.setAttribute('class', 'pict-flow-node-card-icon');
+				tmpIconText.setAttribute('font-size', '16');
+				tmpIconText.setAttribute('text-anchor', 'middle');
+				tmpIconText.setAttribute('dominant-baseline', 'central');
+				tmpIconText.setAttribute('pointer-events', 'none');
+
+				if (tmpMeta.Code)
+				{
+					// Icon on the left, code on the right
+					tmpIconText.setAttribute('x', String(tmpWidth * 0.33));
+				}
+				else
+				{
+					tmpIconText.setAttribute('x', String(tmpWidth / 2));
+				}
+				tmpIconText.setAttribute('y', String(tmpBodyCenterY));
+				tmpIconText.textContent = tmpMeta.Icon;
+				tmpGroup.appendChild(tmpIconText);
+			}
+
+			// Code badge (displayed as monospace text)
+			if (tmpMeta.Code)
+			{
+				let tmpCodeText = this._createSVGElement('text');
+				tmpCodeText.setAttribute('class', 'pict-flow-node-card-code');
+				tmpCodeText.setAttribute('font-size', '10');
+				tmpCodeText.setAttribute('font-family', 'monospace');
+				tmpCodeText.setAttribute('fill', '#7f8c8d');
+				tmpCodeText.setAttribute('text-anchor', 'middle');
+				tmpCodeText.setAttribute('dominant-baseline', 'central');
+				tmpCodeText.setAttribute('pointer-events', 'none');
+
+				if (tmpMeta.Icon)
+				{
+					tmpCodeText.setAttribute('x', String(tmpWidth * 0.67));
+				}
+				else
+				{
+					tmpCodeText.setAttribute('x', String(tmpWidth / 2));
+				}
+				tmpCodeText.setAttribute('y', String(tmpBodyCenterY));
+				tmpCodeText.textContent = tmpMeta.Code;
+				tmpGroup.appendChild(tmpCodeText);
+			}
+
+			// Tooltip via SVG <title> element
+			if (tmpMeta.Tooltip || tmpMeta.Description)
+			{
+				let tmpSVGTitle = this._createSVGElement('title');
+				tmpSVGTitle.textContent = tmpMeta.Tooltip || tmpMeta.Description;
+				tmpGroup.appendChild(tmpSVGTitle);
+			}
+		}
+
 		// Render ports
 		this._renderPorts(pNodeData, tmpGroup, tmpWidth, tmpHeight);
 

@@ -17,3 +17,6 @@ module.exports.PictServiceFlowLayout = require('./services/PictService-Flow-Layo
 // Providers
 module.exports.PictProviderFlowNodeTypes = require('./providers/PictProvider-Flow-NodeTypes.js');
 module.exports.PictProviderFlowEventHandler = require('./providers/PictProvider-Flow-EventHandler.js');
+
+// FlowCard base class
+module.exports.PictFlowCard = require('./PictFlowCard.js');

@@ -1,6 +1,16 @@
 const libPictView = require('pict-view');
 const libPictSectionFlow = require('pict-section-flow');
 
+// FlowCard definitions
+const libFlowCardIfThenElse = require('../cards/FlowCard-IfThenElse.js');
+const libFlowCardSwitch = require('../cards/FlowCard-Switch.js');
+const libFlowCardEach = require('../cards/FlowCard-Each.js');
+const libFlowCardFileRead = require('../cards/FlowCard-FileRead.js');
+const libFlowCardFileWrite = require('../cards/FlowCard-FileWrite.js');
+const libFlowCardLogValues = require('../cards/FlowCard-LogValues.js');
+const libFlowCardSetValue = require('../cards/FlowCard-SetValue.js');
+const libFlowCardGetValue = require('../cards/FlowCard-GetValue.js');
+
 const _ViewConfiguration =
 {
 	ViewIdentifier: "FlowExample-MainWorkspace",
@@ -75,7 +85,7 @@ const _ViewConfiguration =
 <div class="flowexample-workspace">
 	<div class="flowexample-workspace-header">
 		<h1>Flow Diagram</h1>
-		<p>Create, edit, and connect nodes to build flow diagrams. Drag nodes to reposition, drag from output ports to input ports to create connections.</p>
+		<p>Build flow diagrams from cards. Open the Card Palette to browse available cards, or select a node type from the dropdown and click + Add Node.</p>
 	</div>
 	<div id="FlowExample-Flow-Container"></div>
 	<div class="flowexample-hints">
@@ -129,6 +139,38 @@ class FlowExampleMainWorkspaceView extends libPictView
 		this._FlowView = null;
 	}
 
+	/**
+	 * Build a map of FlowCard node type configurations keyed by hash.
+	 * These are passed as NodeTypes in the FlowView options so they
+	 * are available from the moment the NodeTypeProvider is created,
+	 * before the toolbar renders.
+	 */
+	_buildFlowCardNodeTypes()
+	{
+		let tmpCardClasses =
+		[
+			libFlowCardIfThenElse,
+			libFlowCardSwitch,
+			libFlowCardEach,
+			libFlowCardFileRead,
+			libFlowCardFileWrite,
+			libFlowCardLogValues,
+			libFlowCardSetValue,
+			libFlowCardGetValue
+		];
+
+		let tmpNodeTypes = {};
+
+		for (let i = 0; i < tmpCardClasses.length; i++)
+		{
+			let tmpCard = new tmpCardClasses[i](this.fable, {}, `FlowCard-${i}`);
+			let tmpConfig = tmpCard.getNodeTypeConfiguration();
+			tmpNodeTypes[tmpConfig.Hash] = tmpConfig;
+		}
+
+		return tmpNodeTypes;
+	}
+
 	onAfterRender(pRenderable, pRenderDestinationAddress, pRecord, pContent)
 	{
 		// Create and render the flow section view into its container
@@ -162,6 +204,10 @@ class FlowExampleMainWorkspaceView extends libPictView
 					DefaultNodeType: 'default',
 					DefaultNodeWidth: 180,
 					DefaultNodeHeight: 80,
+
+					// Pre-register FlowCard node types so they are available
+					// when the NodeTypeProvider is created, before toolbar renders
+					NodeTypes: this._buildFlowCardNodeTypes(),
 
 					Renderables:
 					[

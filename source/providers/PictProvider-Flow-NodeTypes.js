@@ -93,6 +93,20 @@ class PictProviderFlowNodeTypes extends libPictProvider
 
 		// Initialize with default node types
 		this._NodeTypes = JSON.parse(JSON.stringify(_DefaultNodeTypes));
+
+		// Merge any additional node types passed in via options
+		if (pOptions && pOptions.AdditionalNodeTypes && typeof pOptions.AdditionalNodeTypes === 'object')
+		{
+			let tmpAdditionalKeys = Object.keys(pOptions.AdditionalNodeTypes);
+			for (let i = 0; i < tmpAdditionalKeys.length; i++)
+			{
+				this._NodeTypes[tmpAdditionalKeys[i]] = Object.assign(
+					{},
+					this._NodeTypes[tmpAdditionalKeys[i]] || {},
+					JSON.parse(JSON.stringify(pOptions.AdditionalNodeTypes[tmpAdditionalKeys[i]]))
+				);
+			}
+		}
 	}
 
 	/**
@@ -165,6 +179,62 @@ class PictProviderFlowNodeTypes extends libPictProvider
 	getNodeTypeList()
 	{
 		return Object.keys(this._NodeTypes);
+	}
+
+	/**
+	 * Get all enabled node types that have FlowCard metadata.
+	 * Returns only types that are cards and whose Enabled flag is true.
+	 * @returns {Array<Object>} Array of node type configurations
+	 */
+	getEnabledCards()
+	{
+		let tmpCards = [];
+		let tmpKeys = Object.keys(this._NodeTypes);
+		for (let i = 0; i < tmpKeys.length; i++)
+		{
+			let tmpType = this._NodeTypes[tmpKeys[i]];
+			if (tmpType.CardMetadata)
+			{
+				if (tmpType.CardMetadata.Enabled !== false)
+				{
+					tmpCards.push(JSON.parse(JSON.stringify(tmpType)));
+				}
+			}
+		}
+		return tmpCards;
+	}
+
+	/**
+	 * Get all enabled cards grouped by category.
+	 * @returns {Object} Map of category name to array of node type configurations
+	 */
+	getCardsByCategory()
+	{
+		let tmpCards = this.getEnabledCards();
+		let tmpCategories = {};
+		for (let i = 0; i < tmpCards.length; i++)
+		{
+			let tmpCategory = (tmpCards[i].CardMetadata && tmpCards[i].CardMetadata.Category)
+				? tmpCards[i].CardMetadata.Category
+				: 'General';
+			if (!tmpCategories[tmpCategory])
+			{
+				tmpCategories[tmpCategory] = [];
+			}
+			tmpCategories[tmpCategory].push(tmpCards[i]);
+		}
+		return tmpCategories;
+	}
+
+	/**
+	 * Check whether a node type hash refers to a FlowCard (has CardMetadata).
+	 * @param {string} pTypeHash
+	 * @returns {boolean}
+	 */
+	isFlowCard(pTypeHash)
+	{
+		let tmpType = this._NodeTypes[pTypeHash];
+		return !!(tmpType && tmpType.CardMetadata);
 	}
 }
 

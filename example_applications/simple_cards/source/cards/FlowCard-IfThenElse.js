@@ -1,0 +1,36 @@
+const libPictFlowCard = require('pict-section-flow').PictFlowCard;
+
+class FlowCardIfThenElse extends libPictFlowCard
+{
+	constructor(pFable, pOptions, pServiceHash)
+	{
+		super(pFable, Object.assign(
+			{},
+			{
+				Title: 'If-Then-Else',
+				Name: 'Conditional Branch',
+				Code: 'ITE',
+				Description: 'Evaluates a condition and routes to the Then or Else branch.',
+				Icon: '\u2753',
+				Tooltip: 'If-Then-Else: Routes flow based on a boolean condition',
+				Category: 'Control Flow',
+				TitleBarColor: '#e67e22',
+				BodyStyle: { fill: '#fef5e7', stroke: '#e67e22' },
+				Width: 200,
+				Height: 100,
+				Inputs:
+				[
+					{ Name: 'In', Side: 'left', MinimumInputCount: 1, MaximumInputCount: 1 }
+				],
+				Outputs:
+				[
+					{ Name: 'Then', Side: 'right' },
+					{ Name: 'Else', Side: 'bottom' }
+				]
+			},
+			pOptions),
+			pServiceHash);
+	}
+}
+
+module.exports = FlowCardIfThenElse;
