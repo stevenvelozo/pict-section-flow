@@ -6,6 +6,7 @@ const libPictServiceFlowLayout = require('../services/PictService-Flow-Layout.js
 
 const libPictProviderFlowNodeTypes = require('../providers/PictProvider-Flow-NodeTypes.js');
 const libPictProviderFlowEventHandler = require('../providers/PictProvider-Flow-EventHandler.js');
+const libPictProviderFlowLayouts = require('../providers/PictProvider-Flow-Layouts.js');
 
 const libPictViewFlowNode = require('./PictView-Flow-Node.js');
 const libPictViewFlowToolbar = require('./PictView-Flow-Toolbar.js');
@@ -56,11 +57,17 @@ const _DefaultConfiguration =
 			background-color: #fafafa;
 			border: 1px solid #e0e0e0;
 			border-radius: 4px;
+			display: flex;
+			flex-direction: column;
+		}
+		.pict-flow-svg-container {
+			flex: 1;
+			min-height: 0;
+			position: relative;
 		}
 		.pict-flow-svg {
 			width: 100%;
 			height: 100%;
-			min-height: 400px;
 			cursor: grab;
 			user-select: none;
 			-webkit-user-select: none;
@@ -340,7 +347,7 @@ const _DefaultConfiguration =
 			Template: /*html*/`
 <div class="pict-flow-container" id="Flow-Wrapper-{~D:Record.ViewIdentifier~}">
 	<div id="Flow-Toolbar-{~D:Record.ViewIdentifier~}"></div>
-	<div id="Flow-SVG-Container-{~D:Record.ViewIdentifier~}">
+	<div class="pict-flow-svg-container" id="Flow-SVG-Container-{~D:Record.ViewIdentifier~}">
 		<svg class="pict-flow-svg"
 			id="Flow-SVG-{~D:Record.ViewIdentifier~}"
 			xmlns="http://www.w3.org/2000/svg">
@@ -426,6 +433,10 @@ class PictViewFlow extends libPictView
 		{
 			this.fable.addServiceType('PictProviderFlowEventHandler', libPictProviderFlowEventHandler);
 		}
+		if (!this.fable.servicesMap.hasOwnProperty('PictProviderFlowLayouts'))
+		{
+			this.fable.addServiceType('PictProviderFlowLayouts', libPictProviderFlowLayouts);
+		}
 		if (!this.fable.servicesMap.hasOwnProperty('PictViewFlowNode'))
 		{
 			this.fable.addServiceType('PictViewFlowNode', libPictViewFlowNode);
@@ -464,6 +475,7 @@ class PictViewFlow extends libPictView
 			Nodes: [],
 			Connections: [],
 			OpenPanels: [],
+			SavedLayouts: [],
 			ViewState: {
 				PanX: 0,
 				PanY: 0,
@@ -485,6 +497,7 @@ class PictViewFlow extends libPictView
 		this._ConnectionRenderer = null;
 		this._LayoutService = null;
 		this._NodeTypeProvider = null;
+		this._LayoutProvider = null;
 		this._EventHandlerProvider = null;
 		this._NodeView = null;
 		this._ToolbarView = null;
@@ -536,6 +549,7 @@ class PictViewFlow extends libPictView
 		// Register providers, passing any additional node types from view options
 		this._NodeTypeProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowNodeTypes', { FlowView: this, AdditionalNodeTypes: this.options.NodeTypes });
 		this._EventHandlerProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowEventHandler', { FlowView: this });
+		this._LayoutProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowLayouts', { FlowView: this });
 
 		return super.onBeforeInitialize();
 	}
@@ -613,6 +627,10 @@ class PictViewFlow extends libPictView
 		if (!this._EventHandlerProvider)
 		{
 			this._EventHandlerProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowEventHandler', { FlowView: this });
+		}
+		if (!this._LayoutProvider)
+		{
+			this._LayoutProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowLayouts', { FlowView: this });
 		}
 
 		// Setup the toolbar if enabled
@@ -737,6 +755,7 @@ class PictViewFlow extends libPictView
 			Nodes: Array.isArray(pFlowData.Nodes) ? pFlowData.Nodes : [],
 			Connections: Array.isArray(pFlowData.Connections) ? pFlowData.Connections : [],
 			OpenPanels: Array.isArray(pFlowData.OpenPanels) ? pFlowData.OpenPanels : [],
+			SavedLayouts: Array.isArray(pFlowData.SavedLayouts) ? pFlowData.SavedLayouts : [],
 			ViewState: Object.assign(
 				{ PanX: 0, PanY: 0, Zoom: 1, SelectedNodeHash: null, SelectedConnectionHash: null, SelectedTetherHash: null },
 				pFlowData.ViewState || {}

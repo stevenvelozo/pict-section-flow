@@ -13,13 +13,17 @@ const _ViewConfiguration =
 		#FlowExample-Application-Container {
 			display: flex;
 			flex-direction: column;
-			min-height: 100vh;
+			height: 100vh;
+			overflow: hidden;
 		}
 		#FlowExample-TopBar-Container {
 			flex-shrink: 0;
 		}
 		#FlowExample-Content-Container {
 			flex: 1;
+			display: flex;
+			flex-direction: column;
+			min-height: 0;
 		}
 		#FlowExample-BottomBar-Container {
 			flex-shrink: 0;

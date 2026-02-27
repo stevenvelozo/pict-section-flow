@@ -22,14 +22,20 @@ const _ViewConfiguration =
 
 	CSS: /*css*/`
 		.flowexample-workspace {
-			padding: 2em;
-			max-width: 1400px;
-			margin: 0 auto;
+			padding: 0.75em;
+			display: flex;
+			flex-direction: column;
+			flex: 1;
+			min-height: 0;
 		}
 		.flowexample-workspace-header {
-			margin: 0 0 1.5em 0;
-			padding-bottom: 1em;
+			flex-shrink: 0;
+			margin: 0 0 0.75em 0;
+			padding-bottom: 0.75em;
 			border-bottom: 1px solid #eee;
+			display: flex;
+			align-items: flex-start;
+			justify-content: space-between;
 		}
 		.flowexample-workspace-header h1 {
 			margin: 0 0 0.25em 0;
@@ -42,11 +48,54 @@ const _ViewConfiguration =
 			color: #7f8c8d;
 			font-size: 1.1em;
 		}
+		.flowexample-help-toggle {
+			flex-shrink: 0;
+			margin-left: 1em;
+			width: 36px;
+			height: 36px;
+			border-radius: 50%;
+			border: 2px solid #3498db;
+			background: #fff;
+			color: #3498db;
+			font-size: 1.2em;
+			font-weight: 700;
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			transition: background 0.15s, color 0.15s;
+		}
+		.flowexample-help-toggle:hover {
+			background: #3498db;
+			color: #fff;
+		}
+		.flowexample-help-toggle.active {
+			background: #3498db;
+			color: #fff;
+		}
 		#FlowExample-Flow-Container {
-			min-height: 500px;
+			flex: 1;
+			min-height: 0;
+		}
+		.flowexample-help-panel {
+			flex-shrink: 0;
+			display: none;
+			margin-bottom: 0.75em;
+			padding: 1.5em;
+			background: #f8f9fa;
+			border: 1px solid #dee2e6;
+			border-radius: 8px;
+		}
+		.flowexample-help-panel.visible {
+			display: block;
+		}
+		.flowexample-help-panel h3 {
+			margin: 0 0 1em 0;
+			font-size: 1.1em;
+			font-weight: 600;
+			color: #2c3e50;
 		}
 		.flowexample-hints {
-			margin-top: 1.5em;
 			display: grid;
 			grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 			gap: 1em;
@@ -84,36 +133,50 @@ const _ViewConfiguration =
 			Template: /*html*/`
 <div class="flowexample-workspace">
 	<div class="flowexample-workspace-header">
-		<h1>Flow Diagram</h1>
-		<p>Build flow diagrams from cards. Open the Card Palette to browse available cards, or select a node type from the dropdown and click + Add Node.</p>
+		<div>
+			<h1>Flow Diagram</h1>
+			<p>Build flow diagrams from cards. Open the Card Palette to browse available cards, or select a node type from the dropdown and click + Add Node.</p>
+		</div>
+		<button class="flowexample-help-toggle" id="FlowExample-HelpToggle" title="Toggle help">?</button>
+	</div>
+	<div class="flowexample-help-panel" id="FlowExample-HelpPanel">
+		<h3>Quick Reference</h3>
+		<div class="flowexample-hints">
+			<div class="flowexample-hint">
+				<h4>Add Nodes</h4>
+				<p>Select a node type from the dropdown and click <code>+ Add Node</code> in the toolbar.</p>
+			</div>
+			<div class="flowexample-hint">
+				<h4>Connect Nodes</h4>
+				<p>Drag from a green output port to a blue input port to create a connection.</p>
+			</div>
+			<div class="flowexample-hint">
+				<h4>Move Nodes</h4>
+				<p>Click and drag any node to reposition it. Connections update automatically.</p>
+			</div>
+			<div class="flowexample-hint">
+				<h4>Pan &amp; Zoom</h4>
+				<p>Click and drag the background to pan. Use the mouse wheel to zoom in and out.</p>
+			</div>
+			<div class="flowexample-hint">
+				<h4>Delete</h4>
+				<p>Select a node or connection and press <code>Delete</code> or click the Delete button.</p>
+			</div>
+			<div class="flowexample-hint">
+				<h4>Auto Layout</h4>
+				<p>Click <code>Auto Layout</code> in the toolbar to automatically arrange nodes left to right.</p>
+			</div>
+			<div class="flowexample-hint">
+				<h4>Properties Panel</h4>
+				<p>Double-click a node to open its properties panel (if the card type defines one).</p>
+			</div>
+			<div class="flowexample-hint">
+				<h4>Save Layouts</h4>
+				<p>Use the Layouts toolbar to save, restore, and delete named arrangement snapshots.</p>
+			</div>
+		</div>
 	</div>
 	<div id="FlowExample-Flow-Container"></div>
-	<div class="flowexample-hints">
-		<div class="flowexample-hint">
-			<h4>Add Nodes</h4>
-			<p>Select a node type from the dropdown and click <code>+ Add Node</code> in the toolbar.</p>
-		</div>
-		<div class="flowexample-hint">
-			<h4>Connect Nodes</h4>
-			<p>Drag from a green output port to a blue input port to create a connection.</p>
-		</div>
-		<div class="flowexample-hint">
-			<h4>Move Nodes</h4>
-			<p>Click and drag any node to reposition it. Connections update automatically.</p>
-		</div>
-		<div class="flowexample-hint">
-			<h4>Pan &amp; Zoom</h4>
-			<p>Click and drag the background to pan. Use the mouse wheel to zoom in and out.</p>
-		</div>
-		<div class="flowexample-hint">
-			<h4>Delete</h4>
-			<p>Select a node or connection and press <code>Delete</code> or click the Delete button.</p>
-		</div>
-		<div class="flowexample-hint">
-			<h4>Auto Layout</h4>
-			<p>Click <code>Auto Layout</code> in the toolbar to automatically arrange nodes left to right.</p>
-		</div>
-	</div>
 </div>
 `
 		}
@@ -227,6 +290,18 @@ class FlowExampleMainWorkspaceView extends libPictView
 		// when re-rendered (e.g. after navigating away and back)
 		this._FlowView.initialRenderComplete = false;
 		this._FlowView.render();
+
+		// Wire up the help toggle button
+		let tmpHelpToggle = document.getElementById('FlowExample-HelpToggle');
+		let tmpHelpPanel = document.getElementById('FlowExample-HelpPanel');
+		if (tmpHelpToggle && tmpHelpPanel)
+		{
+			tmpHelpToggle.addEventListener('click', function ()
+			{
+				tmpHelpPanel.classList.toggle('visible');
+				tmpHelpToggle.classList.toggle('active');
+			});
+		}
 
 		return super.onAfterRender(pRenderable, pRenderDestinationAddress, pRecord, pContent);
 	}

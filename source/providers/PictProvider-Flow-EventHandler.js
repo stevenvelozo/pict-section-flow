@@ -26,6 +26,9 @@ const _ProviderConfiguration =
  * - onTetherSelected(panelData)       - A tether line was selected (or null for deselection)
  * - onTetherHandleMoved(panelData)    - A tether's drag handle was repositioned
  * - onTetherModeChanged(panelData)    - A tether's line mode was toggled (bezier/orthogonal)
+ * - onLayoutSaved(layoutData)         - A layout snapshot was saved
+ * - onLayoutRestored(layoutData)      - A saved layout was restored
+ * - onLayoutDeleted(layoutData)       - A saved layout was deleted
  * - onFlowChanged(flowData)           - The flow data changed (catch-all)
  */
 class PictProviderFlowEventHandler extends libPictProvider

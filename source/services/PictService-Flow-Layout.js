@@ -171,6 +171,165 @@ class PictServiceFlowLayout extends libFableServiceProviderBase
 	}
 
 	/**
+	 * Auto-layout a subset of nodes, positioning them to the right of
+	 * any fixed (already-positioned) nodes.
+	 *
+	 * Uses the same topological sort approach as autoLayout, but only
+	 * repositions the nodes in pNodesToLayout. The pFixedNodes are used
+	 * to compute a bounding box that the new layout avoids.
+	 *
+	 * @param {Array} pNodesToLayout - Nodes that need new positions
+	 * @param {Array} pFixedNodes - Nodes that already have positions (read-only)
+	 * @param {Array} pConnections - All connections in the flow
+	 */
+	autoLayoutSubset(pNodesToLayout, pFixedNodes, pConnections)
+	{
+		if (!pNodesToLayout || pNodesToLayout.length === 0) return;
+
+		// Compute the starting X position to the right of all fixed nodes
+		let tmpStartX = this._StartX;
+		let tmpStartY = this._StartY;
+
+		if (pFixedNodes && pFixedNodes.length > 0)
+		{
+			let tmpMaxX = -Infinity;
+
+			for (let i = 0; i < pFixedNodes.length; i++)
+			{
+				let tmpRight = pFixedNodes[i].X + (pFixedNodes[i].Width || 180);
+				if (tmpRight > tmpMaxX)
+				{
+					tmpMaxX = tmpRight;
+				}
+			}
+
+			// Place unmatched nodes to the right of all fixed nodes
+			tmpStartX = tmpMaxX + this._HorizontalSpacing;
+		}
+
+		// Build a set of nodes we are laying out for quick lookup
+		let tmpNodeSet = {};
+		for (let i = 0; i < pNodesToLayout.length; i++)
+		{
+			tmpNodeSet[pNodesToLayout[i].Hash] = true;
+		}
+
+		// Build adjacency information only for nodes in the subset
+		let tmpNodeMap = {};
+		let tmpInDegree = {};
+		let tmpOutEdges = {};
+
+		for (let i = 0; i < pNodesToLayout.length; i++)
+		{
+			let tmpNode = pNodesToLayout[i];
+			tmpNodeMap[tmpNode.Hash] = tmpNode;
+			tmpInDegree[tmpNode.Hash] = 0;
+			tmpOutEdges[tmpNode.Hash] = [];
+		}
+
+		// Only count edges between nodes in the subset
+		for (let i = 0; i < pConnections.length; i++)
+		{
+			let tmpConn = pConnections[i];
+			let tmpSourceInSubset = tmpNodeSet[tmpConn.SourceNodeHash];
+			let tmpTargetInSubset = tmpNodeSet[tmpConn.TargetNodeHash];
+
+			if (tmpSourceInSubset && tmpTargetInSubset)
+			{
+				tmpInDegree[tmpConn.TargetNodeHash]++;
+				tmpOutEdges[tmpConn.SourceNodeHash].push(tmpConn.TargetNodeHash);
+			}
+		}
+
+		// Topological sort (Kahn's algorithm)
+		let tmpLayers = [];
+		let tmpQueue = [];
+		let tmpAssigned = {};
+
+		for (let tmpHash in tmpInDegree)
+		{
+			if (tmpInDegree[tmpHash] === 0)
+			{
+				tmpQueue.push(tmpHash);
+			}
+		}
+
+		while (tmpQueue.length > 0)
+		{
+			let tmpCurrentLayer = [];
+			let tmpNextQueue = [];
+
+			for (let i = 0; i < tmpQueue.length; i++)
+			{
+				let tmpNodeHash = tmpQueue[i];
+				if (tmpAssigned[tmpNodeHash]) continue;
+
+				tmpAssigned[tmpNodeHash] = true;
+				tmpCurrentLayer.push(tmpNodeHash);
+
+				let tmpEdges = tmpOutEdges[tmpNodeHash] || [];
+				for (let j = 0; j < tmpEdges.length; j++)
+				{
+					let tmpTargetHash = tmpEdges[j];
+					tmpInDegree[tmpTargetHash]--;
+					if (tmpInDegree[tmpTargetHash] <= 0 && !tmpAssigned[tmpTargetHash])
+					{
+						tmpNextQueue.push(tmpTargetHash);
+					}
+				}
+			}
+
+			if (tmpCurrentLayer.length > 0)
+			{
+				tmpLayers.push(tmpCurrentLayer);
+			}
+
+			tmpQueue = tmpNextQueue;
+		}
+
+		// Handle remaining unassigned nodes (cycles or disconnected)
+		let tmpRemainingNodes = [];
+		for (let i = 0; i < pNodesToLayout.length; i++)
+		{
+			if (!tmpAssigned[pNodesToLayout[i].Hash])
+			{
+				tmpRemainingNodes.push(pNodesToLayout[i].Hash);
+			}
+		}
+		if (tmpRemainingNodes.length > 0)
+		{
+			tmpLayers.push(tmpRemainingNodes);
+		}
+
+		// Assign positions based on layers, starting from tmpStartX
+		let tmpCurrentX = tmpStartX;
+
+		for (let tmpLayerIndex = 0; tmpLayerIndex < tmpLayers.length; tmpLayerIndex++)
+		{
+			let tmpLayer = tmpLayers[tmpLayerIndex];
+			let tmpMaxWidth = 0;
+			let tmpCurrentY = tmpStartY;
+
+			for (let i = 0; i < tmpLayer.length; i++)
+			{
+				let tmpNode = tmpNodeMap[tmpLayer[i]];
+				if (!tmpNode) continue;
+
+				tmpNode.X = tmpCurrentX;
+				tmpNode.Y = tmpCurrentY;
+
+				let tmpWidth = tmpNode.Width || 180;
+				let tmpHeight = tmpNode.Height || 80;
+
+				tmpMaxWidth = Math.max(tmpMaxWidth, tmpWidth);
+				tmpCurrentY += tmpHeight + this._VerticalSpacing;
+			}
+
+			tmpCurrentX += tmpMaxWidth + this._HorizontalSpacing;
+		}
+	}
+
+	/**
 	 * Center all nodes around a given point
 	 * @param {Array} pNodes
 	 * @param {number} pCenterX

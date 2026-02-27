@@ -51,11 +51,14 @@ class FlowExampleApplication extends libPictApplication
 			CurrentRoute: 'home'
 		};
 
-		// Initialize sample flow data using FlowCard types
+		// Initialize sample flow data using FlowCard types.
+		// Includes one of every node type for easy smoke testing:
+		//   start, FREAD, ITE, EACH, GET, SET, SW, LOG (x2), FWRITE, end
 		this.pict.AppData.FlowExample.SampleFlow =
 		{
 			Nodes:
 			[
+				// ── Entry ──────────────────────────────────────────────
 				{
 					Hash: 'node-start',
 					Type: 'start',
@@ -70,6 +73,7 @@ class FlowExampleApplication extends libPictApplication
 					],
 					Data: {}
 				},
+				// ── I/O: File Read (Template panel) ────────────────────
 				{
 					Hash: 'node-fread',
 					Type: 'FREAD',
@@ -86,6 +90,7 @@ class FlowExampleApplication extends libPictApplication
 					],
 					Data: {}
 				},
+				// ── Control: If-Then-Else (Markdown panel) ─────────────
 				{
 					Hash: 'node-check',
 					Type: 'ITE',
@@ -102,6 +107,7 @@ class FlowExampleApplication extends libPictApplication
 					],
 					Data: {}
 				},
+				// ── Control: Each (no panel) ───────────────────────────
 				{
 					Hash: 'node-each',
 					Type: 'EACH',
@@ -118,10 +124,27 @@ class FlowExampleApplication extends libPictApplication
 					],
 					Data: {}
 				},
+				// ── Data: Get Value (no panel) ─────────────────────────
+				{
+					Hash: 'node-get',
+					Type: 'GET',
+					X: 1090,
+					Y: 110,
+					Width: 170,
+					Height: 80,
+					Title: 'Read Item',
+					Ports:
+					[
+						{ Hash: 'port-get-in', Direction: 'input', Side: 'left', Label: 'In' },
+						{ Hash: 'port-get-value', Direction: 'output', Side: 'right', Label: 'Value' }
+					],
+					Data: {}
+				},
+				// ── Data: Set Value (Form panel) ───────────────────────
 				{
 					Hash: 'node-set',
 					Type: 'SET',
-					X: 1090,
+					X: 1340,
 					Y: 110,
 					Width: 170,
 					Height: 80,
@@ -133,11 +156,30 @@ class FlowExampleApplication extends libPictApplication
 					],
 					Data: {}
 				},
+				// ── Control: Switch (no panel) ─────────────────────────
+				{
+					Hash: 'node-switch',
+					Type: 'SW',
+					X: 1590,
+					Y: 100,
+					Width: 200,
+					Height: 120,
+					Title: 'Route Output',
+					Ports:
+					[
+						{ Hash: 'port-sw-in', Direction: 'input', Side: 'left', Label: 'In' },
+						{ Hash: 'port-sw-a', Direction: 'output', Side: 'right', Label: 'Case A' },
+						{ Hash: 'port-sw-b', Direction: 'output', Side: 'right', Label: 'Case B' },
+						{ Hash: 'port-sw-default', Direction: 'output', Side: 'bottom', Label: 'Default' }
+					],
+					Data: {}
+				},
+				// ── Debug: Log Values (Template panel) ─────────────────
 				{
 					Hash: 'node-log',
 					Type: 'LOG',
-					X: 1090,
-					Y: 260,
+					X: 1590,
+					Y: 310,
 					Width: 160,
 					Height: 80,
 					Title: 'Log Results',
@@ -148,10 +190,11 @@ class FlowExampleApplication extends libPictApplication
 					],
 					Data: {}
 				},
+				// ── I/O: File Write (View panel) ───────────────────────
 				{
 					Hash: 'node-fwrite',
 					Type: 'FWRITE',
-					X: 1340,
+					X: 1870,
 					Y: 160,
 					Width: 180,
 					Height: 80,
@@ -165,10 +208,11 @@ class FlowExampleApplication extends libPictApplication
 					],
 					Data: {}
 				},
+				// ── Exit ───────────────────────────────────────────────
 				{
 					Hash: 'node-end',
 					Type: 'end',
-					X: 1600,
+					X: 2130,
 					Y: 180,
 					Width: 140,
 					Height: 80,
@@ -179,11 +223,12 @@ class FlowExampleApplication extends libPictApplication
 					],
 					Data: {}
 				},
+				// ── Debug: Log Error (Template panel, error branch) ────
 				{
 					Hash: 'node-log-err',
 					Type: 'LOG',
 					X: 530,
-					Y: 360,
+					Y: 380,
 					Width: 160,
 					Height: 80,
 					Title: 'Log Error',
@@ -197,6 +242,7 @@ class FlowExampleApplication extends libPictApplication
 			],
 			Connections:
 			[
+				// Main flow: Start → Read Config
 				{
 					Hash: 'conn-1',
 					SourceNodeHash: 'node-start',
@@ -205,6 +251,7 @@ class FlowExampleApplication extends libPictApplication
 					TargetPortHash: 'port-fread-in',
 					Data: {}
 				},
+				// Read Config → Has Items?
 				{
 					Hash: 'conn-2',
 					SourceNodeHash: 'node-fread',
@@ -213,6 +260,7 @@ class FlowExampleApplication extends libPictApplication
 					TargetPortHash: 'port-check-in',
 					Data: {}
 				},
+				// Has Items? (Then) → Process Items
 				{
 					Hash: 'conn-3',
 					SourceNodeHash: 'node-check',
@@ -221,64 +269,108 @@ class FlowExampleApplication extends libPictApplication
 					TargetPortHash: 'port-each-in',
 					Data: {}
 				},
+				// Process Items (Item) → Read Item (GET)
 				{
 					Hash: 'conn-4',
 					SourceNodeHash: 'node-each',
 					SourcePortHash: 'port-each-item',
+					TargetNodeHash: 'node-get',
+					TargetPortHash: 'port-get-in',
+					Data: {}
+				},
+				// Read Item (GET) → Transform (SET)
+				{
+					Hash: 'conn-5',
+					SourceNodeHash: 'node-get',
+					SourcePortHash: 'port-get-value',
 					TargetNodeHash: 'node-set',
 					TargetPortHash: 'port-set-in',
 					Data: {}
 				},
+				// Transform (SET) → Route Output (SW)
 				{
-					Hash: 'conn-5',
+					Hash: 'conn-6',
 					SourceNodeHash: 'node-set',
 					SourcePortHash: 'port-set-out',
+					TargetNodeHash: 'node-switch',
+					TargetPortHash: 'port-sw-in',
+					Data: {}
+				},
+				// Route Output (SW Case A) → Write Output (data)
+				{
+					Hash: 'conn-7',
+					SourceNodeHash: 'node-switch',
+					SourcePortHash: 'port-sw-a',
 					TargetNodeHash: 'node-fwrite',
 					TargetPortHash: 'port-fwrite-data',
 					Data: {}
 				},
+				// Route Output (SW Case B) → Log Results
 				{
-					Hash: 'conn-6',
+					Hash: 'conn-8',
+					SourceNodeHash: 'node-switch',
+					SourcePortHash: 'port-sw-b',
+					TargetNodeHash: 'node-log',
+					TargetPortHash: 'port-log-in',
+					Data: {}
+				},
+				// Route Output (SW Default) → Log Error
+				{
+					Hash: 'conn-9',
+					SourceNodeHash: 'node-switch',
+					SourcePortHash: 'port-sw-default',
+					TargetNodeHash: 'node-log-err',
+					TargetPortHash: 'port-logerr-in',
+					Data: {}
+				},
+				// Process Items (Done) → Log Results
+				{
+					Hash: 'conn-10',
 					SourceNodeHash: 'node-each',
 					SourcePortHash: 'port-each-done',
 					TargetNodeHash: 'node-log',
 					TargetPortHash: 'port-log-in',
 					Data: {}
 				},
+				// Log Results → Write Output (path)
 				{
-					Hash: 'conn-7',
+					Hash: 'conn-11',
 					SourceNodeHash: 'node-log',
 					SourcePortHash: 'port-log-out',
 					TargetNodeHash: 'node-fwrite',
 					TargetPortHash: 'port-fwrite-path',
 					Data: {}
 				},
+				// Write Output → End
 				{
-					Hash: 'conn-8',
+					Hash: 'conn-12',
 					SourceNodeHash: 'node-fwrite',
 					SourcePortHash: 'port-fwrite-done',
 					TargetNodeHash: 'node-end',
 					TargetPortHash: 'port-end-in',
 					Data: {}
 				},
+				// Error branch: Read Config (Error) → Log Error
 				{
-					Hash: 'conn-9',
+					Hash: 'conn-13',
 					SourceNodeHash: 'node-fread',
 					SourcePortHash: 'port-fread-err',
 					TargetNodeHash: 'node-log-err',
 					TargetPortHash: 'port-logerr-in',
 					Data: {}
 				},
+				// Error branch: Has Items? (Else) → Log Error
 				{
-					Hash: 'conn-10',
+					Hash: 'conn-14',
 					SourceNodeHash: 'node-check',
 					SourcePortHash: 'port-check-else',
 					TargetNodeHash: 'node-log-err',
 					TargetPortHash: 'port-logerr-in',
 					Data: {}
 				},
+				// Error branch: Log Error → End
 				{
-					Hash: 'conn-11',
+					Hash: 'conn-15',
 					SourceNodeHash: 'node-log-err',
 					SourcePortHash: 'port-logerr-out',
 					TargetNodeHash: 'node-end',

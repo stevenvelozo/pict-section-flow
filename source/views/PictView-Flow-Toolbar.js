@@ -179,6 +179,10 @@ const _DefaultConfiguration =
 			color: #95a5a6;
 			font-family: monospace;
 		}
+		.pict-flow-toolbar-select.layout-select {
+			min-width: 120px;
+			max-width: 200px;
+		}
 	`,
 
 	Templates:
@@ -203,6 +207,16 @@ const _DefaultConfiguration =
 	</div>
 	<div class="pict-flow-toolbar-group">
 		<button class="pict-flow-toolbar-btn" data-flow-action="auto-layout">Auto Layout</button>
+	</div>
+	<div class="pict-flow-toolbar-group">
+		<span class="pict-flow-toolbar-label">Layouts:</span>
+		<select class="pict-flow-toolbar-select layout-select"
+			id="Flow-Toolbar-LayoutSelect-{~D:Record.FlowViewIdentifier~}">
+			<option value="">-- select layout --</option>
+		</select>
+		<button class="pict-flow-toolbar-btn" data-flow-action="save-layout" title="Save the current node positions as a named layout">Save</button>
+		<button class="pict-flow-toolbar-btn" data-flow-action="restore-layout" title="Restore the selected layout">Restore</button>
+		<button class="pict-flow-toolbar-btn danger" data-flow-action="delete-layout" title="Delete the selected saved layout">Delete</button>
 	</div>
 	<div class="pict-flow-toolbar-group">
 		<button class="pict-flow-toolbar-btn" data-flow-action="fullscreen" id="Flow-Toolbar-Fullscreen-{~D:Record.FlowViewIdentifier~}" title="Toggle Fullscreen">&#x26F6; Fullscreen</button>
@@ -300,9 +314,10 @@ class PictViewFlowToolbar extends libPictView
 			});
 		}
 
-		// Populate the node type dropdown and palette
+		// Populate the node type dropdown, palette, and layout dropdown
 		this._populateNodeTypeDropdown();
 		this._renderPalette();
+		this._populateLayoutDropdown();
 
 		return super.onAfterRender(pRenderable, pRenderDestinationAddress, pRecord, pContent);
 	}
@@ -357,6 +372,50 @@ class PictViewFlowToolbar extends libPictView
 				tmpOption.textContent = tmpTypeConfig.Label;
 			}
 
+			tmpSelect.appendChild(tmpOption);
+		}
+	}
+
+	/**
+	 * Populate the layout dropdown from saved layouts in the flow data.
+	 */
+	_populateLayoutDropdown()
+	{
+		if (!this._FlowView || !this._FlowView._LayoutProvider)
+		{
+			return;
+		}
+
+		let tmpFlowViewIdentifier = this.options.FlowViewIdentifier;
+		let tmpSelectElements = this.pict.ContentAssignment.getElement(
+			`#Flow-Toolbar-LayoutSelect-${tmpFlowViewIdentifier}`
+		);
+		if (tmpSelectElements.length < 1)
+		{
+			return;
+		}
+
+		let tmpSelect = tmpSelectElements[0];
+
+		// Clear existing options
+		while (tmpSelect.firstChild)
+		{
+			tmpSelect.removeChild(tmpSelect.firstChild);
+		}
+
+		// Add placeholder option
+		let tmpPlaceholder = document.createElement('option');
+		tmpPlaceholder.value = '';
+		tmpPlaceholder.textContent = '-- select layout --';
+		tmpSelect.appendChild(tmpPlaceholder);
+
+		let tmpLayouts = this._FlowView._LayoutProvider.getLayouts();
+		for (let i = 0; i < tmpLayouts.length; i++)
+		{
+			let tmpLayout = tmpLayouts[i];
+			let tmpOption = document.createElement('option');
+			tmpOption.value = tmpLayout.Hash;
+			tmpOption.textContent = tmpLayout.Name;
 			tmpSelect.appendChild(tmpOption);
 		}
 	}
@@ -581,6 +640,50 @@ class PictViewFlowToolbar extends libPictView
 
 			case 'auto-layout':
 				this._FlowView.autoLayout();
+				break;
+
+			case 'save-layout':
+				{
+					let tmpName = window.prompt('Enter a name for this layout:');
+					if (tmpName !== null && tmpName.trim() !== '')
+					{
+						this._FlowView._LayoutProvider.saveLayout(tmpName.trim());
+						this._populateLayoutDropdown();
+					}
+				}
+				break;
+
+			case 'restore-layout':
+				{
+					let tmpSelectElements = this.pict.ContentAssignment.getElement(
+						`#Flow-Toolbar-LayoutSelect-${tmpFlowViewIdentifier}`
+					);
+					if (tmpSelectElements.length > 0)
+					{
+						let tmpLayoutHash = tmpSelectElements[0].value;
+						if (tmpLayoutHash)
+						{
+							this._FlowView._LayoutProvider.restoreLayout(tmpLayoutHash);
+						}
+					}
+				}
+				break;
+
+			case 'delete-layout':
+				{
+					let tmpSelectElements = this.pict.ContentAssignment.getElement(
+						`#Flow-Toolbar-LayoutSelect-${tmpFlowViewIdentifier}`
+					);
+					if (tmpSelectElements.length > 0)
+					{
+						let tmpLayoutHash = tmpSelectElements[0].value;
+						if (tmpLayoutHash)
+						{
+							this._FlowView._LayoutProvider.deleteLayout(tmpLayoutHash);
+							this._populateLayoutDropdown();
+						}
+					}
+				}
 				break;
 
 			case 'fullscreen':
