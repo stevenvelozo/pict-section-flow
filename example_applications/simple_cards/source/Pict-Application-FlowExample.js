@@ -1,5 +1,6 @@
 const libPictApplication = require('pict-application');
 const libPictRouter = require('pict-router');
+const libPictSectionForm = require('pict-section-form');
 
 // Views
 const libViewLayout = require('./views/PictView-FlowExample-Layout.js');
@@ -8,6 +9,7 @@ const libViewBottomBar = require('./views/PictView-FlowExample-BottomBar.js');
 const libViewMainWorkspace = require('./views/PictView-FlowExample-MainWorkspace.js');
 const libViewAbout = require('./views/PictView-FlowExample-About.js');
 const libViewDocumentation = require('./views/PictView-FlowExample-Documentation.js');
+const libViewFileWriteInfo = require('./views/PictView-FlowExample-FileWriteInfo.js');
 
 class FlowExampleApplication extends libPictApplication
 {
@@ -33,6 +35,12 @@ class FlowExampleApplication extends libPictApplication
 
 		// Add the documentation page view
 		this.pict.addView('FlowExample-Documentation', libViewDocumentation.default_configuration, libViewDocumentation);
+
+		// Add the file write info view (used by the View panel type example)
+		this.pict.addView('FlowExample-FileWriteInfo', libViewFileWriteInfo.default_configuration, libViewFileWriteInfo);
+
+		// Register pict-section-form service types so Form panels can use them
+		this.pict.addServiceType('PictFormMetacontroller', libPictSectionForm.PictFormMetacontroller);
 	}
 
 	onAfterInitializeAsync(fCallback)

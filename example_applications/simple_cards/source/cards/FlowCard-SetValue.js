@@ -25,7 +25,67 @@ class FlowCardSetValue extends libPictFlowCard
 				Outputs:
 				[
 					{ Name: 'Out', Side: 'right' }
-				]
+				],
+				PropertiesPanel:
+				{
+					PanelType: 'Form',
+					DefaultWidth: 320,
+					DefaultHeight: 200,
+					Title: 'Set Value Properties',
+					Configuration:
+					{
+						Manifest:
+						{
+							Scope: 'FlowCardSetValue',
+							Sections:
+							[
+								{
+									Name: 'Value Assignment',
+									Hash: 'SetValueSection',
+									Groups:
+									[
+										{
+											Name: 'Settings',
+											Hash: 'SetValueGroup'
+										}
+									]
+								}
+							],
+							Descriptors:
+							{
+								'Record.Data.VariableName':
+								{
+									Name: 'Variable Name',
+									Hash: 'VariableName',
+									DataType: 'String',
+									Default: '',
+									PictForm:
+									{
+										Section: 'SetValueSection',
+										Group: 'SetValueGroup',
+										Row: 1,
+										Width: 12
+									}
+								},
+								'Record.Data.Expression':
+								{
+									Name: 'Value Expression',
+									Hash: 'Expression',
+									DataType: 'String',
+									Default: '',
+									PictForm:
+									{
+										Section: 'SetValueSection',
+										Group: 'SetValueGroup',
+										Row: 2,
+										Width: 12,
+										InputType: 'TextArea'
+									}
+								}
+							}
+						}
+					}
+				}
 			},
 			pOptions),
 			pServiceHash);

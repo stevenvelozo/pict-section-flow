@@ -25,7 +25,25 @@ class FlowCardLogValues extends libPictFlowCard
 				Outputs:
 				[
 					{ Name: 'Pass', Side: 'right' }
-				]
+				],
+				PropertiesPanel:
+				{
+					PanelType: 'Template',
+					DefaultWidth: 260,
+					DefaultHeight: 140,
+					Title: 'Log Settings',
+					Configuration:
+					{
+						Templates:
+						[
+							{
+								Hash: 'flow-card-log-panel',
+								Template: '<div style="padding:4px"><label style="font-size:11px;color:#7f8c8d">Log Level</label><div style="font-size:12px;padding:4px 0">{~D:Record.Data.LogLevel~}</div><label style="font-size:11px;color:#7f8c8d">Format</label><div style="font-size:12px;padding:4px 0">{~D:Record.Data.Format~}</div></div>'
+							}
+						],
+						TemplateHash: 'flow-card-log-panel'
+					}
+				}
 			},
 			pOptions),
 			pServiceHash);

@@ -18,6 +18,9 @@ const _ProviderConfiguration =
  * - onConnectionSelected(conn) - A connection was selected
  * - onConnectionCreated(conn)  - A new connection was created
  * - onConnectionRemoved(conn)  - A connection was removed
+ * - onPanelOpened(panelData)   - A properties panel was opened
+ * - onPanelClosed(panelData)   - A properties panel was closed
+ * - onPanelMoved(panelData)    - A properties panel was moved
  * - onFlowChanged(flowData)    - The flow data changed (catch-all)
  */
 class PictProviderFlowEventHandler extends libPictProvider

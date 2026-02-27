@@ -9,6 +9,13 @@ const libPictProviderFlowEventHandler = require('../providers/PictProvider-Flow-
 
 const libPictViewFlowNode = require('./PictView-Flow-Node.js');
 const libPictViewFlowToolbar = require('./PictView-Flow-Toolbar.js');
+const libPictViewFlowPropertiesPanel = require('./PictView-Flow-PropertiesPanel.js');
+
+const libPictFlowCardPropertiesPanel = require('../PictFlowCardPropertiesPanel.js');
+const libPanelTemplate = require('../panels/FlowCardPropertiesPanel-Template.js');
+const libPanelMarkdown = require('../panels/FlowCardPropertiesPanel-Markdown.js');
+const libPanelForm = require('../panels/FlowCardPropertiesPanel-Form.js');
+const libPanelView = require('../panels/FlowCardPropertiesPanel-View.js');
 
 const _DefaultConfiguration =
 {
@@ -178,6 +185,79 @@ const _DefaultConfiguration =
 			rx: 25;
 			ry: 25;
 		}
+		.pict-flow-tether-line {
+			fill: none;
+			stroke: #95a5a6;
+			stroke-width: 1.5;
+			stroke-dasharray: 6 4;
+			pointer-events: none;
+		}
+		.pict-flow-node-panel-indicator {
+			fill: #3498db;
+			stroke: #2980b9;
+			stroke-width: 1;
+			cursor: pointer;
+		}
+		.pict-flow-node-panel-indicator:hover {
+			fill: #2980b9;
+		}
+		.pict-flow-panel-foreign-object {
+			overflow: visible;
+		}
+		.pict-flow-panel {
+			background: #ffffff;
+			border: 1px solid #bdc3c7;
+			border-radius: 6px;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+			display: flex;
+			flex-direction: column;
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+			font-size: 13px;
+			overflow: hidden;
+			width: 100%;
+			height: 100%;
+			box-sizing: border-box;
+		}
+		.pict-flow-panel-titlebar {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 6px 10px;
+			background: #ecf0f1;
+			border-bottom: 1px solid #d5dbdb;
+			cursor: grab;
+			user-select: none;
+			-webkit-user-select: none;
+			flex-shrink: 0;
+		}
+		.pict-flow-panel-titlebar.dragging {
+			cursor: grabbing;
+		}
+		.pict-flow-panel-title-text {
+			font-weight: 600;
+			font-size: 12px;
+			color: #2c3e50;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+		.pict-flow-panel-close-btn {
+			cursor: pointer;
+			color: #95a5a6;
+			font-size: 14px;
+			line-height: 1;
+			padding: 2px 4px;
+			border: none;
+			background: none;
+		}
+		.pict-flow-panel-close-btn:hover {
+			color: #e74c3c;
+		}
+		.pict-flow-panel-body {
+			flex: 1;
+			overflow: auto;
+			padding: 8px;
+		}
 	`,
 
 	Templates:
@@ -204,6 +284,12 @@ const _DefaultConfiguration =
 					orient="auto" markerUnits="strokeWidth">
 					<polygon points="0 0, 5 3.5, 0 7" fill="#3498db" />
 				</marker>
+				<marker id="flow-tether-arrowhead-{~D:Record.ViewIdentifier~}"
+					markerWidth="4" markerHeight="6"
+					refX="6" refY="3"
+					orient="auto" markerUnits="strokeWidth">
+					<polygon points="0 0, 4 3, 0 6" fill="#95a5a6" />
+				</marker>
 				<pattern id="flow-grid-{~D:Record.ViewIdentifier~}"
 					width="20" height="20" patternUnits="userSpaceOnUse">
 					<line x1="20" y1="0" x2="20" y2="20" class="pict-flow-grid-pattern" />
@@ -216,6 +302,8 @@ const _DefaultConfiguration =
 			<g class="pict-flow-viewport" id="Flow-Viewport-{~D:Record.ViewIdentifier~}">
 				<g class="pict-flow-connections-layer" id="Flow-Connections-{~D:Record.ViewIdentifier~}"></g>
 				<g class="pict-flow-nodes-layer" id="Flow-Nodes-{~D:Record.ViewIdentifier~}"></g>
+				<g class="pict-flow-tethers-layer" id="Flow-Tethers-{~D:Record.ViewIdentifier~}"></g>
+				<g class="pict-flow-panels-layer" id="Flow-Panels-{~D:Record.ViewIdentifier~}"></g>
 			</g>
 		</svg>
 	</div>
@@ -273,11 +361,36 @@ class PictViewFlow extends libPictView
 		{
 			this.fable.addServiceType('PictViewFlowToolbar', libPictViewFlowToolbar);
 		}
+		if (!this.fable.servicesMap.hasOwnProperty('PictViewFlowPropertiesPanel'))
+		{
+			this.fable.addServiceType('PictViewFlowPropertiesPanel', libPictViewFlowPropertiesPanel);
+		}
+		if (!this.fable.servicesMap.hasOwnProperty('PictFlowCardPropertiesPanel'))
+		{
+			this.fable.addServiceType('PictFlowCardPropertiesPanel', libPictFlowCardPropertiesPanel);
+		}
+		if (!this.fable.servicesMap.hasOwnProperty('PictFlowCardPropertiesPanel-Template'))
+		{
+			this.fable.addServiceType('PictFlowCardPropertiesPanel-Template', libPanelTemplate);
+		}
+		if (!this.fable.servicesMap.hasOwnProperty('PictFlowCardPropertiesPanel-Markdown'))
+		{
+			this.fable.addServiceType('PictFlowCardPropertiesPanel-Markdown', libPanelMarkdown);
+		}
+		if (!this.fable.servicesMap.hasOwnProperty('PictFlowCardPropertiesPanel-Form'))
+		{
+			this.fable.addServiceType('PictFlowCardPropertiesPanel-Form', libPanelForm);
+		}
+		if (!this.fable.servicesMap.hasOwnProperty('PictFlowCardPropertiesPanel-View'))
+		{
+			this.fable.addServiceType('PictFlowCardPropertiesPanel-View', libPanelView);
+		}
 
 		// Internal state
 		this._FlowData = {
 			Nodes: [],
 			Connections: [],
+			OpenPanels: [],
 			ViewState: {
 				PanX: 0,
 				PanY: 0,
@@ -291,6 +404,8 @@ class PictViewFlow extends libPictView
 		this._ViewportElement = null;
 		this._NodesLayer = null;
 		this._ConnectionsLayer = null;
+		this._TethersLayer = null;
+		this._PanelsLayer = null;
 
 		this._InteractionManager = null;
 		this._ConnectionRenderer = null;
@@ -299,6 +414,7 @@ class PictViewFlow extends libPictView
 		this._EventHandlerProvider = null;
 		this._NodeView = null;
 		this._ToolbarView = null;
+		this._PropertiesPanelView = null;
 
 		this.initialRenderComplete = false;
 	}
@@ -389,6 +505,18 @@ class PictViewFlow extends libPictView
 			this._ConnectionsLayer = tmpConnectionsElements[0];
 		}
 
+		let tmpTethersElements = this.pict.ContentAssignment.getElement(`#Flow-Tethers-${tmpViewIdentifier}`);
+		if (tmpTethersElements.length > 0)
+		{
+			this._TethersLayer = tmpTethersElements[0];
+		}
+
+		let tmpPanelsElements = this.pict.ContentAssignment.getElement(`#Flow-Panels-${tmpViewIdentifier}`);
+		if (tmpPanelsElements.length > 0)
+		{
+			this._PanelsLayer = tmpPanelsElements[0];
+		}
+
 		// Initialize services with references
 		if (!this._InteractionManager)
 		{
@@ -441,6 +569,17 @@ class PictViewFlow extends libPictView
 				}
 			));
 		this._NodeView._FlowView = this;
+
+		// Setup the properties panel renderer
+		this._PropertiesPanelView = this.fable.instantiateServiceProviderWithoutRegistration('PictViewFlowPropertiesPanel',
+			Object.assign({},
+				libPictViewFlowPropertiesPanel.default_configuration,
+				{
+					ViewIdentifier: `Flow-PropertiesPanel-${tmpViewIdentifier}`,
+					AutoRender: false
+				}
+			));
+		this._PropertiesPanelView._FlowView = this;
 
 		// Bind interaction events
 		this._InteractionManager.initialize(this._SVGElement, this._ViewportElement);
@@ -521,6 +660,7 @@ class PictViewFlow extends libPictView
 		this._FlowData = {
 			Nodes: Array.isArray(pFlowData.Nodes) ? pFlowData.Nodes : [],
 			Connections: Array.isArray(pFlowData.Connections) ? pFlowData.Connections : [],
+			OpenPanels: Array.isArray(pFlowData.OpenPanels) ? pFlowData.OpenPanels : [],
 			ViewState: Object.assign(
 				{ PanX: 0, PanY: 0, Zoom: 1, SelectedNodeHash: null, SelectedConnectionHash: null },
 				pFlowData.ViewState || {}
@@ -609,6 +749,9 @@ class PictViewFlow extends libPictView
 		{
 			return pConnection.SourceNodeHash !== pNodeHash && pConnection.TargetNodeHash !== pNodeHash;
 		});
+
+		// Close any open panels for this node
+		this.closePanelForNode(pNodeHash);
 
 		// Clear selection if this node was selected
 		if (this._FlowData.ViewState.SelectedNodeHash === pNodeHash)
@@ -1047,6 +1190,12 @@ class PictViewFlow extends libPictView
 			this._NodeView.renderNode(tmpNode, this._NodesLayer, tmpIsSelected, tmpNodeTypeConfig);
 		}
 
+		// Render properties panels and tethers
+		if (this._PropertiesPanelView && this._PanelsLayer && this._TethersLayer)
+		{
+			this._PropertiesPanelView.renderPanels(this._FlowData.OpenPanels, this._PanelsLayer, this._TethersLayer);
+		}
+
 		// Update viewport transform
 		this.updateViewportTransform();
 	}
@@ -1080,6 +1229,9 @@ class PictViewFlow extends libPictView
 
 		// Re-render connections that involve this node
 		this._renderConnectionsForNode(pNodeHash);
+
+		// Update tethers for any panels attached to this node
+		this._renderTethersForNode(pNodeHash);
 	}
 
 	/**
@@ -1108,6 +1260,180 @@ class PictViewFlow extends libPictView
 			// Re-render this connection
 			this._ConnectionRenderer.renderConnection(tmpConn, this._ConnectionsLayer, tmpIsSelected);
 		}
+	}
+
+	/**
+	 * Re-render tethers for panels attached to a specific node (for drag performance).
+	 * @param {string} pNodeHash
+	 */
+	_renderTethersForNode(pNodeHash)
+	{
+		if (!this._TethersLayer || !this._PropertiesPanelView) return;
+
+		let tmpAffectedPanels = this._FlowData.OpenPanels.filter((pPanel) => pPanel.NodeHash === pNodeHash);
+		if (tmpAffectedPanels.length === 0) return;
+
+		// Remove existing tethers for these panels
+		for (let i = 0; i < tmpAffectedPanels.length; i++)
+		{
+			let tmpExisting = this._TethersLayer.querySelectorAll(`[data-panel-hash="${tmpAffectedPanels[i].Hash}"]`);
+			for (let j = 0; j < tmpExisting.length; j++)
+			{
+				tmpExisting[j].remove();
+			}
+			// Re-render this tether
+			this._PropertiesPanelView._renderTether(tmpAffectedPanels[i], this._TethersLayer);
+		}
+	}
+
+	// ---- Properties Panel Management ----
+
+	/**
+	 * Open a properties panel for a node.
+	 * @param {string} pNodeHash - The hash of the node to open a panel for
+	 * @returns {Object|false} The panel data, or false if the node has no PropertiesPanel config
+	 */
+	openPanel(pNodeHash)
+	{
+		let tmpNode = this.getNode(pNodeHash);
+		if (!tmpNode) return false;
+
+		let tmpNodeTypeConfig = this._NodeTypeProvider.getNodeType(tmpNode.Type);
+		if (!tmpNodeTypeConfig || !tmpNodeTypeConfig.PropertiesPanel) return false;
+
+		// Check if a panel is already open for this node
+		let tmpExisting = this._FlowData.OpenPanels.find((pPanel) => pPanel.NodeHash === pNodeHash);
+		if (tmpExisting) return tmpExisting;
+
+		let tmpPanelConfig = tmpNodeTypeConfig.PropertiesPanel;
+		let tmpPanelHash = `panel-${this.fable.getUUID()}`;
+		let tmpWidth = tmpPanelConfig.DefaultWidth || 300;
+		let tmpHeight = tmpPanelConfig.DefaultHeight || 200;
+
+		let tmpPanelData =
+		{
+			Hash: tmpPanelHash,
+			NodeHash: pNodeHash,
+			PanelType: tmpPanelConfig.PanelType || 'Base',
+			Title: tmpPanelConfig.Title || tmpNodeTypeConfig.Label || 'Properties',
+			X: tmpNode.X + tmpNode.Width + 30,
+			Y: tmpNode.Y,
+			Width: tmpWidth,
+			Height: tmpHeight
+		};
+
+		this._FlowData.OpenPanels.push(tmpPanelData);
+		this.renderFlow();
+		this.marshalFromView();
+
+		if (this._EventHandlerProvider)
+		{
+			this._EventHandlerProvider.fireEvent('onPanelOpened', tmpPanelData);
+			this._EventHandlerProvider.fireEvent('onFlowChanged', this._FlowData);
+		}
+
+		return tmpPanelData;
+	}
+
+	/**
+	 * Close a properties panel by panel hash.
+	 * @param {string} pPanelHash
+	 * @returns {boolean}
+	 */
+	closePanel(pPanelHash)
+	{
+		let tmpIndex = this._FlowData.OpenPanels.findIndex((pPanel) => pPanel.Hash === pPanelHash);
+		if (tmpIndex < 0) return false;
+
+		let tmpRemovedPanel = this._FlowData.OpenPanels.splice(tmpIndex, 1)[0];
+
+		// Clean up the panel instance
+		if (this._PropertiesPanelView)
+		{
+			this._PropertiesPanelView.destroyPanel(pPanelHash);
+		}
+
+		this.renderFlow();
+		this.marshalFromView();
+
+		if (this._EventHandlerProvider)
+		{
+			this._EventHandlerProvider.fireEvent('onPanelClosed', tmpRemovedPanel);
+			this._EventHandlerProvider.fireEvent('onFlowChanged', this._FlowData);
+		}
+
+		return true;
+	}
+
+	/**
+	 * Close all panels for a given node.
+	 * @param {string} pNodeHash
+	 * @returns {boolean}
+	 */
+	closePanelForNode(pNodeHash)
+	{
+		let tmpPanelsToClose = this._FlowData.OpenPanels.filter((pPanel) => pPanel.NodeHash === pNodeHash);
+		if (tmpPanelsToClose.length === 0) return false;
+
+		for (let i = 0; i < tmpPanelsToClose.length; i++)
+		{
+			let tmpIndex = this._FlowData.OpenPanels.indexOf(tmpPanelsToClose[i]);
+			if (tmpIndex >= 0)
+			{
+				this._FlowData.OpenPanels.splice(tmpIndex, 1);
+			}
+			if (this._PropertiesPanelView)
+			{
+				this._PropertiesPanelView.destroyPanel(tmpPanelsToClose[i].Hash);
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Toggle a properties panel for a node (open if closed, close if open).
+	 * @param {string} pNodeHash
+	 * @returns {Object|false}
+	 */
+	togglePanel(pNodeHash)
+	{
+		let tmpExisting = this._FlowData.OpenPanels.find((pPanel) => pPanel.NodeHash === pNodeHash);
+		if (tmpExisting)
+		{
+			this.closePanel(tmpExisting.Hash);
+			return false;
+		}
+		return this.openPanel(pNodeHash);
+	}
+
+	/**
+	 * Update a panel's position (for drag).
+	 * @param {string} pPanelHash
+	 * @param {number} pX
+	 * @param {number} pY
+	 */
+	updatePanelPosition(pPanelHash, pX, pY)
+	{
+		let tmpPanel = this._FlowData.OpenPanels.find((pPanel) => pPanel.Hash === pPanelHash);
+		if (!tmpPanel) return;
+
+		tmpPanel.X = pX;
+		tmpPanel.Y = pY;
+
+		// Update the foreignObject position directly for smooth dragging
+		if (this._PanelsLayer)
+		{
+			let tmpFO = this._PanelsLayer.querySelector(`[data-panel-hash="${pPanelHash}"]`);
+			if (tmpFO)
+			{
+				tmpFO.setAttribute('x', String(pX));
+				tmpFO.setAttribute('y', String(pY));
+			}
+		}
+
+		// Update the tether for this panel
+		this._renderTethersForNode(tmpPanel.NodeHash);
 	}
 }
 

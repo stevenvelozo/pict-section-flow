@@ -27,7 +27,18 @@ class FlowCardFileWrite extends libPictFlowCard
 				[
 					{ Name: 'Done', Side: 'right' },
 					{ Name: 'Error', Side: 'bottom' }
-				]
+				],
+				PropertiesPanel:
+				{
+					PanelType: 'View',
+					DefaultWidth: 260,
+					DefaultHeight: 180,
+					Title: 'File Write Info',
+					Configuration:
+					{
+						ViewHash: 'FlowExample-FileWriteInfo'
+					}
+				}
 			},
 			pOptions),
 			pServiceHash);

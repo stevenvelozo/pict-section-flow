@@ -20,3 +20,13 @@ module.exports.PictProviderFlowEventHandler = require('./providers/PictProvider-
 
 // FlowCard base class
 module.exports.PictFlowCard = require('./PictFlowCard.js');
+
+// FlowCardPropertiesPanel base class and panel types
+module.exports.PictFlowCardPropertiesPanel = require('./PictFlowCardPropertiesPanel.js');
+module.exports.FlowCardPropertiesPanelTemplate = require('./panels/FlowCardPropertiesPanel-Template.js');
+module.exports.FlowCardPropertiesPanelMarkdown = require('./panels/FlowCardPropertiesPanel-Markdown.js');
+module.exports.FlowCardPropertiesPanelForm = require('./panels/FlowCardPropertiesPanel-Form.js');
+module.exports.FlowCardPropertiesPanelView = require('./panels/FlowCardPropertiesPanel-View.js');
+
+// Properties panel renderer view
+module.exports.PictViewFlowPropertiesPanel = require('./views/PictView-Flow-PropertiesPanel.js');

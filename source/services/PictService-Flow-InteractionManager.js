@@ -7,6 +7,7 @@ const INTERACTION_STATES =
 {
 	IDLE: 'idle',
 	DRAGGING_NODE: 'dragging-node',
+	DRAGGING_PANEL: 'dragging-panel',
 	CONNECTING: 'connecting',
 	PANNING: 'panning'
 };
@@ -34,6 +35,13 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		this._DragNodeStartX = 0;
 		this._DragNodeStartY = 0;
 
+		// Panel drag state
+		this._DragPanelHash = null;
+		this._DragPanelStartX = 0;
+		this._DragPanelStartY = 0;
+		this._DragPanelDataStartX = 0;
+		this._DragPanelDataStartY = 0;
+
 		// Pan state
 		this._PanStartX = 0;
 		this._PanStartY = 0;
@@ -44,6 +52,11 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		this._ConnectSourceNodeHash = null;
 		this._ConnectSourcePortHash = null;
 		this._ConnectDragLine = null;
+
+		// Double-click detection
+		this._LastClickTime = 0;
+		this._LastClickNodeHash = null;
+		this._DoubleClickThreshold = 400;
 
 		// Bound event handlers (for removeEventListener)
 		this._boundOnPointerDown = this._onPointerDown.bind(this);
@@ -110,6 +123,12 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		let tmpTarget = pEvent.target;
 		let tmpElementType = this._getElementType(tmpTarget);
 
+		// Check if click is inside a panel body — let HTML handle its own events
+		if (tmpTarget.closest && tmpTarget.closest('.pict-flow-panel-body'))
+		{
+			return;
+		}
+
 		// Capture pointer for smooth dragging
 		this._SVGElement.setPointerCapture(pEvent.pointerId);
 
@@ -121,8 +140,43 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 
 			case 'node':
 			case 'node-body':
-				this._startNodeDrag(pEvent, tmpTarget);
+			case 'panel-indicator':
+			{
+				let tmpNodeHash = this._getNodeHash(tmpTarget);
+				let tmpNow = Date.now();
+
+				// Check for double-click on same node
+				if (tmpNodeHash && tmpNodeHash === this._LastClickNodeHash
+					&& (tmpNow - this._LastClickTime) < this._DoubleClickThreshold)
+				{
+					// Double-click: toggle panel
+					this._LastClickTime = 0;
+					this._LastClickNodeHash = null;
+					this._FlowView.togglePanel(tmpNodeHash);
+				}
+				else
+				{
+					// Single click: start node drag
+					this._LastClickTime = tmpNow;
+					this._LastClickNodeHash = tmpNodeHash;
+					this._startNodeDrag(pEvent, tmpTarget);
+				}
 				break;
+			}
+
+			case 'panel-titlebar':
+				this._startPanelDrag(pEvent, tmpTarget);
+				break;
+
+			case 'panel-close':
+			{
+				let tmpPanelHash = this._getPanelHash(tmpTarget);
+				if (tmpPanelHash)
+				{
+					this._FlowView.closePanel(tmpPanelHash);
+				}
+				break;
+			}
 
 			case 'connection':
 			case 'connection-hitarea':
@@ -153,6 +207,10 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 				this._onNodeDrag(pEvent);
 				break;
 
+			case INTERACTION_STATES.DRAGGING_PANEL:
+				this._onPanelDrag(pEvent);
+				break;
+
 			case INTERACTION_STATES.CONNECTING:
 				this._onConnectionDrag(pEvent);
 				break;
@@ -181,6 +239,10 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		{
 			case INTERACTION_STATES.DRAGGING_NODE:
 				this._endNodeDrag(pEvent);
+				break;
+
+			case INTERACTION_STATES.DRAGGING_PANEL:
+				this._endPanelDrag(pEvent);
 				break;
 
 			case INTERACTION_STATES.CONNECTING:
@@ -225,8 +287,12 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		// Only handle events when the flow is focused/visible
 		if (pEvent.key === 'Delete' || pEvent.key === 'Backspace')
 		{
-			// Don't delete if user is typing in an input
+			// Don't delete if user is typing in an input or inside a panel
 			if (pEvent.target && (pEvent.target.tagName === 'INPUT' || pEvent.target.tagName === 'TEXTAREA' || pEvent.target.tagName === 'SELECT'))
+			{
+				return;
+			}
+			if (pEvent.target && pEvent.target.closest && pEvent.target.closest('.pict-flow-panel'))
 			{
 				return;
 			}
@@ -326,6 +392,70 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 
 		this._State = INTERACTION_STATES.IDLE;
 		this._DragNodeHash = null;
+	}
+
+	// ---- Panel Dragging ----
+
+	/**
+	 * Start dragging a panel by its title bar
+	 * @param {PointerEvent} pEvent
+	 * @param {Element} pTarget
+	 */
+	_startPanelDrag(pEvent, pTarget)
+	{
+		let tmpPanelHash = this._getPanelHash(pTarget);
+		if (!tmpPanelHash) return;
+
+		let tmpPanel = this._FlowView._FlowData.OpenPanels.find((pPanel) => pPanel.Hash === tmpPanelHash);
+		if (!tmpPanel) return;
+
+		this._State = INTERACTION_STATES.DRAGGING_PANEL;
+		this._DragPanelHash = tmpPanelHash;
+		this._DragPanelStartX = pEvent.clientX;
+		this._DragPanelStartY = pEvent.clientY;
+		this._DragPanelDataStartX = tmpPanel.X;
+		this._DragPanelDataStartY = tmpPanel.Y;
+
+		this._SVGElement.classList.add('panning');
+	}
+
+	/**
+	 * Handle panel dragging
+	 * @param {PointerEvent} pEvent
+	 */
+	_onPanelDrag(pEvent)
+	{
+		if (!this._DragPanelHash) return;
+
+		let tmpVS = this._FlowView.viewState;
+		let tmpDX = (pEvent.clientX - this._DragPanelStartX) / tmpVS.Zoom;
+		let tmpDY = (pEvent.clientY - this._DragPanelStartY) / tmpVS.Zoom;
+
+		let tmpNewX = this._DragPanelDataStartX + tmpDX;
+		let tmpNewY = this._DragPanelDataStartY + tmpDY;
+
+		this._FlowView.updatePanelPosition(this._DragPanelHash, tmpNewX, tmpNewY);
+	}
+
+	/**
+	 * End panel dragging
+	 * @param {PointerEvent} pEvent
+	 */
+	_endPanelDrag(pEvent)
+	{
+		this._SVGElement.classList.remove('panning');
+
+		this._FlowView.marshalFromView();
+
+		let tmpPanel = this._FlowView._FlowData.OpenPanels.find((pPanel) => pPanel.Hash === this._DragPanelHash);
+		if (tmpPanel && this._FlowView._EventHandlerProvider)
+		{
+			this._FlowView._EventHandlerProvider.fireEvent('onPanelMoved', tmpPanel);
+			this._FlowView._EventHandlerProvider.fireEvent('onFlowChanged', this._FlowView.flowData);
+		}
+
+		this._State = INTERACTION_STATES.IDLE;
+		this._DragPanelHash = null;
 	}
 
 	// ---- Connection Creation ----
@@ -520,7 +650,7 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		if (!pTarget) return 'background';
 
 		// Check the element itself
-		let tmpType = pTarget.getAttribute('data-element-type');
+		let tmpType = pTarget.getAttribute ? pTarget.getAttribute('data-element-type') : null;
 		if (tmpType) return tmpType;
 
 		// Walk up to find the closest element with a data attribute
@@ -528,7 +658,7 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		let tmpDepth = 0;
 		while (tmpParent && tmpDepth < 5)
 		{
-			tmpType = tmpParent.getAttribute('data-element-type');
+			tmpType = tmpParent.getAttribute ? tmpParent.getAttribute('data-element-type') : null;
 			if (tmpType) return tmpType;
 			tmpParent = tmpParent.parentElement;
 			tmpDepth++;
@@ -546,14 +676,39 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 	{
 		if (!pTarget) return null;
 
-		let tmpHash = pTarget.getAttribute('data-node-hash');
+		let tmpHash = pTarget.getAttribute ? pTarget.getAttribute('data-node-hash') : null;
 		if (tmpHash) return tmpHash;
 
 		let tmpParent = pTarget.parentElement;
 		let tmpDepth = 0;
 		while (tmpParent && tmpDepth < 5)
 		{
-			tmpHash = tmpParent.getAttribute('data-node-hash');
+			tmpHash = tmpParent.getAttribute ? tmpParent.getAttribute('data-node-hash') : null;
+			if (tmpHash) return tmpHash;
+			tmpParent = tmpParent.parentElement;
+			tmpDepth++;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Get the panel hash from a target element (walks up parents)
+	 * @param {Element} pTarget
+	 * @returns {string|null}
+	 */
+	_getPanelHash(pTarget)
+	{
+		if (!pTarget) return null;
+
+		let tmpHash = pTarget.getAttribute ? pTarget.getAttribute('data-panel-hash') : null;
+		if (tmpHash) return tmpHash;
+
+		let tmpParent = pTarget.parentElement;
+		let tmpDepth = 0;
+		while (tmpParent && tmpDepth < 5)
+		{
+			tmpHash = tmpParent.getAttribute ? tmpParent.getAttribute('data-panel-hash') : null;
 			if (tmpHash) return tmpHash;
 			tmpParent = tmpParent.parentElement;
 			tmpDepth++;

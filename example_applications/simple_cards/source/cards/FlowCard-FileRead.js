@@ -26,7 +26,25 @@ class FlowCardFileRead extends libPictFlowCard
 				[
 					{ Name: 'Data', Side: 'right' },
 					{ Name: 'Error', Side: 'bottom' }
-				]
+				],
+				PropertiesPanel:
+				{
+					PanelType: 'Template',
+					DefaultWidth: 280,
+					DefaultHeight: 160,
+					Title: 'File Read Settings',
+					Configuration:
+					{
+						Templates:
+						[
+							{
+								Hash: 'flow-card-file-read-panel',
+								Template: '<div style="padding:4px"><label style="font-size:11px;color:#7f8c8d">File Path</label><div style="font-size:12px;padding:4px 0">{~D:Record.Data.FilePath~}</div><label style="font-size:11px;color:#7f8c8d">Encoding</label><div style="font-size:12px;padding:4px 0">{~D:Record.Data.Encoding~}</div></div>'
+							}
+						],
+						TemplateHash: 'flow-card-file-read-panel'
+					}
+				}
 			},
 			pOptions),
 			pServiceHash);

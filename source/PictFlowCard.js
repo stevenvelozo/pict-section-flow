@@ -25,6 +25,12 @@ const libFableServiceProviderBase = require('fable-serviceproviderbase');
  *       - MaximumInputCount    (number)  - Maximum connections accepted (default -1, unlimited)
  *   - Outputs        (array)  - Named output ports
  *   - Enabled        (boolean) - Whether this card is available in the palette
+ *   - PropertiesPanel (object, optional) - Configuration for the on-graph properties panel
+ *       - PanelType      (string)  - 'Template', 'Markdown', 'Form', or 'View'
+ *       - DefaultWidth   (number)  - Panel width (default 300)
+ *       - DefaultHeight  (number)  - Panel height (default 200)
+ *       - Title          (string)  - Panel title bar text
+ *       - Configuration  (object)  - Panel-type-specific configuration
  *
  * Usage:
  *   class MyCard extends PictFlowCard {
@@ -71,6 +77,11 @@ class PictFlowCard extends libFableServiceProviderBase
 		// Outputs: [{ Name: 'Out', Side: 'right' }]
 		this.cardInputs = Array.isArray(tmpOptions.Inputs) ? tmpOptions.Inputs : [];
 		this.cardOutputs = Array.isArray(tmpOptions.Outputs) ? tmpOptions.Outputs : [];
+
+		// --- Properties panel configuration ---
+		this.cardPropertiesPanel = (tmpOptions.PropertiesPanel && typeof tmpOptions.PropertiesPanel === 'object')
+			? tmpOptions.PropertiesPanel
+			: null;
 	}
 
 	/**
@@ -120,7 +131,8 @@ class PictFlowCard extends libFableServiceProviderBase
 			tmpPorts.push({ Hash: null, Direction: 'output', Side: 'right', Label: 'Out' });
 		}
 
-		return {
+		let tmpResult =
+		{
 			Hash: this.cardCode,
 			Label: this.cardTitle,
 			DefaultWidth: this.cardWidth,
@@ -142,6 +154,14 @@ class PictFlowCard extends libFableServiceProviderBase
 				Category: this.cardCategory
 			}
 		};
+
+		// Include properties panel config if defined
+		if (this.cardPropertiesPanel)
+		{
+			tmpResult.PropertiesPanel = JSON.parse(JSON.stringify(this.cardPropertiesPanel));
+		}
+
+		return tmpResult;
 	}
 
 	/**
@@ -182,5 +202,6 @@ module.exports.default_configuration =
 	BodyStyle: {},
 	Width: 180,
 	Height: 80,
-	Category: 'General'
+	Category: 'General',
+	PropertiesPanel: null
 };

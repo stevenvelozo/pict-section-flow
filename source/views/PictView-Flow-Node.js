@@ -197,6 +197,29 @@ class PictViewFlowNode extends libPictView
 		// Render ports
 		this._renderPorts(pNodeData, tmpGroup, tmpWidth, tmpHeight);
 
+		// Panel indicator icon (small rect in bottom-right corner)
+		if (pNodeTypeConfig && pNodeTypeConfig.PropertiesPanel)
+		{
+			let tmpIndicatorSize = 10;
+			let tmpIndicatorMargin = 4;
+			let tmpIndicator = this._createSVGElement('rect');
+			tmpIndicator.setAttribute('class', 'pict-flow-node-panel-indicator');
+			tmpIndicator.setAttribute('x', String(tmpWidth - tmpIndicatorSize - tmpIndicatorMargin));
+			tmpIndicator.setAttribute('y', String(tmpHeight - tmpIndicatorSize - tmpIndicatorMargin));
+			tmpIndicator.setAttribute('width', String(tmpIndicatorSize));
+			tmpIndicator.setAttribute('height', String(tmpIndicatorSize));
+			tmpIndicator.setAttribute('rx', '2');
+			tmpIndicator.setAttribute('ry', '2');
+			tmpIndicator.setAttribute('data-node-hash', pNodeData.Hash);
+			tmpIndicator.setAttribute('data-element-type', 'panel-indicator');
+
+			let tmpIndicatorTitle = this._createSVGElement('title');
+			tmpIndicatorTitle.textContent = 'Double-click to open properties';
+			tmpIndicator.appendChild(tmpIndicatorTitle);
+
+			tmpGroup.appendChild(tmpIndicator);
+		}
+
 		pNodesLayer.appendChild(tmpGroup);
 	}
 
