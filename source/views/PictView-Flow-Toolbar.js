@@ -204,6 +204,9 @@ const _DefaultConfiguration =
 	<div class="pict-flow-toolbar-group">
 		<button class="pict-flow-toolbar-btn" data-flow-action="auto-layout">Auto Layout</button>
 	</div>
+	<div class="pict-flow-toolbar-group">
+		<button class="pict-flow-toolbar-btn" data-flow-action="fullscreen" id="Flow-Toolbar-Fullscreen-{~D:Record.FlowViewIdentifier~}" title="Toggle Fullscreen">&#x26F6; Fullscreen</button>
+	</div>
 </div>
 <div class="pict-flow-palette-container" id="Flow-Palette-{~D:Record.FlowViewIdentifier~}">
 	<div class="pict-flow-palette-toggle" data-flow-action="toggle-palette">
@@ -578,6 +581,17 @@ class PictViewFlowToolbar extends libPictView
 
 			case 'auto-layout':
 				this._FlowView.autoLayout();
+				break;
+
+			case 'fullscreen':
+				{
+					let tmpIsFullscreen = this._FlowView.toggleFullscreen();
+					let tmpBtnElements = this.pict.ContentAssignment.getElement(`#Flow-Toolbar-Fullscreen-${tmpFlowViewIdentifier}`);
+					if (tmpBtnElements.length > 0)
+					{
+						tmpBtnElements[0].innerHTML = tmpIsFullscreen ? '&#x2716; Exit Fullscreen' : '&#x26F6; Fullscreen';
+					}
+				}
 				break;
 
 			default:

@@ -8,6 +8,7 @@ const INTERACTION_STATES =
 	IDLE: 'idle',
 	DRAGGING_NODE: 'dragging-node',
 	DRAGGING_PANEL: 'dragging-panel',
+	DRAGGING_HANDLE: 'dragging-handle',
 	CONNECTING: 'connecting',
 	PANNING: 'panning'
 };
@@ -42,6 +43,12 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		this._DragPanelDataStartX = 0;
 		this._DragPanelDataStartY = 0;
 
+		// Handle drag state
+		this._DragHandleConnectionHash = null;
+		this._DragHandlePanelHash = null;
+		this._DragHandleType = null;
+		this._DragHandleIsTether = false;
+
 		// Pan state
 		this._PanStartX = 0;
 		this._PanStartY = 0;
@@ -57,6 +64,11 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		this._LastClickTime = 0;
 		this._LastClickNodeHash = null;
 		this._DoubleClickThreshold = 400;
+
+		// Double-click detection for handles
+		this._LastHandleClickTime = 0;
+		this._LastHandleClickHash = null;
+		this._LastHandleClickType = null;
 
 		// Bound event handlers (for removeEventListener)
 		this._boundOnPointerDown = this._onPointerDown.bind(this);
@@ -178,6 +190,65 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 				break;
 			}
 
+			case 'connection-handle':
+			{
+				let tmpConnectionHash = this._getConnectionHash(tmpTarget);
+				let tmpHandleType = tmpTarget.getAttribute('data-handle-type');
+				let tmpNow = Date.now();
+
+				// Check for double-click on handle to toggle mode
+				if (tmpConnectionHash === this._LastHandleClickHash
+					&& tmpHandleType === this._LastHandleClickType
+					&& (tmpNow - this._LastHandleClickTime) < this._DoubleClickThreshold)
+				{
+					this._toggleConnectionLineMode(tmpConnectionHash);
+					this._LastHandleClickTime = 0;
+					this._LastHandleClickHash = null;
+					this._LastHandleClickType = null;
+				}
+				else
+				{
+					this._LastHandleClickTime = tmpNow;
+					this._LastHandleClickHash = tmpConnectionHash;
+					this._LastHandleClickType = tmpHandleType;
+					this._startHandleDrag(pEvent, tmpConnectionHash, null, tmpHandleType, false);
+				}
+				pEvent.stopPropagation();
+				break;
+			}
+
+			case 'tether':
+			case 'tether-hitarea':
+				this._selectTether(tmpTarget);
+				break;
+
+			case 'tether-handle':
+			{
+				let tmpPanelHash = this._getPanelHash(tmpTarget);
+				let tmpHandleType = tmpTarget.getAttribute('data-handle-type');
+				let tmpNow = Date.now();
+
+				// Check for double-click on tether handle to toggle mode
+				if (tmpPanelHash === this._LastHandleClickHash
+					&& tmpHandleType === this._LastHandleClickType
+					&& (tmpNow - this._LastHandleClickTime) < this._DoubleClickThreshold)
+				{
+					this._toggleTetherLineMode(tmpPanelHash);
+					this._LastHandleClickTime = 0;
+					this._LastHandleClickHash = null;
+					this._LastHandleClickType = null;
+				}
+				else
+				{
+					this._LastHandleClickTime = tmpNow;
+					this._LastHandleClickHash = tmpPanelHash;
+					this._LastHandleClickType = tmpHandleType;
+					this._startHandleDrag(pEvent, null, tmpPanelHash, tmpHandleType, true);
+				}
+				pEvent.stopPropagation();
+				break;
+			}
+
 			case 'connection':
 			case 'connection-hitarea':
 				this._selectConnection(tmpTarget);
@@ -209,6 +280,10 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 
 			case INTERACTION_STATES.DRAGGING_PANEL:
 				this._onPanelDrag(pEvent);
+				break;
+
+			case INTERACTION_STATES.DRAGGING_HANDLE:
+				this._onHandleDrag(pEvent);
 				break;
 
 			case INTERACTION_STATES.CONNECTING:
@@ -243,6 +318,10 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 
 			case INTERACTION_STATES.DRAGGING_PANEL:
 				this._endPanelDrag(pEvent);
+				break;
+
+			case INTERACTION_STATES.DRAGGING_HANDLE:
+				this._endHandleDrag(pEvent);
 				break;
 
 			case INTERACTION_STATES.CONNECTING:
@@ -306,17 +385,31 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 			{
 				this._cancelConnection();
 			}
+
+			// Exit fullscreen if currently in fullscreen mode
+			if (this._FlowView._IsFullscreen)
+			{
+				this._FlowView.exitFullscreen();
+				// Update the toolbar button text
+				if (this._FlowView._ToolbarView)
+				{
+					let tmpFlowViewIdentifier = this._FlowView.options.ViewIdentifier;
+					let tmpBtnElements = this._FlowView.pict.ContentAssignment.getElement(`#Flow-Toolbar-Fullscreen-${tmpFlowViewIdentifier}`);
+					if (tmpBtnElements.length > 0)
+					{
+						tmpBtnElements[0].innerHTML = '&#x26F6; Fullscreen';
+					}
+				}
+				pEvent.preventDefault();
+				return;
+			}
+
 			this._FlowView.deselectAll();
 		}
 	}
 
 	// ---- Node Dragging ----
 
-	/**
-	 * Start dragging a node
-	 * @param {PointerEvent} pEvent
-	 * @param {Element} pTarget
-	 */
 	_startNodeDrag(pEvent, pTarget)
 	{
 		if (!this._FlowView.options.EnableNodeDragging) return;
@@ -324,7 +417,6 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		let tmpNodeHash = this._getNodeHash(pTarget);
 		if (!tmpNodeHash) return;
 
-		// Select the node
 		this._FlowView.selectNode(tmpNodeHash);
 
 		let tmpNode = this._FlowView.getNode(tmpNodeHash);
@@ -337,7 +429,6 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		this._DragNodeStartX = tmpNode.X;
 		this._DragNodeStartY = tmpNode.Y;
 
-		// Add dragging class
 		this._SVGElement.classList.add('panning');
 
 		let tmpNodeGroup = this._FlowView._NodesLayer.querySelector(`[data-node-hash="${tmpNodeHash}"]`);
@@ -347,10 +438,6 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		}
 	}
 
-	/**
-	 * Handle node dragging
-	 * @param {PointerEvent} pEvent
-	 */
 	_onNodeDrag(pEvent)
 	{
 		if (!this._DragNodeHash) return;
@@ -365,10 +452,6 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		this._FlowView.updateNodePosition(this._DragNodeHash, tmpNewX, tmpNewY);
 	}
 
-	/**
-	 * End node dragging
-	 * @param {PointerEvent} pEvent
-	 */
 	_endNodeDrag(pEvent)
 	{
 		this._SVGElement.classList.remove('panning');
@@ -379,7 +462,6 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 			tmpNodeGroup.classList.remove('dragging');
 		}
 
-		// Full re-render to finalize positions
 		this._FlowView.renderFlow();
 		this._FlowView.marshalFromView();
 
@@ -396,11 +478,6 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 
 	// ---- Panel Dragging ----
 
-	/**
-	 * Start dragging a panel by its title bar
-	 * @param {PointerEvent} pEvent
-	 * @param {Element} pTarget
-	 */
 	_startPanelDrag(pEvent, pTarget)
 	{
 		let tmpPanelHash = this._getPanelHash(pTarget);
@@ -419,10 +496,6 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		this._SVGElement.classList.add('panning');
 	}
 
-	/**
-	 * Handle panel dragging
-	 * @param {PointerEvent} pEvent
-	 */
 	_onPanelDrag(pEvent)
 	{
 		if (!this._DragPanelHash) return;
@@ -437,10 +510,6 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		this._FlowView.updatePanelPosition(this._DragPanelHash, tmpNewX, tmpNewY);
 	}
 
-	/**
-	 * End panel dragging
-	 * @param {PointerEvent} pEvent
-	 */
 	_endPanelDrag(pEvent)
 	{
 		this._SVGElement.classList.remove('panning');
@@ -458,13 +527,152 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		this._DragPanelHash = null;
 	}
 
+	// ---- Handle Dragging ----
+
+	_startHandleDrag(pEvent, pConnectionHash, pPanelHash, pHandleType, pIsTether)
+	{
+		this._State = INTERACTION_STATES.DRAGGING_HANDLE;
+		this._DragHandleConnectionHash = pConnectionHash;
+		this._DragHandlePanelHash = pPanelHash;
+		this._DragHandleType = pHandleType;
+		this._DragHandleIsTether = pIsTether;
+		this._DragStartX = pEvent.clientX;
+		this._DragStartY = pEvent.clientY;
+		this._SVGElement.classList.add('panning');
+	}
+
+	_onHandleDrag(pEvent)
+	{
+		let tmpCoords = this._FlowView.screenToSVGCoords(pEvent.clientX, pEvent.clientY);
+
+		if (this._DragHandleIsTether)
+		{
+			this._FlowView.updateTetherHandle(
+				this._DragHandlePanelHash,
+				this._DragHandleType,
+				tmpCoords.x,
+				tmpCoords.y
+			);
+		}
+		else
+		{
+			this._FlowView.updateConnectionHandle(
+				this._DragHandleConnectionHash,
+				this._DragHandleType,
+				tmpCoords.x,
+				tmpCoords.y
+			);
+		}
+	}
+
+	_endHandleDrag(pEvent)
+	{
+		this._SVGElement.classList.remove('panning');
+
+		this._FlowView.renderFlow();
+		this._FlowView.marshalFromView();
+
+		if (this._FlowView._EventHandlerProvider)
+		{
+			this._FlowView._EventHandlerProvider.fireEvent('onFlowChanged', this._FlowView.flowData);
+
+			if (this._DragHandleIsTether)
+			{
+				let tmpPanel = this._FlowView._FlowData.OpenPanels.find((pPanel) => pPanel.Hash === this._DragHandlePanelHash);
+				if (tmpPanel)
+				{
+					this._FlowView._EventHandlerProvider.fireEvent('onTetherHandleMoved', tmpPanel);
+				}
+			}
+			else
+			{
+				let tmpConnection = this._FlowView.getConnection(this._DragHandleConnectionHash);
+				if (tmpConnection)
+				{
+					this._FlowView._EventHandlerProvider.fireEvent('onConnectionHandleMoved', tmpConnection);
+				}
+			}
+		}
+
+		this._State = INTERACTION_STATES.IDLE;
+		this._DragHandleConnectionHash = null;
+		this._DragHandlePanelHash = null;
+		this._DragHandleType = null;
+		this._DragHandleIsTether = false;
+	}
+
+	// ---- Line Mode Toggling ----
+
+	_toggleConnectionLineMode(pConnectionHash)
+	{
+		let tmpConnection = this._FlowView.getConnection(pConnectionHash);
+		if (!tmpConnection) return;
+
+		if (!tmpConnection.Data) tmpConnection.Data = {};
+
+		let tmpCurrentMode = tmpConnection.Data.LineMode || 'bezier';
+		tmpConnection.Data.LineMode = (tmpCurrentMode === 'bezier') ? 'orthogonal' : 'bezier';
+
+		// Reset handle positions when switching modes
+		tmpConnection.Data.HandleCustomized = false;
+		tmpConnection.Data.BezierHandleX = null;
+		tmpConnection.Data.BezierHandleY = null;
+		tmpConnection.Data.OrthoCorner1X = null;
+		tmpConnection.Data.OrthoCorner1Y = null;
+		tmpConnection.Data.OrthoCorner2X = null;
+		tmpConnection.Data.OrthoCorner2Y = null;
+		tmpConnection.Data.OrthoMidOffset = 0;
+
+		this._FlowView.renderFlow();
+		this._FlowView.marshalFromView();
+
+		if (this._FlowView._EventHandlerProvider)
+		{
+			this._FlowView._EventHandlerProvider.fireEvent('onConnectionModeChanged', tmpConnection);
+			this._FlowView._EventHandlerProvider.fireEvent('onFlowChanged', this._FlowView.flowData);
+		}
+	}
+
+	_toggleTetherLineMode(pPanelHash)
+	{
+		let tmpPanel = this._FlowView._FlowData.OpenPanels.find((pPanel) => pPanel.Hash === pPanelHash);
+		if (!tmpPanel) return;
+
+		let tmpCurrentMode = tmpPanel.TetherLineMode || 'bezier';
+		tmpPanel.TetherLineMode = (tmpCurrentMode === 'bezier') ? 'orthogonal' : 'bezier';
+
+		tmpPanel.TetherHandleCustomized = false;
+		tmpPanel.TetherBezierHandleX = null;
+		tmpPanel.TetherBezierHandleY = null;
+		tmpPanel.TetherOrthoCorner1X = null;
+		tmpPanel.TetherOrthoCorner1Y = null;
+		tmpPanel.TetherOrthoCorner2X = null;
+		tmpPanel.TetherOrthoCorner2Y = null;
+		tmpPanel.TetherOrthoMidOffset = 0;
+
+		this._FlowView.renderFlow();
+		this._FlowView.marshalFromView();
+
+		if (this._FlowView._EventHandlerProvider)
+		{
+			this._FlowView._EventHandlerProvider.fireEvent('onTetherModeChanged', tmpPanel);
+			this._FlowView._EventHandlerProvider.fireEvent('onFlowChanged', this._FlowView.flowData);
+		}
+	}
+
+	// ---- Tether Selection ----
+
+	_selectTether(pTarget)
+	{
+		let tmpPanelHash = this._getPanelHash(pTarget);
+		if (tmpPanelHash)
+		{
+			this._FlowView.selectTether(tmpPanelHash);
+		}
+	}
+
 	// ---- Connection Creation ----
 
-	/**
-	 * Start creating a connection from a port
-	 * @param {PointerEvent} pEvent
-	 * @param {Element} pTarget
-	 */
 	_startConnection(pEvent, pTarget)
 	{
 		if (!this._FlowView.options.EnableConnectionCreation) return;
@@ -475,7 +683,6 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 
 		if (!tmpNodeHash || !tmpPortHash) return;
 
-		// Only allow starting connections from output ports
 		if (tmpPortDirection !== 'output')
 		{
 			return;
@@ -487,25 +694,18 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 
 		this._SVGElement.classList.add('connecting');
 
-		// Create drag line
 		let tmpPortPos = this._FlowView.getPortPosition(tmpNodeHash, tmpPortHash);
 		if (tmpPortPos)
 		{
 			this._ConnectDragLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 			this._ConnectDragLine.setAttribute('class', 'pict-flow-drag-connection');
 			this._ConnectDragLine.setAttribute('d', `M ${tmpPortPos.x} ${tmpPortPos.y} L ${tmpPortPos.x} ${tmpPortPos.y}`);
-
-			// Add to viewport (so it transforms with pan/zoom)
 			this._FlowView._ViewportElement.appendChild(this._ConnectDragLine);
 		}
 
 		pEvent.stopPropagation();
 	}
 
-	/**
-	 * Handle connection drag
-	 * @param {PointerEvent} pEvent
-	 */
 	_onConnectionDrag(pEvent)
 	{
 		if (!this._ConnectDragLine) return;
@@ -515,19 +715,13 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 
 		let tmpEndCoords = this._FlowView.screenToSVGCoords(pEvent.clientX, pEvent.clientY);
 
-		// Render a bezier curve for the drag line
 		let tmpDX = Math.abs(tmpEndCoords.x - tmpSourcePos.x) * 0.5;
 		let tmpPath = `M ${tmpSourcePos.x} ${tmpSourcePos.y} C ${tmpSourcePos.x + tmpDX} ${tmpSourcePos.y}, ${tmpEndCoords.x - tmpDX} ${tmpEndCoords.y}, ${tmpEndCoords.x} ${tmpEndCoords.y}`;
 		this._ConnectDragLine.setAttribute('d', tmpPath);
 	}
 
-	/**
-	 * End connection creation
-	 * @param {PointerEvent} pEvent
-	 */
 	_endConnection(pEvent)
 	{
-		// Remove drag line
 		if (this._ConnectDragLine && this._ConnectDragLine.parentNode)
 		{
 			this._ConnectDragLine.parentNode.removeChild(this._ConnectDragLine);
@@ -536,7 +730,6 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 
 		this._SVGElement.classList.remove('connecting');
 
-		// Check if we're over a valid target port
 		let tmpTarget = document.elementFromPoint(pEvent.clientX, pEvent.clientY);
 		if (tmpTarget)
 		{
@@ -560,9 +753,6 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		this._ConnectSourcePortHash = null;
 	}
 
-	/**
-	 * Cancel connection creation (e.g., on Escape)
-	 */
 	_cancelConnection()
 	{
 		if (this._ConnectDragLine && this._ConnectDragLine.parentNode)
@@ -580,13 +770,8 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 
 	// ---- Panning ----
 
-	/**
-	 * Start panning the viewport
-	 * @param {PointerEvent} pEvent
-	 */
 	_startPanning(pEvent)
 	{
-		// Deselect if clicking on empty space
 		this._FlowView.deselectAll();
 
 		this._State = INTERACTION_STATES.PANNING;
@@ -598,10 +783,6 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		this._SVGElement.classList.add('panning');
 	}
 
-	/**
-	 * Handle panning
-	 * @param {PointerEvent} pEvent
-	 */
 	_onPan(pEvent)
 	{
 		let tmpDX = pEvent.clientX - this._PanStartX;
@@ -613,10 +794,6 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		this._FlowView.updateViewportTransform();
 	}
 
-	/**
-	 * End panning
-	 * @param {PointerEvent} pEvent
-	 */
 	_endPanning(pEvent)
 	{
 		this._SVGElement.classList.remove('panning');
@@ -625,13 +802,9 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 
 	// ---- Connection Selection ----
 
-	/**
-	 * Select a connection
-	 * @param {Element} pTarget
-	 */
 	_selectConnection(pTarget)
 	{
-		let tmpConnectionHash = pTarget.getAttribute('data-connection-hash');
+		let tmpConnectionHash = this._getConnectionHash(pTarget);
 		if (tmpConnectionHash)
 		{
 			this._FlowView.selectConnection(tmpConnectionHash);
@@ -640,20 +813,13 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 
 	// ---- Utilities ----
 
-	/**
-	 * Get the element type from a target element (walks up to find data attributes)
-	 * @param {Element} pTarget
-	 * @returns {string} The element type
-	 */
 	_getElementType(pTarget)
 	{
 		if (!pTarget) return 'background';
 
-		// Check the element itself
 		let tmpType = pTarget.getAttribute ? pTarget.getAttribute('data-element-type') : null;
 		if (tmpType) return tmpType;
 
-		// Walk up to find the closest element with a data attribute
 		let tmpParent = pTarget.parentElement;
 		let tmpDepth = 0;
 		while (tmpParent && tmpDepth < 5)
@@ -667,11 +833,6 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		return 'background';
 	}
 
-	/**
-	 * Get the node hash from a target element (walks up parents)
-	 * @param {Element} pTarget
-	 * @returns {string|null}
-	 */
 	_getNodeHash(pTarget)
 	{
 		if (!pTarget) return null;
@@ -692,11 +853,6 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		return null;
 	}
 
-	/**
-	 * Get the panel hash from a target element (walks up parents)
-	 * @param {Element} pTarget
-	 * @returns {string|null}
-	 */
 	_getPanelHash(pTarget)
 	{
 		if (!pTarget) return null;
@@ -709,6 +865,26 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		while (tmpParent && tmpDepth < 5)
 		{
 			tmpHash = tmpParent.getAttribute ? tmpParent.getAttribute('data-panel-hash') : null;
+			if (tmpHash) return tmpHash;
+			tmpParent = tmpParent.parentElement;
+			tmpDepth++;
+		}
+
+		return null;
+	}
+
+	_getConnectionHash(pTarget)
+	{
+		if (!pTarget) return null;
+
+		let tmpHash = pTarget.getAttribute ? pTarget.getAttribute('data-connection-hash') : null;
+		if (tmpHash) return tmpHash;
+
+		let tmpParent = pTarget.parentElement;
+		let tmpDepth = 0;
+		while (tmpParent && tmpDepth < 5)
+		{
+			tmpHash = tmpParent.getAttribute ? tmpParent.getAttribute('data-connection-hash') : null;
 			if (tmpHash) return tmpHash;
 			tmpParent = tmpParent.parentElement;
 			tmpDepth++;

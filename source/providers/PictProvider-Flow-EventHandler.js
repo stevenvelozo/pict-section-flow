@@ -11,17 +11,22 @@ const _ProviderConfiguration =
  * for flow events like node selection, movement, connection creation, etc.
  *
  * Supported events:
- * - onNodeSelected(node)       - A node was selected (or null for deselection)
- * - onNodeAdded(node)          - A new node was added
- * - onNodeRemoved(node)        - A node was removed
- * - onNodeMoved(node)          - A node was moved to a new position
- * - onConnectionSelected(conn) - A connection was selected
- * - onConnectionCreated(conn)  - A new connection was created
- * - onConnectionRemoved(conn)  - A connection was removed
- * - onPanelOpened(panelData)   - A properties panel was opened
- * - onPanelClosed(panelData)   - A properties panel was closed
- * - onPanelMoved(panelData)    - A properties panel was moved
- * - onFlowChanged(flowData)    - The flow data changed (catch-all)
+ * - onNodeSelected(node)              - A node was selected (or null for deselection)
+ * - onNodeAdded(node)                 - A new node was added
+ * - onNodeRemoved(node)               - A node was removed
+ * - onNodeMoved(node)                 - A node was moved to a new position
+ * - onConnectionSelected(conn)        - A connection was selected
+ * - onConnectionCreated(conn)         - A new connection was created
+ * - onConnectionRemoved(conn)         - A connection was removed
+ * - onConnectionHandleMoved(conn)     - A connection's drag handle was repositioned
+ * - onConnectionModeChanged(conn)     - A connection's line mode was toggled (bezier/orthogonal)
+ * - onPanelOpened(panelData)          - A properties panel was opened
+ * - onPanelClosed(panelData)          - A properties panel was closed
+ * - onPanelMoved(panelData)           - A properties panel was moved
+ * - onTetherSelected(panelData)       - A tether line was selected (or null for deselection)
+ * - onTetherHandleMoved(panelData)    - A tether's drag handle was repositioned
+ * - onTetherModeChanged(panelData)    - A tether's line mode was toggled (bezier/orthogonal)
+ * - onFlowChanged(flowData)           - The flow data changed (catch-all)
  */
 class PictProviderFlowEventHandler extends libPictProvider
 {

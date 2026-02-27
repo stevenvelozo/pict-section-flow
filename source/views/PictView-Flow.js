@@ -185,12 +185,71 @@ const _DefaultConfiguration =
 			rx: 25;
 			ry: 25;
 		}
+		.pict-flow-connection-handle {
+			fill: #ffffff;
+			stroke: #3498db;
+			stroke-width: 2;
+			cursor: grab;
+			transition: r 0.15s;
+			filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+		}
+		.pict-flow-connection-handle:hover {
+			r: 8;
+			stroke-width: 2.5;
+		}
+		.pict-flow-connection-handle-midpoint {
+			fill: #ffffff;
+			stroke: #e67e22;
+			stroke-width: 2;
+			cursor: grab;
+			transition: r 0.15s;
+			filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+		}
+		.pict-flow-connection-handle-midpoint:hover {
+			r: 8;
+			stroke-width: 2.5;
+		}
 		.pict-flow-tether-line {
 			fill: none;
 			stroke: #95a5a6;
 			stroke-width: 1.5;
 			stroke-dasharray: 6 4;
-			pointer-events: none;
+			pointer-events: visibleStroke;
+			cursor: pointer;
+		}
+		.pict-flow-tether-line.selected {
+			stroke: #3498db;
+			stroke-width: 2;
+		}
+		.pict-flow-tether-hitarea {
+			fill: none;
+			stroke: transparent;
+			stroke-width: 10;
+			cursor: pointer;
+		}
+		.pict-flow-tether-handle {
+			fill: #ffffff;
+			stroke: #3498db;
+			stroke-width: 2;
+			cursor: grab;
+			transition: r 0.15s;
+			filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+		}
+		.pict-flow-tether-handle:hover {
+			r: 8;
+			stroke-width: 2.5;
+		}
+		.pict-flow-tether-handle-midpoint {
+			fill: #ffffff;
+			stroke: #e67e22;
+			stroke-width: 2;
+			cursor: grab;
+			transition: r 0.15s;
+			filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+		}
+		.pict-flow-tether-handle-midpoint:hover {
+			r: 8;
+			stroke-width: 2.5;
 		}
 		.pict-flow-node-panel-indicator {
 			fill: #3498db;
@@ -257,6 +316,20 @@ const _DefaultConfiguration =
 			flex: 1;
 			overflow: auto;
 			padding: 8px;
+		}
+		.pict-flow-fullscreen {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100vw;
+			height: 100vh;
+			z-index: 9999;
+			border-radius: 0;
+			border: none;
+			min-height: 100vh;
+		}
+		.pict-flow-fullscreen .pict-flow-svg {
+			min-height: calc(100vh - 50px);
 		}
 	`,
 
@@ -396,7 +469,8 @@ class PictViewFlow extends libPictView
 				PanY: 0,
 				Zoom: 1,
 				SelectedNodeHash: null,
-				SelectedConnectionHash: null
+				SelectedConnectionHash: null,
+				SelectedTetherHash: null
 			}
 		};
 
@@ -415,6 +489,8 @@ class PictViewFlow extends libPictView
 		this._NodeView = null;
 		this._ToolbarView = null;
 		this._PropertiesPanelView = null;
+
+		this._IsFullscreen = false;
 
 		this.initialRenderComplete = false;
 	}
@@ -662,7 +738,7 @@ class PictViewFlow extends libPictView
 			Connections: Array.isArray(pFlowData.Connections) ? pFlowData.Connections : [],
 			OpenPanels: Array.isArray(pFlowData.OpenPanels) ? pFlowData.OpenPanels : [],
 			ViewState: Object.assign(
-				{ PanX: 0, PanY: 0, Zoom: 1, SelectedNodeHash: null, SelectedConnectionHash: null },
+				{ PanX: 0, PanY: 0, Zoom: 1, SelectedNodeHash: null, SelectedConnectionHash: null, SelectedTetherHash: null },
 				pFlowData.ViewState || {}
 			)
 		};
@@ -887,6 +963,7 @@ class PictViewFlow extends libPictView
 		let tmpPreviousSelection = this._FlowData.ViewState.SelectedNodeHash;
 		this._FlowData.ViewState.SelectedNodeHash = pNodeHash;
 		this._FlowData.ViewState.SelectedConnectionHash = null;
+		this._FlowData.ViewState.SelectedTetherHash = null;
 
 		this.renderFlow();
 
@@ -906,6 +983,7 @@ class PictViewFlow extends libPictView
 		let tmpPreviousSelection = this._FlowData.ViewState.SelectedConnectionHash;
 		this._FlowData.ViewState.SelectedConnectionHash = pConnectionHash;
 		this._FlowData.ViewState.SelectedNodeHash = null;
+		this._FlowData.ViewState.SelectedTetherHash = null;
 
 		this.renderFlow();
 
@@ -923,6 +1001,7 @@ class PictViewFlow extends libPictView
 	{
 		this._FlowData.ViewState.SelectedNodeHash = null;
 		this._FlowData.ViewState.SelectedConnectionHash = null;
+		this._FlowData.ViewState.SelectedTetherHash = null;
 		this.renderFlow();
 	}
 
@@ -1037,6 +1116,50 @@ class PictViewFlow extends libPictView
 	}
 
 	/**
+	 * Toggle fullscreen mode on the flow editor container.
+	 * Uses a CSS fixed-position overlay instead of the Fullscreen API.
+	 * @returns {boolean} The new fullscreen state
+	 */
+	toggleFullscreen()
+	{
+		let tmpViewIdentifier = this.options.ViewIdentifier;
+		let tmpContainerElements = this.pict.ContentAssignment.getElement(`#Flow-Wrapper-${tmpViewIdentifier}`);
+		if (tmpContainerElements.length < 1) return this._IsFullscreen;
+
+		let tmpContainer = tmpContainerElements[0];
+
+		this._IsFullscreen = !this._IsFullscreen;
+
+		if (this._IsFullscreen)
+		{
+			tmpContainer.classList.add('pict-flow-fullscreen');
+		}
+		else
+		{
+			tmpContainer.classList.remove('pict-flow-fullscreen');
+		}
+
+		return this._IsFullscreen;
+	}
+
+	/**
+	 * Exit fullscreen mode if currently active.
+	 */
+	exitFullscreen()
+	{
+		if (!this._IsFullscreen) return;
+
+		let tmpViewIdentifier = this.options.ViewIdentifier;
+		let tmpContainerElements = this.pict.ContentAssignment.getElement(`#Flow-Wrapper-${tmpViewIdentifier}`);
+		if (tmpContainerElements.length > 0)
+		{
+			tmpContainerElements[0].classList.remove('pict-flow-fullscreen');
+		}
+
+		this._IsFullscreen = false;
+	}
+
+	/**
 	 * Get a node by hash
 	 * @param {string} pNodeHash
 	 * @returns {Object|null}
@@ -1054,6 +1177,248 @@ class PictViewFlow extends libPictView
 	getConnection(pConnectionHash)
 	{
 		return this._FlowData.Connections.find((pConn) => pConn.Hash === pConnectionHash) || null;
+	}
+
+	/**
+	 * Select a tether by its panel hash.
+	 * @param {string|null} pPanelHash - Hash of the panel whose tether to select, or null to deselect
+	 */
+	selectTether(pPanelHash)
+	{
+		let tmpPreviousSelection = this._FlowData.ViewState.SelectedTetherHash;
+		this._FlowData.ViewState.SelectedTetherHash = pPanelHash;
+		this._FlowData.ViewState.SelectedNodeHash = null;
+		this._FlowData.ViewState.SelectedConnectionHash = null;
+
+		this.renderFlow();
+
+		if (this._EventHandlerProvider && pPanelHash !== tmpPreviousSelection)
+		{
+			let tmpPanel = pPanelHash ? this._FlowData.OpenPanels.find((pPanel) => pPanel.Hash === pPanelHash) : null;
+			this._EventHandlerProvider.fireEvent('onTetherSelected', tmpPanel);
+		}
+	}
+
+	/**
+	 * Update a connection handle position during drag (for real-time feedback).
+	 * @param {string} pConnectionHash
+	 * @param {string} pHandleType - 'bezier-midpoint', 'ortho-corner1', 'ortho-corner2', 'ortho-midpoint'
+	 * @param {number} pX
+	 * @param {number} pY
+	 */
+	updateConnectionHandle(pConnectionHash, pHandleType, pX, pY)
+	{
+		let tmpConnection = this.getConnection(pConnectionHash);
+		if (!tmpConnection) return;
+
+		if (!tmpConnection.Data) tmpConnection.Data = {};
+		tmpConnection.Data.HandleCustomized = true;
+
+		switch (pHandleType)
+		{
+			case 'bezier-midpoint':
+				tmpConnection.Data.BezierHandleX = pX;
+				tmpConnection.Data.BezierHandleY = pY;
+				break;
+
+			case 'ortho-corner1':
+				tmpConnection.Data.OrthoCorner1X = pX;
+				tmpConnection.Data.OrthoCorner1Y = pY;
+				break;
+
+			case 'ortho-corner2':
+				tmpConnection.Data.OrthoCorner2X = pX;
+				tmpConnection.Data.OrthoCorner2Y = pY;
+				break;
+
+			case 'ortho-midpoint':
+			{
+				// Midpoint drag shifts the corridor offset
+				let tmpSourcePos = this.getPortPosition(tmpConnection.SourceNodeHash, tmpConnection.SourcePortHash);
+				let tmpTargetPos = this.getPortPosition(tmpConnection.TargetNodeHash, tmpConnection.TargetPortHash);
+				if (tmpSourcePos && tmpTargetPos)
+				{
+					let tmpGeom = this._ConnectionRenderer._computeDirectionalGeometry(tmpSourcePos, tmpTargetPos);
+					let tmpStartDir = tmpGeom.startDir;
+
+					// Compute offset along the corridor axis
+					if (Math.abs(tmpStartDir.dx) > Math.abs(tmpStartDir.dy))
+					{
+						// Horizontal departure — corridor is vertical, shift is along X
+						let tmpAutoMidX = (tmpGeom.departX + tmpGeom.approachX) / 2;
+						tmpConnection.Data.OrthoMidOffset = pX - tmpAutoMidX;
+					}
+					else
+					{
+						// Vertical departure — corridor is horizontal, shift is along Y
+						let tmpAutoMidY = (tmpGeom.departY + tmpGeom.approachY) / 2;
+						tmpConnection.Data.OrthoMidOffset = pY - tmpAutoMidY;
+					}
+				}
+				break;
+			}
+		}
+
+		this._renderSingleConnection(pConnectionHash);
+	}
+
+	/**
+	 * Update a tether handle position during drag (for real-time feedback).
+	 * @param {string} pPanelHash
+	 * @param {string} pHandleType - 'bezier-midpoint', 'ortho-corner1', 'ortho-corner2', 'ortho-midpoint'
+	 * @param {number} pX
+	 * @param {number} pY
+	 */
+	updateTetherHandle(pPanelHash, pHandleType, pX, pY)
+	{
+		let tmpPanel = this._FlowData.OpenPanels.find((pPanel) => pPanel.Hash === pPanelHash);
+		if (!tmpPanel) return;
+
+		tmpPanel.TetherHandleCustomized = true;
+
+		switch (pHandleType)
+		{
+			case 'bezier-midpoint':
+				tmpPanel.TetherBezierHandleX = pX;
+				tmpPanel.TetherBezierHandleY = pY;
+				break;
+
+			case 'ortho-corner1':
+				tmpPanel.TetherOrthoCorner1X = pX;
+				tmpPanel.TetherOrthoCorner1Y = pY;
+				break;
+
+			case 'ortho-corner2':
+				tmpPanel.TetherOrthoCorner2X = pX;
+				tmpPanel.TetherOrthoCorner2Y = pY;
+				break;
+
+			case 'ortho-midpoint':
+				// For tethers, store offset directly
+				tmpPanel.TetherOrthoMidOffset = (tmpPanel.TetherOrthoMidOffset || 0);
+				// We'll compute the offset relative to auto midpoint in the tether renderer
+				// For now, store the desired position
+				tmpPanel._TetherMidDragX = pX;
+				tmpPanel._TetherMidDragY = pY;
+				break;
+		}
+
+		this._renderSingleTether(pPanelHash);
+	}
+
+	/**
+	 * Re-render a single connection (remove and re-add) for smooth drag performance.
+	 * @param {string} pConnectionHash
+	 */
+	_renderSingleConnection(pConnectionHash)
+	{
+		if (!this._ConnectionsLayer) return;
+
+		// Remove existing elements for this connection
+		let tmpExisting = this._ConnectionsLayer.querySelectorAll(`[data-connection-hash="${pConnectionHash}"]`);
+		for (let i = 0; i < tmpExisting.length; i++)
+		{
+			tmpExisting[i].remove();
+		}
+
+		let tmpConnection = this.getConnection(pConnectionHash);
+		if (!tmpConnection) return;
+
+		let tmpIsSelected = (this._FlowData.ViewState.SelectedConnectionHash === pConnectionHash);
+		this._ConnectionRenderer.renderConnection(tmpConnection, this._ConnectionsLayer, tmpIsSelected);
+	}
+
+	/**
+	 * Re-render a single tether (remove and re-add) for smooth drag performance.
+	 * @param {string} pPanelHash
+	 */
+	_renderSingleTether(pPanelHash)
+	{
+		if (!this._TethersLayer || !this._PropertiesPanelView) return;
+
+		// Remove existing tether elements for this panel
+		let tmpExisting = this._TethersLayer.querySelectorAll(`[data-panel-hash="${pPanelHash}"]`);
+		for (let i = 0; i < tmpExisting.length; i++)
+		{
+			tmpExisting[i].remove();
+		}
+
+		let tmpPanel = this._FlowData.OpenPanels.find((pPanel) => pPanel.Hash === pPanelHash);
+		if (!tmpPanel) return;
+
+		let tmpIsSelected = (this._FlowData.ViewState.SelectedTetherHash === pPanelHash);
+		this._PropertiesPanelView._renderTether(tmpPanel, this._TethersLayer, tmpIsSelected);
+	}
+
+	/**
+	 * Reset handle positions for all connections/tethers involving a node.
+	 * Called when a node moves. Preserves LineMode but resets handle coordinates to auto.
+	 * @param {string} pNodeHash
+	 */
+	_resetHandlesForNode(pNodeHash)
+	{
+		// Reset connection handles
+		for (let i = 0; i < this._FlowData.Connections.length; i++)
+		{
+			let tmpConn = this._FlowData.Connections[i];
+			if (tmpConn.SourceNodeHash === pNodeHash || tmpConn.TargetNodeHash === pNodeHash)
+			{
+				if (tmpConn.Data && tmpConn.Data.HandleCustomized)
+				{
+					tmpConn.Data.HandleCustomized = false;
+					tmpConn.Data.BezierHandleX = null;
+					tmpConn.Data.BezierHandleY = null;
+					tmpConn.Data.OrthoCorner1X = null;
+					tmpConn.Data.OrthoCorner1Y = null;
+					tmpConn.Data.OrthoCorner2X = null;
+					tmpConn.Data.OrthoCorner2Y = null;
+					tmpConn.Data.OrthoMidOffset = 0;
+				}
+			}
+		}
+
+		// Reset tether handles for panels attached to this node
+		for (let i = 0; i < this._FlowData.OpenPanels.length; i++)
+		{
+			let tmpPanel = this._FlowData.OpenPanels[i];
+			if (tmpPanel.NodeHash === pNodeHash)
+			{
+				if (tmpPanel.TetherHandleCustomized)
+				{
+					tmpPanel.TetherHandleCustomized = false;
+					tmpPanel.TetherBezierHandleX = null;
+					tmpPanel.TetherBezierHandleY = null;
+					tmpPanel.TetherOrthoCorner1X = null;
+					tmpPanel.TetherOrthoCorner1Y = null;
+					tmpPanel.TetherOrthoCorner2X = null;
+					tmpPanel.TetherOrthoCorner2Y = null;
+					tmpPanel.TetherOrthoMidOffset = 0;
+				}
+			}
+		}
+	}
+
+	/**
+	 * Reset tether handle positions for a specific panel.
+	 * Called when a panel is dragged.
+	 * @param {string} pPanelHash
+	 */
+	_resetHandlesForPanel(pPanelHash)
+	{
+		let tmpPanel = this._FlowData.OpenPanels.find((pPanel) => pPanel.Hash === pPanelHash);
+		if (!tmpPanel) return;
+
+		if (tmpPanel.TetherHandleCustomized)
+		{
+			tmpPanel.TetherHandleCustomized = false;
+			tmpPanel.TetherBezierHandleX = null;
+			tmpPanel.TetherBezierHandleY = null;
+			tmpPanel.TetherOrthoCorner1X = null;
+			tmpPanel.TetherOrthoCorner1Y = null;
+			tmpPanel.TetherOrthoCorner2X = null;
+			tmpPanel.TetherOrthoCorner2Y = null;
+			tmpPanel.TetherOrthoMidOffset = 0;
+		}
 	}
 
 	/**
@@ -1193,7 +1558,7 @@ class PictViewFlow extends libPictView
 		// Render properties panels and tethers
 		if (this._PropertiesPanelView && this._PanelsLayer && this._TethersLayer)
 		{
-			this._PropertiesPanelView.renderPanels(this._FlowData.OpenPanels, this._PanelsLayer, this._TethersLayer);
+			this._PropertiesPanelView.renderPanels(this._FlowData.OpenPanels, this._PanelsLayer, this._TethersLayer, this._FlowData.ViewState.SelectedTetherHash);
 		}
 
 		// Update viewport transform
@@ -1219,6 +1584,9 @@ class PictViewFlow extends libPictView
 
 		tmpNode.X = pX;
 		tmpNode.Y = pY;
+
+		// Reset customized handle positions for connections/tethers involving this node
+		this._resetHandlesForNode(pNodeHash);
 
 		// Update the node's SVG group transform for smooth dragging
 		let tmpNodeGroup = this._NodesLayer.querySelector(`[data-node-hash="${pNodeHash}"]`);
@@ -1281,8 +1649,9 @@ class PictViewFlow extends libPictView
 			{
 				tmpExisting[j].remove();
 			}
-			// Re-render this tether
-			this._PropertiesPanelView._renderTether(tmpAffectedPanels[i], this._TethersLayer);
+			// Re-render this tether with selection state
+			let tmpIsSelected = (this._FlowData.ViewState.SelectedTetherHash === tmpAffectedPanels[i].Hash);
+			this._PropertiesPanelView._renderTether(tmpAffectedPanels[i], this._TethersLayer, tmpIsSelected);
 		}
 	}
 
@@ -1420,6 +1789,9 @@ class PictViewFlow extends libPictView
 
 		tmpPanel.X = pX;
 		tmpPanel.Y = pY;
+
+		// Reset tether handle positions when panel moves
+		this._resetHandlesForPanel(pPanelHash);
 
 		// Update the foreignObject position directly for smooth dragging
 		if (this._PanelsLayer)
