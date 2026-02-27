@@ -174,62 +174,24 @@ class PictViewFlowPropertiesPanel extends libPictView
 
 	/**
 	 * Create a foreignObject containing the panel chrome and content.
+	 * Delegates to the PanelChrome provider for template-based chrome creation,
+	 * then renders panel content into the body container.
 	 *
 	 * @param {Object} pPanelData - Panel data from OpenPanels
 	 * @param {SVGGElement} pPanelsLayer
 	 */
 	_createPanelForeignObject(pPanelData, pPanelsLayer)
 	{
-		let tmpFO = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
-		tmpFO.setAttribute('class', 'pict-flow-panel-foreign-object');
-		tmpFO.setAttribute('data-panel-hash', pPanelData.Hash);
-		tmpFO.setAttribute('data-node-hash', pPanelData.NodeHash);
-		tmpFO.setAttribute('x', String(pPanelData.X));
-		tmpFO.setAttribute('y', String(pPanelData.Y));
-		tmpFO.setAttribute('width', String(pPanelData.Width));
-		tmpFO.setAttribute('height', String(pPanelData.Height));
+		let tmpPanelChromeProvider = this._FlowView._PanelChromeProvider;
+		if (!tmpPanelChromeProvider) return;
 
-		// Build HTML chrome
-		let tmpPanelDiv = document.createElement('div');
-		tmpPanelDiv.setAttribute('class', 'pict-flow-panel');
-		tmpPanelDiv.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+		let tmpBody = tmpPanelChromeProvider.createPanelForeignObject(pPanelData, pPanelsLayer);
 
-		// Title bar
-		let tmpTitleBar = document.createElement('div');
-		tmpTitleBar.setAttribute('class', 'pict-flow-panel-titlebar');
-		tmpTitleBar.setAttribute('data-element-type', 'panel-titlebar');
-		tmpTitleBar.setAttribute('data-panel-hash', pPanelData.Hash);
-
-		let tmpTitleText = document.createElement('span');
-		tmpTitleText.setAttribute('class', 'pict-flow-panel-title-text');
-		tmpTitleText.textContent = pPanelData.Title || 'Properties';
-		tmpTitleBar.appendChild(tmpTitleText);
-
-		let tmpCloseBtn = document.createElement('span');
-		tmpCloseBtn.setAttribute('class', 'pict-flow-panel-close-btn');
-		tmpCloseBtn.setAttribute('data-element-type', 'panel-close');
-		tmpCloseBtn.setAttribute('data-panel-hash', pPanelData.Hash);
-		tmpCloseBtn.textContent = '\u2715';
-		tmpTitleBar.appendChild(tmpCloseBtn);
-
-		tmpPanelDiv.appendChild(tmpTitleBar);
-
-		// Body (content container)
-		let tmpBody = document.createElement('div');
-		tmpBody.setAttribute('class', 'pict-flow-panel-body');
-		tmpBody.setAttribute('data-panel-hash', pPanelData.Hash);
-
-		// Stop event propagation so SVG interactions don't fire
-		tmpBody.addEventListener('pointerdown', (pEvent) => { pEvent.stopPropagation(); });
-		tmpBody.addEventListener('wheel', (pEvent) => { pEvent.stopPropagation(); });
-
-		tmpPanelDiv.appendChild(tmpBody);
-
-		tmpFO.appendChild(tmpPanelDiv);
-		pPanelsLayer.appendChild(tmpFO);
-
-		// Now render the panel content via the panel type implementation
-		this._renderPanelContent(pPanelData, tmpBody);
+		// Render the panel content via the panel type implementation
+		if (tmpBody)
+		{
+			this._renderPanelContent(pPanelData, tmpBody);
+		}
 	}
 
 	/**

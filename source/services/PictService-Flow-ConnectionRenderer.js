@@ -12,16 +12,6 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 	}
 
 	/**
-	 * Create an SVG namespace element
-	 * @param {string} pTagName
-	 * @returns {SVGElement}
-	 */
-	_createSVGElement(pTagName)
-	{
-		return document.createElementNS('http://www.w3.org/2000/svg', pTagName);
-	}
-
-	/**
 	 * Render a connection as an SVG path with hit area and optional handles.
 	 * @param {Object} pConnection - The connection data
 	 * @param {SVGGElement} pConnectionsLayer - The SVG group to append to
@@ -63,7 +53,7 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 		let tmpViewIdentifier = this._FlowView.options.ViewIdentifier;
 
 		// Hit area (wider invisible path for easier selection)
-		let tmpHitArea = this._createSVGElement('path');
+		let tmpHitArea = this._FlowView._SVGHelperProvider.createSVGElement('path');
 		tmpHitArea.setAttribute('class', 'pict-flow-connection-hitarea');
 		tmpHitArea.setAttribute('d', tmpPath);
 		tmpHitArea.setAttribute('data-connection-hash', pConnection.Hash);
@@ -71,7 +61,7 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 		pConnectionsLayer.appendChild(tmpHitArea);
 
 		// Visible connection path
-		let tmpPathElement = this._createSVGElement('path');
+		let tmpPathElement = this._FlowView._SVGHelperProvider.createSVGElement('path');
 		tmpPathElement.setAttribute('class', `pict-flow-connection ${pIsSelected ? 'selected' : ''}`);
 		tmpPathElement.setAttribute('d', tmpPath);
 		tmpPathElement.setAttribute('data-connection-hash', pConnection.Hash);
@@ -97,24 +87,6 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 	}
 
 	/**
-	 * Get the outward unit direction vector for a given port side.
-	 *
-	 * @param {string} pSide - 'left', 'right', 'top', or 'bottom'
-	 * @returns {{dx: number, dy: number}}
-	 */
-	_sideDirection(pSide)
-	{
-		switch (pSide)
-		{
-			case 'left':   return { dx: -1, dy:  0 };
-			case 'right':  return { dx:  1, dy:  0 };
-			case 'top':    return { dx:  0, dy: -1 };
-			case 'bottom': return { dx:  0, dy:  1 };
-			default:       return { dx:  1, dy:  0 };
-		}
-	}
-
-	/**
 	 * Compute the departure and approach points plus control points
 	 * for a direction-aware bezier between two ports.
 	 *
@@ -127,8 +99,8 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 	 */
 	_computeDirectionalGeometry(pStart, pEnd)
 	{
-		let tmpStartDir = this._sideDirection(pStart.side || 'right');
-		let tmpEndDir   = this._sideDirection(pEnd.side   || 'left');
+		let tmpStartDir = this._FlowView._GeometryProvider.sideDirection(pStart.side || 'right');
+		let tmpEndDir   = this._FlowView._GeometryProvider.sideDirection(pEnd.side   || 'left');
 
 		let tmpStraightLen = 20;
 
@@ -217,7 +189,14 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 	{
 		let tmpGeo = this._computeDirectionalGeometry(pStart, pEnd);
 
-		return `M ${pStart.x} ${pStart.y} L ${tmpGeo.departX} ${tmpGeo.departY} C ${tmpGeo.cp1X} ${tmpGeo.cp1Y}, ${tmpGeo.cp2X} ${tmpGeo.cp2Y}, ${tmpGeo.approachX} ${tmpGeo.approachY} L ${pEnd.x} ${pEnd.y}`;
+		return this._FlowView._PathGenerator.buildBezierPathString(
+			{ x: pStart.x, y: pStart.y },
+			{ x: tmpGeo.departX, y: tmpGeo.departY },
+			{ x: tmpGeo.cp1X, y: tmpGeo.cp1Y },
+			{ x: tmpGeo.cp2X, y: tmpGeo.cp2Y },
+			{ x: tmpGeo.approachX, y: tmpGeo.approachY },
+			{ x: pEnd.x, y: pEnd.y }
+		);
 	}
 
 	/**
@@ -243,8 +222,8 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 		let tmpGeo = this._computeDirectionalGeometry(pStart, pEnd);
 
 		// Split into two cubic bezier segments through the handle point.
-		// First segment: depart → handle
-		// Second segment: handle → approach
+		// First segment: depart -> handle
+		// Second segment: handle -> approach
 		// Control points are computed to ensure smooth tangent at the handle.
 		let tmpCP1aX = tmpGeo.departX + tmpGeo.startDir.dx * ((Math.abs(pHandleX - tmpGeo.departX) + Math.abs(pHandleY - tmpGeo.departY)) * 0.4);
 		let tmpCP1aY = tmpGeo.departY + tmpGeo.startDir.dy * ((Math.abs(pHandleX - tmpGeo.departX) + Math.abs(pHandleY - tmpGeo.departY)) * 0.4);
@@ -269,7 +248,17 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 		let tmpCP2bX = tmpGeo.approachX + tmpGeo.endDir.dx * ((Math.abs(pHandleX - tmpGeo.approachX) + Math.abs(pHandleY - tmpGeo.approachY)) * 0.4);
 		let tmpCP2bY = tmpGeo.approachY + tmpGeo.endDir.dy * ((Math.abs(pHandleX - tmpGeo.approachX) + Math.abs(pHandleY - tmpGeo.approachY)) * 0.4);
 
-		return `M ${pStart.x} ${pStart.y} L ${tmpGeo.departX} ${tmpGeo.departY} C ${tmpCP1aX} ${tmpCP1aY}, ${tmpCP1bX} ${tmpCP1bY}, ${pHandleX} ${pHandleY} C ${tmpCP2aX} ${tmpCP2aY}, ${tmpCP2bX} ${tmpCP2bY}, ${tmpGeo.approachX} ${tmpGeo.approachY} L ${pEnd.x} ${pEnd.y}`;
+		return this._FlowView._PathGenerator.buildSplitBezierPathString(
+			{ x: pStart.x, y: pStart.y },
+			{ x: tmpGeo.departX, y: tmpGeo.departY },
+			{ x: tmpCP1aX, y: tmpCP1aY },
+			{ x: tmpCP1bX, y: tmpCP1bY },
+			{ x: pHandleX, y: pHandleY },
+			{ x: tmpCP2aX, y: tmpCP2aY },
+			{ x: tmpCP2bX, y: tmpCP2bY },
+			{ x: tmpGeo.approachX, y: tmpGeo.approachY },
+			{ x: pEnd.x, y: pEnd.y }
+		);
 	}
 
 	/**
@@ -284,12 +273,13 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 	{
 		let tmpGeo = this._computeDirectionalGeometry(pStart, pEnd);
 
-		// Cubic bezier at t=0.5:
-		// B(0.5) = 0.125*P0 + 0.375*P1 + 0.375*P2 + 0.125*P3
-		let tmpX = 0.125 * tmpGeo.departX + 0.375 * tmpGeo.cp1X + 0.375 * tmpGeo.cp2X + 0.125 * tmpGeo.approachX;
-		let tmpY = 0.125 * tmpGeo.departY + 0.375 * tmpGeo.cp1Y + 0.375 * tmpGeo.cp2Y + 0.125 * tmpGeo.approachY;
-
-		return { x: tmpX, y: tmpY };
+		return this._FlowView._PathGenerator.evaluateCubicBezier(
+			{ x: tmpGeo.departX, y: tmpGeo.departY },
+			{ x: tmpGeo.cp1X, y: tmpGeo.cp1Y },
+			{ x: tmpGeo.cp2X, y: tmpGeo.cp2Y },
+			{ x: tmpGeo.approachX, y: tmpGeo.approachY },
+			0.5
+		);
 	}
 
 	/**
@@ -305,8 +295,8 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 	 */
 	_generateOrthogonalPath(pStart, pEnd, pCorners, pMidOffset)
 	{
-		let tmpStartDir = this._sideDirection(pStart.side || 'right');
-		let tmpEndDir   = this._sideDirection(pEnd.side   || 'left');
+		let tmpStartDir = this._FlowView._GeometryProvider.sideDirection(pStart.side || 'right');
+		let tmpEndDir   = this._FlowView._GeometryProvider.sideDirection(pEnd.side   || 'left');
 
 		let tmpStraightLen = 20;
 
@@ -325,68 +315,24 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 		}
 		else
 		{
-			let tmpAutoCorners = this.getAutoOrthogonalCorners(
-				{ x: tmpDepartX, y: tmpDepartY, startDir: tmpStartDir },
-				{ x: tmpApproachX, y: tmpApproachY, endDir: tmpEndDir },
+			let tmpAutoCorners = this._FlowView._PathGenerator.computeAutoOrthogonalCorners(
+				tmpDepartX, tmpDepartY,
+				tmpApproachX, tmpApproachY,
+				tmpStartDir, tmpEndDir,
 				pMidOffset || 0
 			);
 			tmpCorner1 = tmpAutoCorners.corner1;
 			tmpCorner2 = tmpAutoCorners.corner2;
 		}
 
-		return `M ${pStart.x} ${pStart.y} L ${tmpDepartX} ${tmpDepartY} L ${tmpCorner1.x} ${tmpCorner1.y} L ${tmpCorner2.x} ${tmpCorner2.y} L ${tmpApproachX} ${tmpApproachY} L ${pEnd.x} ${pEnd.y}`;
-	}
-
-	/**
-	 * Get the auto-calculated corners for an orthogonal path.
-	 *
-	 * The corridor is placed at the midpoint between departure and approach,
-	 * shifted by pMidOffset.
-	 *
-	 * @param {{x: number, y: number, startDir: {dx: number, dy: number}}} pDepart
-	 * @param {{x: number, y: number, endDir: {dx: number, dy: number}}} pApproach
-	 * @param {number} pMidOffset
-	 * @returns {{corner1: {x, y}, corner2: {x, y}, midpoint: {x, y}}}
-	 */
-	getAutoOrthogonalCorners(pDepart, pApproach, pMidOffset)
-	{
-		let tmpStartHorizontal = (pDepart.startDir.dx !== 0);
-		let tmpEndHorizontal = (pApproach.endDir.dx !== 0);
-
-		let tmpCorner1, tmpCorner2, tmpMidpoint;
-
-		if (tmpStartHorizontal && tmpEndHorizontal)
-		{
-			// Both horizontal: corridor is a vertical line at the midpoint X
-			let tmpMidX = (pDepart.x + pApproach.x) / 2 + (pMidOffset || 0);
-			tmpCorner1 = { x: tmpMidX, y: pDepart.y };
-			tmpCorner2 = { x: tmpMidX, y: pApproach.y };
-			tmpMidpoint = { x: tmpMidX, y: (pDepart.y + pApproach.y) / 2 };
-		}
-		else if (!tmpStartHorizontal && !tmpEndHorizontal)
-		{
-			// Both vertical: corridor is a horizontal line at the midpoint Y
-			let tmpMidY = (pDepart.y + pApproach.y) / 2 + (pMidOffset || 0);
-			tmpCorner1 = { x: pDepart.x, y: tmpMidY };
-			tmpCorner2 = { x: pApproach.x, y: tmpMidY };
-			tmpMidpoint = { x: (pDepart.x + pApproach.x) / 2, y: tmpMidY };
-		}
-		else if (tmpStartHorizontal && !tmpEndHorizontal)
-		{
-			// Start horizontal, end vertical: single L-bend
-			tmpCorner1 = { x: pApproach.x + (pMidOffset || 0), y: pDepart.y };
-			tmpCorner2 = { x: pApproach.x + (pMidOffset || 0), y: pApproach.y };
-			tmpMidpoint = { x: pApproach.x + (pMidOffset || 0), y: (pDepart.y + pApproach.y) / 2 };
-		}
-		else
-		{
-			// Start vertical, end horizontal: single L-bend
-			tmpCorner1 = { x: pDepart.x, y: pApproach.y + (pMidOffset || 0) };
-			tmpCorner2 = { x: pApproach.x, y: pApproach.y + (pMidOffset || 0) };
-			tmpMidpoint = { x: (pDepart.x + pApproach.x) / 2, y: pApproach.y + (pMidOffset || 0) };
-		}
-
-		return { corner1: tmpCorner1, corner2: tmpCorner2, midpoint: tmpMidpoint };
+		return this._FlowView._PathGenerator.buildOrthogonalPathString(
+			{ x: pStart.x, y: pStart.y },
+			{ x: tmpDepartX, y: tmpDepartY },
+			tmpCorner1,
+			tmpCorner2,
+			{ x: tmpApproachX, y: tmpApproachY },
+			{ x: pEnd.x, y: pEnd.y }
+		);
 	}
 
 	/**
@@ -399,8 +345,8 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 	 */
 	getOrthogonalGeometry(pStart, pEnd, pData)
 	{
-		let tmpStartDir = this._sideDirection(pStart.side || 'right');
-		let tmpEndDir   = this._sideDirection(pEnd.side   || 'left');
+		let tmpStartDir = this._FlowView._GeometryProvider.sideDirection(pStart.side || 'right');
+		let tmpEndDir   = this._FlowView._GeometryProvider.sideDirection(pEnd.side   || 'left');
 
 		let tmpStraightLen = 20;
 
@@ -421,9 +367,10 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 			return { corner1: tmpCorner1, corner2: tmpCorner2, midpoint: tmpMidpoint };
 		}
 
-		return this.getAutoOrthogonalCorners(
-			{ x: tmpDepartX, y: tmpDepartY, startDir: tmpStartDir },
-			{ x: tmpApproachX, y: tmpApproachY, endDir: tmpEndDir },
+		return this._FlowView._PathGenerator.computeAutoOrthogonalCorners(
+			tmpDepartX, tmpDepartY,
+			tmpApproachX, tmpApproachY,
+			tmpStartDir, tmpEndDir,
 			(pData && pData.OrthoMidOffset) || 0
 		);
 	}
@@ -487,7 +434,7 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 	 */
 	_createHandle(pLayer, pConnectionHash, pHandleType, pX, pY, pClassName)
 	{
-		let tmpCircle = this._createSVGElement('circle');
+		let tmpCircle = this._FlowView._SVGHelperProvider.createSVGElement('circle');
 		tmpCircle.setAttribute('class', pClassName);
 		tmpCircle.setAttribute('cx', String(pX));
 		tmpCircle.setAttribute('cy', String(pY));
@@ -506,7 +453,7 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 	 */
 	_generateBezierPath(pStart, pEnd)
 	{
-		// During drag operations we may not have side info; default to right→left
+		// During drag operations we may not have side info; default to right->left
 		let tmpStart = { x: pStart.x, y: pStart.y, side: pStart.side || 'right' };
 		let tmpEnd   = { x: pEnd.x,   y: pEnd.y,   side: pEnd.side   || 'left' };
 		return this._generateDirectionalPath(tmpStart, tmpEnd);
@@ -529,7 +476,7 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 			{ x: pEndX,   y: pEndY,   side: 'left' }
 		);
 
-		let tmpPathElement = this._createSVGElement('path');
+		let tmpPathElement = this._FlowView._SVGHelperProvider.createSVGElement('path');
 		tmpPathElement.setAttribute('class', 'pict-flow-drag-connection');
 		tmpPathElement.setAttribute('d', tmpPath);
 		pLayer.appendChild(tmpPathElement);

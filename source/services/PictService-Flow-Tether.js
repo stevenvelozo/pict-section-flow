@@ -6,6 +6,11 @@ const libFableServiceProviderBase = require('fable-serviceproviderbase');
  * Centralizes all tether geometry, path generation, handle state management,
  * and SVG rendering for the lines that connect properties panels to their nodes.
  *
+ * Delegates to shared providers for:
+ *   - SVG element creation (_FlowView._SVGHelperProvider)
+ *   - Geometry calculations (_FlowView._GeometryProvider)
+ *   - Path string building (_FlowView._PathGenerator)
+ *
  * Responsibilities:
  *   - Smart 4-quadrant anchor detection (which edge of the node/panel to connect)
  *   - Bezier and orthogonal path generation
@@ -24,18 +29,6 @@ class PictServiceFlowTether extends libFableServiceProviderBase
 		this.serviceType = 'PictServiceFlowTether';
 
 		this._FlowView = (pOptions && pOptions.FlowView) ? pOptions.FlowView : null;
-	}
-
-	// ---- SVG Helpers ----
-
-	/**
-	 * Create an SVG namespace element.
-	 * @param {string} pTagName
-	 * @returns {SVGElement}
-	 */
-	_createSVGElement(pTagName)
-	{
-		return document.createElementNS('http://www.w3.org/2000/svg', pTagName);
 	}
 
 	// ---- Anchor Calculation ----
@@ -89,55 +82,13 @@ class PictServiceFlowTether extends libFableServiceProviderBase
 			}
 		}
 
-		let tmpNodeAnchor = this._getEdgeCenter(pNodeData, tmpNodeSide);
-		let tmpPanelAnchor = this._getEdgeCenter(pPanelData, tmpPanelSide);
+		let tmpNodeAnchor = this._FlowView._GeometryProvider.getEdgeCenter(pNodeData, tmpNodeSide);
+		let tmpPanelAnchor = this._FlowView._GeometryProvider.getEdgeCenter(pPanelData, tmpPanelSide);
 
 		return {
 			nodeAnchor: Object.assign(tmpNodeAnchor, { side: tmpNodeSide }),
 			panelAnchor: Object.assign(tmpPanelAnchor, { side: tmpPanelSide })
 		};
-	}
-
-	/**
-	 * Get the center point of a rectangle's edge.
-	 * Works for both node and panel data (anything with X, Y, Width, Height).
-	 *
-	 * @param {Object} pRectData - Object with X, Y, Width, Height
-	 * @param {string} pSide - 'left', 'right', 'top', 'bottom'
-	 * @returns {{x: number, y: number}}
-	 */
-	_getEdgeCenter(pRectData, pSide)
-	{
-		switch (pSide)
-		{
-			case 'left':
-				return { x: pRectData.X, y: pRectData.Y + pRectData.Height / 2 };
-			case 'right':
-				return { x: pRectData.X + pRectData.Width, y: pRectData.Y + pRectData.Height / 2 };
-			case 'top':
-				return { x: pRectData.X + pRectData.Width / 2, y: pRectData.Y };
-			case 'bottom':
-				return { x: pRectData.X + pRectData.Width / 2, y: pRectData.Y + pRectData.Height };
-			default:
-				return { x: pRectData.X + pRectData.Width, y: pRectData.Y + pRectData.Height / 2 };
-		}
-	}
-
-	/**
-	 * Get the outward direction vector for a given side.
-	 * @param {string} pSide
-	 * @returns {{dx: number, dy: number}}
-	 */
-	_sideDirection(pSide)
-	{
-		switch (pSide)
-		{
-			case 'left':  return { dx: -1, dy: 0 };
-			case 'right': return { dx: 1, dy: 0 };
-			case 'top':   return { dx: 0, dy: -1 };
-			case 'bottom':return { dx: 0, dy: 1 };
-			default:      return { dx: 1, dy: 0 };
-		}
 	}
 
 	// ---- Path Generation ----
@@ -153,8 +104,8 @@ class PictServiceFlowTether extends libFableServiceProviderBase
 	generateBezierPath(pFrom, pTo, pHandleX, pHandleY)
 	{
 		let tmpDepartDist = 20;
-		let tmpFromDir = this._sideDirection(pFrom.side);
-		let tmpToDir = this._sideDirection(pTo.side);
+		let tmpFromDir = this._FlowView._GeometryProvider.sideDirection(pFrom.side);
+		let tmpToDir = this._FlowView._GeometryProvider.sideDirection(pTo.side);
 
 		let tmpDepartX = pFrom.x + tmpFromDir.dx * tmpDepartDist;
 		let tmpDepartY = pFrom.y + tmpFromDir.dy * tmpDepartDist;
@@ -174,7 +125,14 @@ class PictServiceFlowTether extends libFableServiceProviderBase
 			let tmpCP2X = tmpApproachX + tmpToDir.dx * tmpCPDist;
 			let tmpCP2Y = tmpApproachY + tmpToDir.dy * tmpCPDist;
 
-			return `M ${pFrom.x} ${pFrom.y} L ${tmpDepartX} ${tmpDepartY} C ${tmpCP1X} ${tmpCP1Y}, ${tmpCP2X} ${tmpCP2Y}, ${tmpApproachX} ${tmpApproachY} L ${pTo.x} ${pTo.y}`;
+			return this._FlowView._PathGenerator.buildBezierPathString(
+				{ x: pFrom.x, y: pFrom.y },
+				{ x: tmpDepartX, y: tmpDepartY },
+				{ x: tmpCP1X, y: tmpCP1Y },
+				{ x: tmpCP2X, y: tmpCP2Y },
+				{ x: tmpApproachX, y: tmpApproachY },
+				{ x: pTo.x, y: pTo.y }
+			);
 		}
 
 		// User-set handle: split bezier into two segments through handle
@@ -199,7 +157,17 @@ class PictServiceFlowTether extends libFableServiceProviderBase
 		let tmpCP2bX = pHandleX + tmpTangentX * tmpTangentDist;
 		let tmpCP2bY = pHandleY + tmpTangentY * tmpTangentDist;
 
-		return `M ${pFrom.x} ${pFrom.y} L ${tmpDepartX} ${tmpDepartY} C ${tmpCP1aX} ${tmpCP1aY}, ${tmpCP1bX} ${tmpCP1bY}, ${pHandleX} ${pHandleY} C ${tmpCP2bX} ${tmpCP2bY}, ${tmpCP2aX} ${tmpCP2aY}, ${tmpApproachX} ${tmpApproachY} L ${pTo.x} ${pTo.y}`;
+		return this._FlowView._PathGenerator.buildSplitBezierPathString(
+			{ x: pFrom.x, y: pFrom.y },
+			{ x: tmpDepartX, y: tmpDepartY },
+			{ x: tmpCP1aX, y: tmpCP1aY },
+			{ x: tmpCP1bX, y: tmpCP1bY },
+			{ x: pHandleX, y: pHandleY },
+			{ x: tmpCP2bX, y: tmpCP2bY },
+			{ x: tmpCP2aX, y: tmpCP2aY },
+			{ x: tmpApproachX, y: tmpApproachY },
+			{ x: pTo.x, y: pTo.y }
+		);
 	}
 
 	/**
@@ -213,8 +181,8 @@ class PictServiceFlowTether extends libFableServiceProviderBase
 	generateOrthogonalPath(pFrom, pTo, pCorners, pMidOffset)
 	{
 		let tmpDepartDist = 20;
-		let tmpFromDir = this._sideDirection(pFrom.side);
-		let tmpToDir = this._sideDirection(pTo.side);
+		let tmpFromDir = this._FlowView._GeometryProvider.sideDirection(pFrom.side);
+		let tmpToDir = this._FlowView._GeometryProvider.sideDirection(pTo.side);
 
 		let tmpDepartX = pFrom.x + tmpFromDir.dx * tmpDepartDist;
 		let tmpDepartY = pFrom.y + tmpFromDir.dy * tmpDepartDist;
@@ -231,65 +199,19 @@ class PictServiceFlowTether extends libFableServiceProviderBase
 		else
 		{
 			// Auto-calculate corners based on direction
-			let tmpAutoCorners = this.getAutoOrthogonalCorners(tmpDepartX, tmpDepartY, tmpApproachX, tmpApproachY, tmpFromDir, tmpToDir, pMidOffset);
+			let tmpAutoCorners = this._FlowView._PathGenerator.computeAutoOrthogonalCorners(tmpDepartX, tmpDepartY, tmpApproachX, tmpApproachY, tmpFromDir, tmpToDir, pMidOffset);
 			tmpCorner1 = tmpAutoCorners.corner1;
 			tmpCorner2 = tmpAutoCorners.corner2;
 		}
 
-		return `M ${pFrom.x} ${pFrom.y} L ${tmpDepartX} ${tmpDepartY} L ${tmpCorner1.x} ${tmpCorner1.y} L ${tmpCorner2.x} ${tmpCorner2.y} L ${tmpApproachX} ${tmpApproachY} L ${pTo.x} ${pTo.y}`;
-	}
-
-	/**
-	 * Auto-calculate orthogonal corners based on departure/approach directions.
-	 * @param {number} pDepartX
-	 * @param {number} pDepartY
-	 * @param {number} pApproachX
-	 * @param {number} pApproachY
-	 * @param {Object} pFromDir - {dx, dy}
-	 * @param {Object} pToDir - {dx, dy}
-	 * @param {number} pMidOffset
-	 * @returns {{corner1: {x,y}, corner2: {x,y}}}
-	 */
-	getAutoOrthogonalCorners(pDepartX, pDepartY, pApproachX, pApproachY, pFromDir, pToDir, pMidOffset)
-	{
-		let tmpOffset = pMidOffset || 0;
-		let tmpFromHoriz = Math.abs(pFromDir.dx) > 0;
-		let tmpToHoriz = Math.abs(pToDir.dx) > 0;
-
-		if (tmpFromHoriz && tmpToHoriz)
-		{
-			// Both horizontal departure/approach: corridor is vertical
-			let tmpMidX = (pDepartX + pApproachX) / 2 + tmpOffset;
-			return {
-				corner1: { x: tmpMidX, y: pDepartY },
-				corner2: { x: tmpMidX, y: pApproachY }
-			};
-		}
-		else if (!tmpFromHoriz && !tmpToHoriz)
-		{
-			// Both vertical: corridor is horizontal
-			let tmpMidY = (pDepartY + pApproachY) / 2 + tmpOffset;
-			return {
-				corner1: { x: pDepartX, y: tmpMidY },
-				corner2: { x: pApproachX, y: tmpMidY }
-			};
-		}
-		else if (tmpFromHoriz && !tmpToHoriz)
-		{
-			// Horizontal→Vertical: single corner
-			return {
-				corner1: { x: pApproachX, y: pDepartY },
-				corner2: { x: pApproachX, y: pDepartY }
-			};
-		}
-		else
-		{
-			// Vertical→Horizontal: single corner
-			return {
-				corner1: { x: pDepartX, y: pApproachY },
-				corner2: { x: pDepartX, y: pApproachY }
-			};
-		}
+		return this._FlowView._PathGenerator.buildOrthogonalPathString(
+			{ x: pFrom.x, y: pFrom.y },
+			{ x: tmpDepartX, y: tmpDepartY },
+			{ x: tmpCorner1.x, y: tmpCorner1.y },
+			{ x: tmpCorner2.x, y: tmpCorner2.y },
+			{ x: tmpApproachX, y: tmpApproachY },
+			{ x: pTo.x, y: pTo.y }
+		);
 	}
 
 	// ---- Handle Position Computation ----
@@ -303,8 +225,8 @@ class PictServiceFlowTether extends libFableServiceProviderBase
 	getAutoMidpoint(pFrom, pTo)
 	{
 		let tmpDepartDist = 20;
-		let tmpFromDir = this._sideDirection(pFrom.side);
-		let tmpToDir = this._sideDirection(pTo.side);
+		let tmpFromDir = this._FlowView._GeometryProvider.sideDirection(pFrom.side);
+		let tmpToDir = this._FlowView._GeometryProvider.sideDirection(pTo.side);
 
 		let tmpDepartX = pFrom.x + tmpFromDir.dx * tmpDepartDist;
 		let tmpDepartY = pFrom.y + tmpFromDir.dy * tmpDepartDist;
@@ -316,18 +238,13 @@ class PictServiceFlowTether extends libFableServiceProviderBase
 		let tmpSpan = Math.max(tmpSpanX, tmpSpanY, 40);
 		let tmpCPDist = tmpSpan * 0.4;
 
-		let tmpP0x = tmpDepartX, tmpP0y = tmpDepartY;
-		let tmpP1x = tmpDepartX + tmpFromDir.dx * tmpCPDist;
-		let tmpP1y = tmpDepartY + tmpFromDir.dy * tmpCPDist;
-		let tmpP2x = tmpApproachX + tmpToDir.dx * tmpCPDist;
-		let tmpP2y = tmpApproachY + tmpToDir.dy * tmpCPDist;
-		let tmpP3x = tmpApproachX, tmpP3y = tmpApproachY;
+		let tmpP0 = { x: tmpDepartX, y: tmpDepartY };
+		let tmpP1 = { x: tmpDepartX + tmpFromDir.dx * tmpCPDist, y: tmpDepartY + tmpFromDir.dy * tmpCPDist };
+		let tmpP2 = { x: tmpApproachX + tmpToDir.dx * tmpCPDist, y: tmpApproachY + tmpToDir.dy * tmpCPDist };
+		let tmpP3 = { x: tmpApproachX, y: tmpApproachY };
 
 		// Evaluate cubic bezier at t=0.5
-		return {
-			x: 0.125 * tmpP0x + 0.375 * tmpP1x + 0.375 * tmpP2x + 0.125 * tmpP3x,
-			y: 0.125 * tmpP0y + 0.375 * tmpP1y + 0.375 * tmpP2y + 0.125 * tmpP3y
-		};
+		return this._FlowView._PathGenerator.evaluateCubicBezier(tmpP0, tmpP1, tmpP2, tmpP3, 0.5);
 	}
 
 	/**
@@ -340,8 +257,8 @@ class PictServiceFlowTether extends libFableServiceProviderBase
 	getOrthoGeometry(pFrom, pTo, pPanelData)
 	{
 		let tmpDepartDist = 20;
-		let tmpFromDir = this._sideDirection(pFrom.side);
-		let tmpToDir = this._sideDirection(pTo.side);
+		let tmpFromDir = this._FlowView._GeometryProvider.sideDirection(pFrom.side);
+		let tmpToDir = this._FlowView._GeometryProvider.sideDirection(pTo.side);
 
 		let tmpDepartX = pFrom.x + tmpFromDir.dx * tmpDepartDist;
 		let tmpDepartY = pFrom.y + tmpFromDir.dy * tmpDepartDist;
@@ -351,13 +268,13 @@ class PictServiceFlowTether extends libFableServiceProviderBase
 		let tmpCorners;
 		if (pPanelData.TetherHandleCustomized && pPanelData.TetherOrthoCorner1X != null)
 		{
-			tmpCorners = this.getAutoOrthogonalCorners(tmpDepartX, tmpDepartY, tmpApproachX, tmpApproachY, tmpFromDir, tmpToDir, pPanelData.TetherOrthoMidOffset || 0);
+			tmpCorners = this._FlowView._PathGenerator.computeAutoOrthogonalCorners(tmpDepartX, tmpDepartY, tmpApproachX, tmpApproachY, tmpFromDir, tmpToDir, pPanelData.TetherOrthoMidOffset || 0);
 			tmpCorners.corner1 = { x: pPanelData.TetherOrthoCorner1X, y: pPanelData.TetherOrthoCorner1Y };
 			tmpCorners.corner2 = { x: pPanelData.TetherOrthoCorner2X, y: pPanelData.TetherOrthoCorner2Y };
 		}
 		else
 		{
-			tmpCorners = this.getAutoOrthogonalCorners(tmpDepartX, tmpDepartY, tmpApproachX, tmpApproachY, tmpFromDir, tmpToDir, pPanelData.TetherOrthoMidOffset || 0);
+			tmpCorners = this._FlowView._PathGenerator.computeAutoOrthogonalCorners(tmpDepartX, tmpDepartY, tmpApproachX, tmpApproachY, tmpFromDir, tmpToDir, pPanelData.TetherOrthoMidOffset || 0);
 		}
 
 		let tmpMidpoint =
@@ -530,7 +447,7 @@ class PictServiceFlowTether extends libFableServiceProviderBase
 		let tmpPath = this.generatePath(pPanelData, tmpFrom, tmpTo);
 
 		// Hit area (wider invisible path for easier click targeting)
-		let tmpHitArea = this._createSVGElement('path');
+		let tmpHitArea = this._FlowView._SVGHelperProvider.createSVGElement('path');
 		tmpHitArea.setAttribute('class', 'pict-flow-tether-hitarea');
 		tmpHitArea.setAttribute('d', tmpPath);
 		tmpHitArea.setAttribute('data-element-type', 'tether-hitarea');
@@ -538,7 +455,7 @@ class PictServiceFlowTether extends libFableServiceProviderBase
 		pTethersLayer.appendChild(tmpHitArea);
 
 		// Visible tether path
-		let tmpPathElement = this._createSVGElement('path');
+		let tmpPathElement = this._FlowView._SVGHelperProvider.createSVGElement('path');
 		tmpPathElement.setAttribute('class', `pict-flow-tether-line${pIsSelected ? ' selected' : ''}`);
 		tmpPathElement.setAttribute('d', tmpPath);
 		tmpPathElement.setAttribute('marker-end', `url(#flow-tether-arrowhead-${pViewIdentifier})`);
@@ -612,7 +529,7 @@ class PictServiceFlowTether extends libFableServiceProviderBase
 	 */
 	_createHandle(pLayer, pPanelHash, pHandleType, pX, pY, pClassName)
 	{
-		let tmpCircle = this._createSVGElement('circle');
+		let tmpCircle = this._FlowView._SVGHelperProvider.createSVGElement('circle');
 		tmpCircle.setAttribute('class', pClassName);
 		tmpCircle.setAttribute('cx', String(pX));
 		tmpCircle.setAttribute('cy', String(pY));

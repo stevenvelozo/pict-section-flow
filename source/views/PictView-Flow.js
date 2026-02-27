@@ -4,10 +4,14 @@ const libPictServiceFlowInteractionManager = require('../services/PictService-Fl
 const libPictServiceFlowConnectionRenderer = require('../services/PictService-Flow-ConnectionRenderer.js');
 const libPictServiceFlowTether = require('../services/PictService-Flow-Tether.js');
 const libPictServiceFlowLayout = require('../services/PictService-Flow-Layout.js');
+const libPictServiceFlowPathGenerator = require('../services/PictService-Flow-PathGenerator.js');
 
 const libPictProviderFlowNodeTypes = require('../providers/PictProvider-Flow-NodeTypes.js');
 const libPictProviderFlowEventHandler = require('../providers/PictProvider-Flow-EventHandler.js');
 const libPictProviderFlowLayouts = require('../providers/PictProvider-Flow-Layouts.js');
+const libPictProviderFlowSVGHelpers = require('../providers/PictProvider-Flow-SVGHelpers.js');
+const libPictProviderFlowGeometry = require('../providers/PictProvider-Flow-Geometry.js');
+const libPictProviderFlowPanelChrome = require('../providers/PictProvider-Flow-PanelChrome.js');
 
 const libPictViewFlowNode = require('./PictView-Flow-Node.js');
 const libPictViewFlowToolbar = require('./PictView-Flow-Toolbar.js');
@@ -409,6 +413,10 @@ const _DefaultConfiguration =
 	Templates:
 	[
 		{
+			Hash: 'Flow-PanelChrome-Template',
+			Template: /*html*/`<div class="pict-flow-panel" xmlns="http://www.w3.org/1999/xhtml"><div class="pict-flow-panel-titlebar" data-element-type="panel-titlebar" data-panel-hash="{~D:Record.Hash~}"><span class="pict-flow-panel-title-text">{~D:Record.Title~}</span><span class="pict-flow-panel-close-btn" data-element-type="panel-close" data-panel-hash="{~D:Record.Hash~}">\u2715</span></div><div class="pict-flow-panel-body" data-panel-hash="{~D:Record.Hash~}"></div></div>`
+		},
+		{
 			Hash: 'Flow-Container-Template',
 			Template: /*html*/`
 <div class="pict-flow-container" id="Flow-Wrapper-{~D:Record.ViewIdentifier~}">
@@ -495,6 +503,22 @@ class PictViewFlow extends libPictView
 		{
 			this.fable.addServiceType('PictServiceFlowLayout', libPictServiceFlowLayout);
 		}
+		if (!this.fable.servicesMap.hasOwnProperty('PictServiceFlowPathGenerator'))
+		{
+			this.fable.addServiceType('PictServiceFlowPathGenerator', libPictServiceFlowPathGenerator);
+		}
+		if (!this.fable.servicesMap.hasOwnProperty('PictProviderFlowSVGHelpers'))
+		{
+			this.fable.addServiceType('PictProviderFlowSVGHelpers', libPictProviderFlowSVGHelpers);
+		}
+		if (!this.fable.servicesMap.hasOwnProperty('PictProviderFlowGeometry'))
+		{
+			this.fable.addServiceType('PictProviderFlowGeometry', libPictProviderFlowGeometry);
+		}
+		if (!this.fable.servicesMap.hasOwnProperty('PictProviderFlowPanelChrome'))
+		{
+			this.fable.addServiceType('PictProviderFlowPanelChrome', libPictProviderFlowPanelChrome);
+		}
 		if (!this.fable.servicesMap.hasOwnProperty('PictProviderFlowNodeTypes'))
 		{
 			this.fable.addServiceType('PictProviderFlowNodeTypes', libPictProviderFlowNodeTypes);
@@ -567,6 +591,10 @@ class PictViewFlow extends libPictView
 		this._ConnectionRenderer = null;
 		this._TetherService = null;
 		this._LayoutService = null;
+		this._PathGenerator = null;
+		this._SVGHelperProvider = null;
+		this._GeometryProvider = null;
+		this._PanelChromeProvider = null;
 		this._NodeTypeProvider = null;
 		this._LayoutProvider = null;
 		this._EventHandlerProvider = null;
@@ -612,13 +640,19 @@ class PictViewFlow extends libPictView
 	{
 		super.onBeforeInitialize();
 
-		// Register services
+		// Instantiate shared utility providers first (used by services below)
+		this._SVGHelperProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowSVGHelpers');
+		this._GeometryProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowGeometry');
+		this._PathGenerator = this.fable.instantiateServiceProviderWithoutRegistration('PictServiceFlowPathGenerator', { FlowView: this });
+		this._PanelChromeProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowPanelChrome', { FlowView: this });
+
+		// Instantiate services
 		this._InteractionManager = this.fable.instantiateServiceProviderWithoutRegistration('PictServiceFlowInteractionManager', { FlowView: this });
 		this._ConnectionRenderer = this.fable.instantiateServiceProviderWithoutRegistration('PictServiceFlowConnectionRenderer', { FlowView: this });
 		this._TetherService = this.fable.instantiateServiceProviderWithoutRegistration('PictServiceFlowTether', { FlowView: this });
 		this._LayoutService = this.fable.instantiateServiceProviderWithoutRegistration('PictServiceFlowLayout', { FlowView: this });
 
-		// Register providers, passing any additional node types from view options
+		// Instantiate providers, passing any additional node types from view options
 		this._NodeTypeProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowNodeTypes', { FlowView: this, AdditionalNodeTypes: this.options.NodeTypes });
 		this._EventHandlerProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowEventHandler', { FlowView: this });
 		this._LayoutProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowLayouts', { FlowView: this });
@@ -677,6 +711,24 @@ class PictViewFlow extends libPictView
 		if (tmpPanelsElements.length > 0)
 		{
 			this._PanelsLayer = tmpPanelsElements[0];
+		}
+
+		// Initialize shared utility providers (used by services below)
+		if (!this._SVGHelperProvider)
+		{
+			this._SVGHelperProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowSVGHelpers');
+		}
+		if (!this._GeometryProvider)
+		{
+			this._GeometryProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowGeometry');
+		}
+		if (!this._PathGenerator)
+		{
+			this._PathGenerator = this.fable.instantiateServiceProviderWithoutRegistration('PictServiceFlowPathGenerator', { FlowView: this });
+		}
+		if (!this._PanelChromeProvider)
+		{
+			this._PanelChromeProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowPanelChrome', { FlowView: this });
 		}
 
 		// Initialize services with references

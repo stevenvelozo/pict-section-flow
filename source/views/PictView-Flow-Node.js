@@ -23,16 +23,6 @@ class PictViewFlowNode extends libPictView
 	}
 
 	/**
-	 * Create the SVG namespace element helper
-	 * @param {string} pTagName
-	 * @returns {SVGElement}
-	 */
-	_createSVGElement(pTagName)
-	{
-		return document.createElementNS('http://www.w3.org/2000/svg', pTagName);
-	}
-
-	/**
 	 * Render a node into the nodes SVG layer
 	 * @param {Object} pNodeData - The node data object
 	 * @param {SVGGElement} pNodesLayer - The SVG <g> element to append to
@@ -41,7 +31,7 @@ class PictViewFlowNode extends libPictView
 	 */
 	renderNode(pNodeData, pNodesLayer, pIsSelected, pNodeTypeConfig)
 	{
-		let tmpGroup = this._createSVGElement('g');
+		let tmpGroup = this._FlowView._SVGHelperProvider.createSVGElement('g');
 		tmpGroup.setAttribute('class', `pict-flow-node ${pIsSelected ? 'selected' : ''} pict-flow-node-${pNodeData.Type || 'default'}`);
 		tmpGroup.setAttribute('transform', `translate(${pNodeData.X}, ${pNodeData.Y})`);
 		tmpGroup.setAttribute('data-node-hash', pNodeData.Hash);
@@ -52,7 +42,7 @@ class PictViewFlowNode extends libPictView
 		let tmpTitleBarHeight = this.options.NodeTitleBarHeight;
 
 		// Node body (main rectangle)
-		let tmpBody = this._createSVGElement('rect');
+		let tmpBody = this._FlowView._SVGHelperProvider.createSVGElement('rect');
 		tmpBody.setAttribute('class', 'pict-flow-node-body');
 		tmpBody.setAttribute('x', '0');
 		tmpBody.setAttribute('y', '0');
@@ -73,7 +63,7 @@ class PictViewFlowNode extends libPictView
 		tmpGroup.appendChild(tmpBody);
 
 		// Title bar background (top portion)
-		let tmpTitleBar = this._createSVGElement('rect');
+		let tmpTitleBar = this._FlowView._SVGHelperProvider.createSVGElement('rect');
 		tmpTitleBar.setAttribute('class', 'pict-flow-node-title-bar');
 		tmpTitleBar.setAttribute('x', '0');
 		tmpTitleBar.setAttribute('y', '0');
@@ -91,7 +81,7 @@ class PictViewFlowNode extends libPictView
 		tmpGroup.appendChild(tmpTitleBar);
 
 		// Title bar bottom fill (to square off the rounded corners at the bottom of the title bar)
-		let tmpTitleBarBottom = this._createSVGElement('rect');
+		let tmpTitleBarBottom = this._FlowView._SVGHelperProvider.createSVGElement('rect');
 		tmpTitleBarBottom.setAttribute('class', 'pict-flow-node-title-bar-bottom');
 		tmpTitleBarBottom.setAttribute('x', '0');
 		tmpTitleBarBottom.setAttribute('y', String(tmpTitleBarHeight - 6));
@@ -108,7 +98,7 @@ class PictViewFlowNode extends libPictView
 		tmpGroup.appendChild(tmpTitleBarBottom);
 
 		// Title text
-		let tmpTitle = this._createSVGElement('text');
+		let tmpTitle = this._FlowView._SVGHelperProvider.createSVGElement('text');
 		tmpTitle.setAttribute('class', 'pict-flow-node-title');
 		tmpTitle.setAttribute('x', String(tmpWidth / 2));
 		tmpTitle.setAttribute('y', String(tmpTitleBarHeight / 2 + 1));
@@ -120,7 +110,7 @@ class PictViewFlowNode extends libPictView
 		// Type label (below title bar)
 		if (pNodeTypeConfig && pNodeTypeConfig.Label && pNodeTypeConfig.Label !== pNodeData.Title)
 		{
-			let tmpTypeLabel = this._createSVGElement('text');
+			let tmpTypeLabel = this._FlowView._SVGHelperProvider.createSVGElement('text');
 			tmpTypeLabel.setAttribute('class', 'pict-flow-node-type-label');
 			tmpTypeLabel.setAttribute('x', String(tmpWidth / 2));
 			tmpTypeLabel.setAttribute('y', String(tmpTitleBarHeight + 18));
@@ -139,7 +129,7 @@ class PictViewFlowNode extends libPictView
 			// Icon (displayed as text, left-of-center or centered if no code)
 			if (tmpMeta.Icon)
 			{
-				let tmpIconText = this._createSVGElement('text');
+				let tmpIconText = this._FlowView._SVGHelperProvider.createSVGElement('text');
 				tmpIconText.setAttribute('class', 'pict-flow-node-card-icon');
 				tmpIconText.setAttribute('font-size', '16');
 				tmpIconText.setAttribute('text-anchor', 'middle');
@@ -163,7 +153,7 @@ class PictViewFlowNode extends libPictView
 			// Code badge (displayed as monospace text)
 			if (tmpMeta.Code)
 			{
-				let tmpCodeText = this._createSVGElement('text');
+				let tmpCodeText = this._FlowView._SVGHelperProvider.createSVGElement('text');
 				tmpCodeText.setAttribute('class', 'pict-flow-node-card-code');
 				tmpCodeText.setAttribute('font-size', '10');
 				tmpCodeText.setAttribute('font-family', 'monospace');
@@ -188,7 +178,7 @@ class PictViewFlowNode extends libPictView
 			// Tooltip via SVG <title> element
 			if (tmpMeta.Tooltip || tmpMeta.Description)
 			{
-				let tmpSVGTitle = this._createSVGElement('title');
+				let tmpSVGTitle = this._FlowView._SVGHelperProvider.createSVGElement('title');
 				tmpSVGTitle.textContent = tmpMeta.Tooltip || tmpMeta.Description;
 				tmpGroup.appendChild(tmpSVGTitle);
 			}
@@ -202,7 +192,7 @@ class PictViewFlowNode extends libPictView
 		{
 			let tmpIndicatorSize = 10;
 			let tmpIndicatorMargin = 4;
-			let tmpIndicator = this._createSVGElement('rect');
+			let tmpIndicator = this._FlowView._SVGHelperProvider.createSVGElement('rect');
 			tmpIndicator.setAttribute('class', 'pict-flow-node-panel-indicator');
 			tmpIndicator.setAttribute('x', String(tmpWidth - tmpIndicatorSize - tmpIndicatorMargin));
 			tmpIndicator.setAttribute('y', String(tmpHeight - tmpIndicatorSize - tmpIndicatorMargin));
@@ -213,7 +203,7 @@ class PictViewFlowNode extends libPictView
 			tmpIndicator.setAttribute('data-node-hash', pNodeData.Hash);
 			tmpIndicator.setAttribute('data-element-type', 'panel-indicator');
 
-			let tmpIndicatorTitle = this._createSVGElement('title');
+			let tmpIndicatorTitle = this._FlowView._SVGHelperProvider.createSVGElement('title');
 			tmpIndicatorTitle.textContent = 'Double-click to open properties';
 			tmpIndicator.appendChild(tmpIndicatorTitle);
 
@@ -255,7 +245,7 @@ class PictViewFlowNode extends libPictView
 				let tmpPosition = this._getPortLocalPosition(tmpSide, i, tmpPorts.length, pWidth, pHeight);
 
 				// Port circle
-				let tmpCircle = this._createSVGElement('circle');
+				let tmpCircle = this._FlowView._SVGHelperProvider.createSVGElement('circle');
 				tmpCircle.setAttribute('class', `pict-flow-port ${tmpPort.Direction}`);
 				tmpCircle.setAttribute('cx', String(tmpPosition.x));
 				tmpCircle.setAttribute('cy', String(tmpPosition.y));
@@ -269,7 +259,7 @@ class PictViewFlowNode extends libPictView
 				// Port label
 				if (tmpPort.Label)
 				{
-					let tmpLabel = this._createSVGElement('text');
+					let tmpLabel = this._FlowView._SVGHelperProvider.createSVGElement('text');
 					tmpLabel.setAttribute('class', 'pict-flow-port-label');
 					tmpLabel.textContent = tmpPort.Label;
 

@@ -14,11 +14,15 @@ module.exports.PictServiceFlowInteractionManager = require('./services/PictServi
 module.exports.PictServiceFlowConnectionRenderer = require('./services/PictService-Flow-ConnectionRenderer.js');
 module.exports.PictServiceFlowTether = require('./services/PictService-Flow-Tether.js');
 module.exports.PictServiceFlowLayout = require('./services/PictService-Flow-Layout.js');
+module.exports.PictServiceFlowPathGenerator = require('./services/PictService-Flow-PathGenerator.js');
 
 // Providers
 module.exports.PictProviderFlowNodeTypes = require('./providers/PictProvider-Flow-NodeTypes.js');
 module.exports.PictProviderFlowEventHandler = require('./providers/PictProvider-Flow-EventHandler.js');
 module.exports.PictProviderFlowLayouts = require('./providers/PictProvider-Flow-Layouts.js');
+module.exports.PictProviderFlowSVGHelpers = require('./providers/PictProvider-Flow-SVGHelpers.js');
+module.exports.PictProviderFlowGeometry = require('./providers/PictProvider-Flow-Geometry.js');
+module.exports.PictProviderFlowPanelChrome = require('./providers/PictProvider-Flow-PanelChrome.js');
 
 // FlowCard base class
 module.exports.PictFlowCard = require('./PictFlowCard.js');
