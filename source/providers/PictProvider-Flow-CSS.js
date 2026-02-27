@@ -525,6 +525,7 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 			display: inline-flex;
 			align-items: center;
 			justify-content: center;
+			gap: 0.35em;
 			padding: 0.35em 0.65em;
 			border: 1px solid #bdc3c7;
 			border-radius: 4px;
@@ -550,6 +551,28 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 		.pict-flow-toolbar-btn.danger:hover {
 			background-color: #fdedec;
 		}
+		.pict-flow-toolbar-btn-icon {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			line-height: 1;
+		}
+		.pict-flow-toolbar-btn-icon svg {
+			display: block;
+		}
+		.pict-flow-toolbar-btn-text {
+			white-space: nowrap;
+		}
+		.pict-flow-toolbar-btn-chevron {
+			display: inline-flex;
+			align-items: center;
+			margin-left: 0.15em;
+		}
+		.pict-flow-toolbar-right {
+			margin-left: auto;
+			border-right: none;
+			padding-right: 0;
+		}
 		.pict-flow-toolbar-label {
 			font-size: 0.8em;
 			color: #7f8c8d;
@@ -574,43 +597,6 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 	getPaletteCSS()
 	{
 		return /*css*/`
-		.pict-flow-palette-container {
-			border-bottom: 1px solid #e0e0e0;
-			background-color: #fafafa;
-		}
-		.pict-flow-palette-toggle {
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			padding: 0.4em 0.75em;
-			cursor: pointer;
-			user-select: none;
-			-webkit-user-select: none;
-			font-size: 0.8em;
-			color: #7f8c8d;
-			background-color: #f4f4f5;
-			border-bottom: 1px solid #e0e0e0;
-		}
-		.pict-flow-palette-toggle:hover {
-			background-color: #ecf0f1;
-			color: #2c3e50;
-		}
-		.pict-flow-palette-toggle-arrow {
-			font-size: 0.7em;
-			transition: transform 0.2s;
-		}
-		.pict-flow-palette-toggle-arrow.open {
-			transform: rotate(180deg);
-		}
-		.pict-flow-palette-body {
-			display: none;
-			padding: 0.5em 0.75em 0.75em 0.75em;
-			max-height: 280px;
-			overflow-y: auto;
-		}
-		.pict-flow-palette-body.open {
-			display: block;
-		}
 		.pict-flow-palette-category {
 			margin-bottom: 0.5em;
 		}
@@ -684,6 +670,312 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 		`;
 	}
 
+	// ── Popups ────────────────────────────────────────────────────────────
+	/**
+	 * CSS for toolbar dropdown popups (Add Node, Cards, Layout).
+	 * @returns {string}
+	 */
+	getPopupCSS()
+	{
+		return /*css*/`
+		.pict-flow-toolbar-popup-anchor {
+			position: relative;
+		}
+		.pict-flow-toolbar-popup {
+			position: absolute;
+			z-index: 1000;
+			background: #ffffff;
+			border: 1px solid #d5d8dc;
+			border-radius: 6px;
+			box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+			min-width: 240px;
+			max-height: 340px;
+			overflow-y: auto;
+			padding: 0.35em 0;
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+			font-size: 13px;
+		}
+		.pict-flow-popup-search-wrapper {
+			position: relative;
+			padding: 0.4em 0.5em;
+			border-bottom: 1px solid #ecf0f1;
+		}
+		.pict-flow-popup-search-icon {
+			position: absolute;
+			left: 0.85em;
+			top: 50%;
+			transform: translateY(-50%);
+			pointer-events: none;
+			line-height: 1;
+			display: flex;
+			align-items: center;
+		}
+		.pict-flow-popup-search {
+			width: 100%;
+			padding: 0.4em 0.5em 0.4em 2em;
+			border: 1px solid #d5d8dc;
+			border-radius: 4px;
+			font-size: 0.9em;
+			outline: none;
+			box-sizing: border-box;
+		}
+		.pict-flow-popup-search:focus {
+			border-color: #3498db;
+		}
+		.pict-flow-popup-list-item {
+			display: flex;
+			align-items: center;
+			gap: 0.5em;
+			padding: 0.45em 0.75em;
+			cursor: pointer;
+			transition: background-color 0.1s;
+		}
+		.pict-flow-popup-list-item:hover {
+			background-color: #eaf2f8;
+		}
+		.pict-flow-popup-list-item-icon {
+			display: inline-flex;
+			align-items: center;
+			flex-shrink: 0;
+			line-height: 1;
+		}
+		.pict-flow-popup-list-item-label {
+			flex: 1;
+			color: #2c3e50;
+			font-weight: 500;
+		}
+		.pict-flow-popup-list-item-code {
+			font-size: 0.8em;
+			color: #95a5a6;
+			font-family: monospace;
+			background: #f0f3f5;
+			padding: 0.1em 0.4em;
+			border-radius: 3px;
+		}
+		.pict-flow-popup-divider {
+			height: 1px;
+			background: #ecf0f1;
+			margin: 0.25em 0;
+		}
+		.pict-flow-popup-list-empty {
+			text-align: center;
+			color: #95a5a6;
+			padding: 1.5em 0.75em;
+			font-size: 0.9em;
+		}
+		.pict-flow-popup-layout-save {
+			display: flex;
+			align-items: center;
+			gap: 0.5em;
+			padding: 0.45em 0.75em;
+			cursor: pointer;
+			transition: background-color 0.1s;
+			color: #2c3e50;
+			font-weight: 500;
+		}
+		.pict-flow-popup-layout-save:hover {
+			background-color: #eaf2f8;
+		}
+		.pict-flow-popup-layout-save-icon {
+			display: inline-flex;
+			align-items: center;
+			flex-shrink: 0;
+			line-height: 1;
+		}
+		.pict-flow-popup-layout-save-input-row {
+			display: flex;
+			align-items: center;
+			gap: 0.35em;
+			padding: 0.35em 0.5em;
+		}
+		.pict-flow-popup-layout-save-input {
+			flex: 1;
+			padding: 0.35em 0.5em;
+			border: 1px solid #d5d8dc;
+			border-radius: 4px;
+			font-size: 0.9em;
+			outline: none;
+			box-sizing: border-box;
+		}
+		.pict-flow-popup-layout-save-input:focus {
+			border-color: #3498db;
+		}
+		.pict-flow-popup-layout-save-confirm {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 28px;
+			height: 28px;
+			border: 1px solid #d5d8dc;
+			border-radius: 4px;
+			background: #fff;
+			cursor: pointer;
+			flex-shrink: 0;
+			transition: background-color 0.15s, border-color 0.15s;
+			line-height: 1;
+		}
+		.pict-flow-popup-layout-save-confirm:hover {
+			background-color: #eaf2f8;
+			border-color: #3498db;
+		}
+		.pict-flow-popup-layout-row {
+			display: flex;
+			align-items: center;
+			padding: 0.45em 0.75em;
+			cursor: pointer;
+			transition: background-color 0.1s;
+		}
+		.pict-flow-popup-layout-row:hover {
+			background-color: #eaf2f8;
+		}
+		.pict-flow-popup-layout-name {
+			flex: 1;
+			color: #2c3e50;
+		}
+		.pict-flow-popup-layout-delete {
+			display: none;
+			align-items: center;
+			justify-content: center;
+			border: none;
+			background: none;
+			color: #e74c3c;
+			cursor: pointer;
+			padding: 2px 4px;
+			border-radius: 3px;
+			line-height: 1;
+		}
+		.pict-flow-popup-layout-row:hover .pict-flow-popup-layout-delete {
+			display: inline-flex;
+		}
+		.pict-flow-popup-layout-delete:hover {
+			background-color: #fdedec;
+		}
+		`;
+	}
+
+	// ── Collapsed Toolbar ─────────────────────────────────────────────────
+	/**
+	 * CSS for the collapsed toolbar state (small expand button in corner).
+	 * @returns {string}
+	 */
+	getCollapsedToolbarCSS()
+	{
+		return /*css*/`
+		.pict-flow-toolbar-collapsed {
+			position: absolute;
+			top: 8px;
+			right: 8px;
+			z-index: 100;
+			display: none;
+		}
+		.pict-flow-toolbar-collapsed.visible {
+			display: block;
+		}
+		.pict-flow-toolbar-expand-btn {
+			width: 36px;
+			height: 36px;
+			border-radius: 6px;
+			border: 1px solid #d5d8dc;
+			background-color: #ffffff;
+			box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			transition: background-color 0.15s, box-shadow 0.15s;
+		}
+		.pict-flow-toolbar-expand-btn:hover {
+			background-color: #ecf0f1;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+		}
+		`;
+	}
+
+	// ── Floating Toolbar ──────────────────────────────────────────────────
+	/**
+	 * CSS for the floating draggable toolbar.
+	 * @returns {string}
+	 */
+	getFloatingToolbarCSS()
+	{
+		return /*css*/`
+		.pict-flow-floating-toolbar {
+			position: absolute;
+			z-index: 100;
+			display: flex;
+			flex-direction: column;
+			gap: 2px;
+			padding: 4px;
+			border-radius: 8px;
+			border: 1px solid #d5d8dc;
+			background-color: #ffffff;
+			box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+			pointer-events: auto;
+		}
+		.pict-flow-floating-grip {
+			cursor: grab;
+			padding: 4px;
+			border-radius: 4px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			transition: background-color 0.15s;
+		}
+		.pict-flow-floating-grip:hover {
+			background-color: #ecf0f1;
+		}
+		.pict-flow-floating-grip:active {
+			cursor: grabbing;
+		}
+		.pict-flow-floating-btn {
+			width: 32px;
+			height: 32px;
+			border: none;
+			border-radius: 4px;
+			background-color: transparent;
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			transition: background-color 0.15s;
+		}
+		.pict-flow-floating-btn:hover {
+			background-color: #ecf0f1;
+		}
+		.pict-flow-floating-btn.danger:hover {
+			background-color: #fdedec;
+		}
+		.pict-flow-floating-separator {
+			height: 1px;
+			background-color: #ecf0f1;
+			margin: 2px 4px;
+		}
+		/* Collapsed floating toolbar — grip-only draggable square */
+		.pict-flow-floating-toolbar.collapsed .pict-flow-floating-btn,
+		.pict-flow-floating-toolbar.collapsed .pict-flow-floating-separator {
+			display: none;
+		}
+		.pict-flow-floating-toolbar.collapsed {
+			padding: 0;
+			border-radius: 6px;
+		}
+		.pict-flow-floating-toolbar.collapsed .pict-flow-floating-grip {
+			width: 32px;
+			height: 32px;
+			padding: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+		.pict-flow-floating-toolbar.collapsed .pict-flow-floating-grip span {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			line-height: 1;
+		}
+		`;
+	}
+
 	// ── Icons ─────────────────────────────────────────────────────────────
 	/**
 	 * CSS for inline SVG icons in palette cards, toolbar buttons, info panel headers, and panel close buttons.
@@ -750,6 +1042,9 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 			this.getFullscreenCSS() +
 			this.getToolbarCSS() +
 			this.getPaletteCSS() +
+			this.getPopupCSS() +
+			this.getCollapsedToolbarCSS() +
+			this.getFloatingToolbarCSS() +
 			this.getIconCSS()
 		);
 	}

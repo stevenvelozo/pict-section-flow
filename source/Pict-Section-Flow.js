@@ -6,8 +6,9 @@ module.exports = require('./views/PictView-Flow.js');
 // Node rendering view
 module.exports.PictViewFlowNode = require('./views/PictView-Flow-Node.js');
 
-// Toolbar view
+// Toolbar views
 module.exports.PictViewFlowToolbar = require('./views/PictView-Flow-Toolbar.js');
+module.exports.PictViewFlowFloatingToolbar = require('./views/PictView-Flow-FloatingToolbar.js');
 
 // Services
 module.exports.PictServiceFlowInteractionManager = require('./services/PictService-Flow-InteractionManager.js');

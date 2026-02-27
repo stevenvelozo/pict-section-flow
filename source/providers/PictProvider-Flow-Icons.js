@@ -53,6 +53,40 @@ const _DefaultIcons =
 
 	'chevron-down': '<svg xmlns="http://www.w3.org/2000/svg" width="{FlowIconSize}" height="{FlowIconSize}" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>',
 
+	// ── Toolbar & Popup Icons ─────────────────────────────────────────────
+
+	'search': '<svg xmlns="http://www.w3.org/2000/svg" width="{FlowIconSize}" height="{FlowIconSize}" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7" fill="#d5e8f7" stroke="#2c3e50" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="#2c3e50" stroke-width="2"/></svg>',
+
+	'cards': '<svg xmlns="http://www.w3.org/2000/svg" width="{FlowIconSize}" height="{FlowIconSize}" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="16" height="12" rx="2" fill="#d5e8f7" stroke="#2c3e50" stroke-width="2"/><path d="M6 7V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2" stroke="#2c3e50" stroke-width="2"/></svg>',
+
+	'layout': '<svg xmlns="http://www.w3.org/2000/svg" width="{FlowIconSize}" height="{FlowIconSize}" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="10" rx="1.5" fill="#d5e8f7" stroke="#2c3e50" stroke-width="2"/><rect x="13" y="3" width="8" height="6" rx="1.5" fill="#d5e8f7" stroke="#2c3e50" stroke-width="2"/><rect x="3" y="15" width="8" height="6" rx="1.5" fill="#d5e8f7" stroke="#2c3e50" stroke-width="2"/><rect x="13" y="11" width="8" height="10" rx="1.5" fill="#d5e8f7" stroke="#2c3e50" stroke-width="2"/></svg>',
+
+	'collapse': '<svg xmlns="http://www.w3.org/2000/svg" width="{FlowIconSize}" height="{FlowIconSize}" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3" fill="#d5e8f7" stroke="#2c3e50" stroke-width="2"/><path d="M8 12h8" stroke="#2c3e50" stroke-width="2"/></svg>',
+
+	'expand': '<svg xmlns="http://www.w3.org/2000/svg" width="{FlowIconSize}" height="{FlowIconSize}" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3" fill="#d5e8f7" stroke="#2c3e50" stroke-width="2"/><path d="M12 8v8M8 12h8" stroke="#2c3e50" stroke-width="2"/></svg>',
+
+	'grip': '<svg xmlns="http://www.w3.org/2000/svg" width="{FlowIconSize}" height="{FlowIconSize}" viewBox="0 0 24 24" fill="#2c3e50"><circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/></svg>',
+
+	'plus': '<svg xmlns="http://www.w3.org/2000/svg" width="{FlowIconSize}" height="{FlowIconSize}" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" fill="#d5e8f7" stroke="#2c3e50" stroke-width="2"/><path d="M12 8v8M8 12h8" stroke="#2c3e50" stroke-width="2"/></svg>',
+
+	'trash': '<svg xmlns="http://www.w3.org/2000/svg" width="{FlowIconSize}" height="{FlowIconSize}" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18" stroke="#2c3e50" stroke-width="2"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="#2c3e50" stroke-width="2"/><rect x="5" y="6" width="14" height="14" rx="2" fill="#d5e8f7" stroke="#2c3e50" stroke-width="2"/><path d="M10 11v6M14 11v6" stroke="#2c3e50" stroke-width="2"/></svg>',
+
+	'save': '<svg xmlns="http://www.w3.org/2000/svg" width="{FlowIconSize}" height="{FlowIconSize}" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" fill="#d5e8f7" stroke="#2c3e50" stroke-width="2"/><path d="M17 21v-8H7v8" stroke="#2c3e50" stroke-width="2"/><path d="M7 3v5h8" stroke="#2c3e50" stroke-width="2"/></svg>',
+
+	'auto-layout': '<svg xmlns="http://www.w3.org/2000/svg" width="{FlowIconSize}" height="{FlowIconSize}" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="6" rx="1.5" fill="#d5e8f7" stroke="#2c3e50" stroke-width="2"/><rect x="2" y="16" width="8" height="6" rx="1.5" fill="#d5e8f7" stroke="#2c3e50" stroke-width="2"/><rect x="14" y="16" width="8" height="6" rx="1.5" fill="#d5e8f7" stroke="#2c3e50" stroke-width="2"/><path d="M12 8v4M6 16v-4h12v4" stroke="#2c3e50" stroke-width="2"/></svg>',
+
+	'zoom-in': '<svg xmlns="http://www.w3.org/2000/svg" width="{FlowIconSize}" height="{FlowIconSize}" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7" fill="#d5e8f7" stroke="#2c3e50" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="#2c3e50" stroke-width="2"/><path d="M11 8v6M8 11h6" stroke="#2c3e50" stroke-width="2"/></svg>',
+
+	'zoom-out': '<svg xmlns="http://www.w3.org/2000/svg" width="{FlowIconSize}" height="{FlowIconSize}" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7" fill="#d5e8f7" stroke="#2c3e50" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="#2c3e50" stroke-width="2"/><path d="M8 11h6" stroke="#2c3e50" stroke-width="2"/></svg>',
+
+	'zoom-fit': '<svg xmlns="http://www.w3.org/2000/svg" width="{FlowIconSize}" height="{FlowIconSize}" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V3h4"/><path d="M17 3h4v4"/><path d="M21 17v4h-4"/><path d="M7 21H3v-4"/><rect x="7" y="7" width="10" height="10" rx="1.5" fill="#d5e8f7"/></svg>',
+
+	'dock': '<svg xmlns="http://www.w3.org/2000/svg" width="{FlowIconSize}" height="{FlowIconSize}" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="4" rx="1.5" fill="#d5e8f7" stroke="#2c3e50" stroke-width="2"/><path d="M12 20V11M8 14l4-4 4 4" stroke="#2c3e50" stroke-width="2"/></svg>',
+
+	'restore': '<svg xmlns="http://www.w3.org/2000/svg" width="{FlowIconSize}" height="{FlowIconSize}" viewBox="0 0 24 24" fill="none" stroke="#2c3e50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>',
+
+	'delete-node': '<svg xmlns="http://www.w3.org/2000/svg" width="{FlowIconSize}" height="{FlowIconSize}" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18" stroke="#2c3e50" stroke-width="2"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="#2c3e50" stroke-width="2"/><rect x="5" y="6" width="14" height="14" rx="2" fill="#d5e8f7" stroke="#2c3e50" stroke-width="2"/><path d="M10 11v6M14 11v6" stroke="#2c3e50" stroke-width="2"/></svg>',
+
 	// ── Fallback ───────────────────────────────────────────────────────────
 
 	'default': '<svg xmlns="http://www.w3.org/2000/svg" width="{FlowIconSize}" height="{FlowIconSize}" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4" fill="#d5e8f7" stroke="#2c3e50" stroke-width="2"/><circle cx="12" cy="12" r="2.5" fill="#2c3e50"/></svg>'

@@ -13,6 +13,22 @@ const _ProviderConfiguration =
  * still exist are placed at their saved positions and any new nodes are
  * auto-laid-out to the right.
  *
+ * ## Persistence
+ *
+ * By default, layouts are persisted to the browser's `localStorage` using a
+ * key derived from the flow view identifier. This means layouts survive page
+ * refreshes out of the box.
+ *
+ * Developers can override the storage backend (e.g., to use a REST API or
+ * IndexedDB) by replacing the three storage hook methods on the instance or
+ * in a subclass:
+ *
+ *   - `storageWrite(pLayouts, fCallback)` — persist the full layout array
+ *   - `storageRead(fCallback)` — load the persisted layout array
+ *   - `storageDelete(fCallback)` — remove all persisted layouts
+ *
+ * Each callback follows the Node convention: `fCallback(pError, pResult)`.
+ *
  * Saved layout data structure:
  * {
  *     Hash: "layout-<UUID>",
@@ -33,7 +49,173 @@ class PictProviderFlowLayouts extends libPictProvider
 		this.serviceType = 'PictProviderFlowLayouts';
 
 		this._FlowView = (pOptions && pOptions.FlowView) ? pOptions.FlowView : null;
+
+		// Storage key for localStorage persistence.
+		// Defaults to a key derived from the FlowView identifier, or can be
+		// set via options.StorageKey.  Pass `false` to disable localStorage.
+		if (pOptions && pOptions.StorageKey !== undefined)
+		{
+			this._StorageKey = pOptions.StorageKey;
+		}
+		else if (this._FlowView && this._FlowView.options && this._FlowView.options.ViewIdentifier)
+		{
+			this._StorageKey = `pict-flow-layouts-${this._FlowView.options.ViewIdentifier}`;
+		}
+		else
+		{
+			this._StorageKey = 'pict-flow-layouts';
+		}
 	}
+
+	// ── Storage Hooks ─────────────────────────────────────────────────────
+	// These three methods form the persistence contract.  The default
+	// implementation uses localStorage.  Override them on the instance or
+	// subclass to use a REST API, IndexedDB, or any other backend.
+	//
+	// All callbacks follow `fCallback(pError, pResult)`.
+
+	/**
+	 * Persist the full array of layout objects.
+	 *
+	 * Default implementation writes JSON to `localStorage`.
+	 *
+	 * @param {Array} pLayouts - The array of layout objects to persist
+	 * @param {Function} fCallback - `function(pError)` called when done
+	 */
+	storageWrite(pLayouts, fCallback)
+	{
+		if (this._StorageKey === false)
+		{
+			return fCallback(null);
+		}
+		try
+		{
+			if (typeof localStorage !== 'undefined')
+			{
+				localStorage.setItem(this._StorageKey, JSON.stringify(pLayouts));
+			}
+			return fCallback(null);
+		}
+		catch (pError)
+		{
+			this.log.warn(`PictProviderFlowLayouts storageWrite error: ${pError.message}`);
+			return fCallback(pError);
+		}
+	}
+
+	/**
+	 * Load the persisted array of layout objects.
+	 *
+	 * Default implementation reads JSON from `localStorage`.
+	 *
+	 * @param {Function} fCallback - `function(pError, pLayouts)` where
+	 *        pLayouts is an Array (or null/empty if nothing stored)
+	 */
+	storageRead(fCallback)
+	{
+		if (this._StorageKey === false)
+		{
+			return fCallback(null, []);
+		}
+		try
+		{
+			if (typeof localStorage !== 'undefined')
+			{
+				let tmpRaw = localStorage.getItem(this._StorageKey);
+				if (tmpRaw)
+				{
+					let tmpParsed = JSON.parse(tmpRaw);
+					if (Array.isArray(tmpParsed))
+					{
+						return fCallback(null, tmpParsed);
+					}
+				}
+			}
+			return fCallback(null, []);
+		}
+		catch (pError)
+		{
+			this.log.warn(`PictProviderFlowLayouts storageRead error: ${pError.message}`);
+			return fCallback(pError, []);
+		}
+	}
+
+	/**
+	 * Remove all persisted layout data.
+	 *
+	 * Default implementation removes the key from `localStorage`.
+	 *
+	 * @param {Function} fCallback - `function(pError)` called when done
+	 */
+	storageDelete(fCallback)
+	{
+		if (this._StorageKey === false)
+		{
+			return fCallback(null);
+		}
+		try
+		{
+			if (typeof localStorage !== 'undefined')
+			{
+				localStorage.removeItem(this._StorageKey);
+			}
+			return fCallback(null);
+		}
+		catch (pError)
+		{
+			this.log.warn(`PictProviderFlowLayouts storageDelete error: ${pError.message}`);
+			return fCallback(pError);
+		}
+	}
+
+	// ── Initialization ────────────────────────────────────────────────────
+
+	/**
+	 * Load persisted layouts and merge them into _FlowData.SavedLayouts.
+	 * Layouts already present in _FlowData (e.g., from setFlowData) are
+	 * kept; persisted layouts with new hashes are appended.
+	 *
+	 * Call this after _FlowData is populated.
+	 */
+	loadPersistedLayouts()
+	{
+		this.storageRead((pError, pLayouts) =>
+		{
+			if (pError || !Array.isArray(pLayouts) || pLayouts.length === 0)
+			{
+				return;
+			}
+
+			if (!this._FlowView || !this._FlowView._FlowData)
+			{
+				return;
+			}
+
+			let tmpExisting = this._FlowView._FlowData.SavedLayouts;
+			let tmpExistingHashes = {};
+			for (let i = 0; i < tmpExisting.length; i++)
+			{
+				tmpExistingHashes[tmpExisting[i].Hash] = true;
+			}
+
+			let tmpAdded = 0;
+			for (let i = 0; i < pLayouts.length; i++)
+			{
+				if (!tmpExistingHashes[pLayouts[i].Hash])
+				{
+					tmpExisting.push(pLayouts[i]);
+					tmpAdded++;
+				}
+			}
+
+			if (tmpAdded > 0)
+			{
+				this.log.trace(`PictProviderFlowLayouts loaded ${tmpAdded} persisted layout(s)`);
+			}
+		});
+	}
+
+	// ── Public API ────────────────────────────────────────────────────────
 
 	/**
 	 * Save the current node and panel positions as a named layout.
@@ -96,6 +278,15 @@ class PictProviderFlowLayouts extends libPictProvider
 
 		tmpFlowData.SavedLayouts.push(tmpLayout);
 		this._FlowView.marshalFromView();
+
+		// Persist to storage
+		this.storageWrite(tmpFlowData.SavedLayouts, (pError) =>
+		{
+			if (pError)
+			{
+				this.log.warn(`PictProviderFlowLayouts: failed to persist after save: ${pError.message}`);
+			}
+		});
 
 		if (this._FlowView._EventHandlerProvider)
 		{
@@ -243,6 +434,15 @@ class PictProviderFlowLayouts extends libPictProvider
 
 		let tmpRemovedLayout = tmpFlowData.SavedLayouts.splice(tmpIndex, 1)[0];
 		this._FlowView.marshalFromView();
+
+		// Persist to storage (with the layout removed)
+		this.storageWrite(tmpFlowData.SavedLayouts, (pError) =>
+		{
+			if (pError)
+			{
+				this.log.warn(`PictProviderFlowLayouts: failed to persist after delete: ${pError.message}`);
+			}
+		});
 
 		if (this._FlowView._EventHandlerProvider)
 		{

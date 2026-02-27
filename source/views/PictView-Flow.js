@@ -21,6 +21,7 @@ const libPictProviderFlowConnectorShapes = require('../providers/PictProvider-Fl
 
 const libPictViewFlowNode = require('./PictView-Flow-Node.js');
 const libPictViewFlowToolbar = require('./PictView-Flow-Toolbar.js');
+const libPictViewFlowFloatingToolbar = require('./PictView-Flow-FloatingToolbar.js');
 const libPictViewFlowPropertiesPanel = require('./PictView-Flow-PropertiesPanel.js');
 
 const libPictFlowCardPropertiesPanel = require('../PictFlowCardPropertiesPanel.js');
@@ -71,6 +72,7 @@ const _DefaultConfiguration =
 			Template: /*html*/`
 <div class="pict-flow-container" id="Flow-Wrapper-{~D:Record.ViewIdentifier~}">
 	<div id="Flow-Toolbar-{~D:Record.ViewIdentifier~}"></div>
+	<div id="Flow-FloatingToolbar-Container-{~D:Record.ViewIdentifier~}" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:100;"></div>
 	<div class="pict-flow-svg-container" id="Flow-SVG-Container-{~D:Record.ViewIdentifier~}">
 		<svg class="pict-flow-svg"
 			id="Flow-SVG-{~D:Record.ViewIdentifier~}"
@@ -194,6 +196,10 @@ class PictViewFlow extends libPictView
 		if (!this.fable.servicesMap.hasOwnProperty('PictViewFlowToolbar'))
 		{
 			this.fable.addServiceType('PictViewFlowToolbar', libPictViewFlowToolbar);
+		}
+		if (!this.fable.servicesMap.hasOwnProperty('PictViewFlowFloatingToolbar'))
+		{
+			this.fable.addServiceType('PictViewFlowFloatingToolbar', libPictViewFlowFloatingToolbar);
 		}
 		if (!this.fable.servicesMap.hasOwnProperty('PictViewFlowPropertiesPanel'))
 		{
@@ -336,6 +342,7 @@ class PictViewFlow extends libPictView
 		this._NodeTypeProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowNodeTypes', { FlowView: this, AdditionalNodeTypes: this.options.NodeTypes });
 		this._EventHandlerProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowEventHandler', { FlowView: this });
 		this._LayoutProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowLayouts', { FlowView: this });
+		this._LayoutProvider.loadPersistedLayouts();
 
 		return super.onBeforeInitialize();
 	}
@@ -471,6 +478,7 @@ class PictViewFlow extends libPictView
 		if (!this._LayoutProvider)
 		{
 			this._LayoutProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowLayouts', { FlowView: this });
+			this._LayoutProvider.loadPersistedLayouts();
 		}
 
 		// Inject marker defs via the connector shapes provider
@@ -619,6 +627,12 @@ class PictViewFlow extends libPictView
 				pFlowData.ViewState || {}
 			)
 		};
+
+		// Merge any browser-persisted layouts into the newly loaded data
+		if (this._LayoutProvider)
+		{
+			this._LayoutProvider.loadPersistedLayouts();
+		}
 
 		if (this.initialRenderComplete)
 		{
