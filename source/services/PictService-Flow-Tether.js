@@ -446,22 +446,34 @@ class PictServiceFlowTether extends libFableServiceProviderBase
 
 		let tmpPath = this.generatePath(pPanelData, tmpFrom, tmpTo);
 
-		// Hit area (wider invisible path for easier click targeting)
-		let tmpHitArea = this._FlowView._SVGHelperProvider.createSVGElement('path');
-		tmpHitArea.setAttribute('class', 'pict-flow-tether-hitarea');
-		tmpHitArea.setAttribute('d', tmpPath);
-		tmpHitArea.setAttribute('data-element-type', 'tether-hitarea');
-		tmpHitArea.setAttribute('data-panel-hash', pPanelData.Hash);
-		pTethersLayer.appendChild(tmpHitArea);
+		// Hit area and visible tether path
+		let tmpShapeProvider = this._FlowView._ConnectorShapesProvider;
+		if (tmpShapeProvider)
+		{
+			let tmpHitArea = tmpShapeProvider.createTetherHitAreaElement(tmpPath, pPanelData.Hash);
+			pTethersLayer.appendChild(tmpHitArea);
 
-		// Visible tether path
-		let tmpPathElement = this._FlowView._SVGHelperProvider.createSVGElement('path');
-		tmpPathElement.setAttribute('class', `pict-flow-tether-line${pIsSelected ? ' selected' : ''}`);
-		tmpPathElement.setAttribute('d', tmpPath);
-		tmpPathElement.setAttribute('marker-end', `url(#flow-tether-arrowhead-${pViewIdentifier})`);
-		tmpPathElement.setAttribute('data-element-type', 'tether');
-		tmpPathElement.setAttribute('data-panel-hash', pPanelData.Hash);
-		pTethersLayer.appendChild(tmpPathElement);
+			let tmpPathElement = tmpShapeProvider.createTetherPathElement(
+				tmpPath, pPanelData.Hash, pIsSelected, pViewIdentifier);
+			pTethersLayer.appendChild(tmpPathElement);
+		}
+		else
+		{
+			let tmpHitArea = this._FlowView._SVGHelperProvider.createSVGElement('path');
+			tmpHitArea.setAttribute('class', 'pict-flow-tether-hitarea');
+			tmpHitArea.setAttribute('d', tmpPath);
+			tmpHitArea.setAttribute('data-element-type', 'tether-hitarea');
+			tmpHitArea.setAttribute('data-panel-hash', pPanelData.Hash);
+			pTethersLayer.appendChild(tmpHitArea);
+
+			let tmpPathElement = this._FlowView._SVGHelperProvider.createSVGElement('path');
+			tmpPathElement.setAttribute('class', `pict-flow-tether-line${pIsSelected ? ' selected' : ''}`);
+			tmpPathElement.setAttribute('d', tmpPath);
+			tmpPathElement.setAttribute('marker-end', `url(#flow-tether-arrowhead-${pViewIdentifier})`);
+			tmpPathElement.setAttribute('data-element-type', 'tether');
+			tmpPathElement.setAttribute('data-panel-hash', pPanelData.Hash);
+			pTethersLayer.appendChild(tmpPathElement);
+		}
 
 		// Render drag handles when selected
 		if (pIsSelected)
@@ -529,15 +541,30 @@ class PictServiceFlowTether extends libFableServiceProviderBase
 	 */
 	_createHandle(pLayer, pPanelHash, pHandleType, pX, pY, pClassName)
 	{
-		let tmpCircle = this._FlowView._SVGHelperProvider.createSVGElement('circle');
-		tmpCircle.setAttribute('class', pClassName);
-		tmpCircle.setAttribute('cx', String(pX));
-		tmpCircle.setAttribute('cy', String(pY));
-		tmpCircle.setAttribute('r', '6');
-		tmpCircle.setAttribute('data-element-type', 'tether-handle');
-		tmpCircle.setAttribute('data-panel-hash', pPanelHash);
-		tmpCircle.setAttribute('data-handle-type', pHandleType);
-		pLayer.appendChild(tmpCircle);
+		let tmpShapeProvider = this._FlowView._ConnectorShapesProvider;
+		let tmpShapeKey = (pClassName === 'pict-flow-tether-handle-midpoint')
+			? 'tether-handle-midpoint' : 'tether-handle';
+
+		if (tmpShapeProvider)
+		{
+			let tmpHandle = tmpShapeProvider.createHandleElement(
+				pPanelHash, pHandleType, pX, pY, tmpShapeKey);
+			tmpHandle.setAttribute('data-element-type', 'tether-handle');
+			tmpHandle.setAttribute('data-panel-hash', pPanelHash);
+			pLayer.appendChild(tmpHandle);
+		}
+		else
+		{
+			let tmpCircle = this._FlowView._SVGHelperProvider.createSVGElement('circle');
+			tmpCircle.setAttribute('class', pClassName);
+			tmpCircle.setAttribute('cx', String(pX));
+			tmpCircle.setAttribute('cy', String(pY));
+			tmpCircle.setAttribute('r', '6');
+			tmpCircle.setAttribute('data-element-type', 'tether-handle');
+			tmpCircle.setAttribute('data-panel-hash', pPanelHash);
+			tmpCircle.setAttribute('data-handle-type', pHandleType);
+			pLayer.appendChild(tmpCircle);
+		}
 	}
 }
 

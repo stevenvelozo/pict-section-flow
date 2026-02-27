@@ -224,16 +224,30 @@ class PictViewFlowNode extends libPictView
 		{
 			let tmpIndicatorSize = 10;
 			let tmpIndicatorMargin = 4;
-			let tmpIndicator = this._FlowView._SVGHelperProvider.createSVGElement('rect');
-			tmpIndicator.setAttribute('class', 'pict-flow-node-panel-indicator');
-			tmpIndicator.setAttribute('x', String(tmpWidth - tmpIndicatorSize - tmpIndicatorMargin));
-			tmpIndicator.setAttribute('y', String(tmpHeight - tmpIndicatorSize - tmpIndicatorMargin));
-			tmpIndicator.setAttribute('width', String(tmpIndicatorSize));
-			tmpIndicator.setAttribute('height', String(tmpIndicatorSize));
-			tmpIndicator.setAttribute('rx', '2');
-			tmpIndicator.setAttribute('ry', '2');
-			tmpIndicator.setAttribute('data-node-hash', pNodeData.Hash);
-			tmpIndicator.setAttribute('data-element-type', 'panel-indicator');
+			let tmpIndicatorX = tmpWidth - tmpIndicatorSize - tmpIndicatorMargin;
+			let tmpIndicatorY = tmpHeight - tmpIndicatorSize - tmpIndicatorMargin;
+			let tmpShapeProvider = this._FlowView._ConnectorShapesProvider;
+			let tmpIndicator;
+
+			if (tmpShapeProvider)
+			{
+				tmpIndicator = tmpShapeProvider.createPanelIndicatorElement(
+					pNodeData.Hash, tmpIndicatorX, tmpIndicatorY,
+					tmpIndicatorSize, tmpIndicatorSize);
+			}
+			else
+			{
+				tmpIndicator = this._FlowView._SVGHelperProvider.createSVGElement('rect');
+				tmpIndicator.setAttribute('class', 'pict-flow-node-panel-indicator');
+				tmpIndicator.setAttribute('x', String(tmpIndicatorX));
+				tmpIndicator.setAttribute('y', String(tmpIndicatorY));
+				tmpIndicator.setAttribute('width', String(tmpIndicatorSize));
+				tmpIndicator.setAttribute('height', String(tmpIndicatorSize));
+				tmpIndicator.setAttribute('rx', '2');
+				tmpIndicator.setAttribute('ry', '2');
+				tmpIndicator.setAttribute('data-node-hash', pNodeData.Hash);
+				tmpIndicator.setAttribute('data-element-type', 'panel-indicator');
+			}
 
 			let tmpIndicatorTitle = this._FlowView._SVGHelperProvider.createSVGElement('title');
 			tmpIndicatorTitle.textContent = 'Double-click to open properties';
@@ -277,15 +291,24 @@ class PictViewFlowNode extends libPictView
 				let tmpPosition = this._getPortLocalPosition(tmpSide, i, tmpPorts.length, pWidth, pHeight);
 
 				// Port circle
-				let tmpCircle = this._FlowView._SVGHelperProvider.createSVGElement('circle');
-				tmpCircle.setAttribute('class', `pict-flow-port ${tmpPort.Direction}`);
-				tmpCircle.setAttribute('cx', String(tmpPosition.x));
-				tmpCircle.setAttribute('cy', String(tmpPosition.y));
-				tmpCircle.setAttribute('r', '5');
-				tmpCircle.setAttribute('data-port-hash', tmpPort.Hash);
-				tmpCircle.setAttribute('data-node-hash', pNodeData.Hash);
-				tmpCircle.setAttribute('data-port-direction', tmpPort.Direction);
-				tmpCircle.setAttribute('data-element-type', 'port');
+				let tmpShapeProvider = this._FlowView._ConnectorShapesProvider;
+				let tmpCircle;
+				if (tmpShapeProvider)
+				{
+					tmpCircle = tmpShapeProvider.createPortElement(tmpPort, tmpPosition, pNodeData.Hash);
+				}
+				else
+				{
+					tmpCircle = this._FlowView._SVGHelperProvider.createSVGElement('circle');
+					tmpCircle.setAttribute('class', `pict-flow-port ${tmpPort.Direction}`);
+					tmpCircle.setAttribute('cx', String(tmpPosition.x));
+					tmpCircle.setAttribute('cy', String(tmpPosition.y));
+					tmpCircle.setAttribute('r', '5');
+					tmpCircle.setAttribute('data-port-hash', tmpPort.Hash);
+					tmpCircle.setAttribute('data-node-hash', pNodeData.Hash);
+					tmpCircle.setAttribute('data-port-direction', tmpPort.Direction);
+					tmpCircle.setAttribute('data-element-type', 'port');
+				}
 				pGroup.appendChild(tmpCircle);
 
 				// Port label

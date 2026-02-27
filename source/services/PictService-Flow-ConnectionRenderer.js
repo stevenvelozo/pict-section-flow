@@ -53,31 +53,42 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 		let tmpViewIdentifier = this._FlowView.options.ViewIdentifier;
 
 		// Hit area (wider invisible path for easier selection)
-		let tmpHitArea = this._FlowView._SVGHelperProvider.createSVGElement('path');
-		tmpHitArea.setAttribute('class', 'pict-flow-connection-hitarea');
-		tmpHitArea.setAttribute('d', tmpPath);
-		tmpHitArea.setAttribute('data-connection-hash', pConnection.Hash);
-		tmpHitArea.setAttribute('data-element-type', 'connection-hitarea');
-		pConnectionsLayer.appendChild(tmpHitArea);
-
-		// Visible connection path
-		let tmpPathElement = this._FlowView._SVGHelperProvider.createSVGElement('path');
-		tmpPathElement.setAttribute('class', `pict-flow-connection ${pIsSelected ? 'selected' : ''}`);
-		tmpPathElement.setAttribute('d', tmpPath);
-		tmpPathElement.setAttribute('data-connection-hash', pConnection.Hash);
-		tmpPathElement.setAttribute('data-element-type', 'connection');
-
-		// Arrow marker
-		if (pIsSelected)
+		let tmpShapeProvider = this._FlowView._ConnectorShapesProvider;
+		if (tmpShapeProvider)
 		{
-			tmpPathElement.setAttribute('marker-end', `url(#flow-arrowhead-selected-${tmpViewIdentifier})`);
+			let tmpHitArea = tmpShapeProvider.createConnectionHitAreaElement(tmpPath, pConnection.Hash);
+			pConnectionsLayer.appendChild(tmpHitArea);
+
+			let tmpPathElement = tmpShapeProvider.createConnectionPathElement(
+				tmpPath, pConnection.Hash, pIsSelected, tmpViewIdentifier);
+			pConnectionsLayer.appendChild(tmpPathElement);
 		}
 		else
 		{
-			tmpPathElement.setAttribute('marker-end', `url(#flow-arrowhead-${tmpViewIdentifier})`);
-		}
+			let tmpHitArea = this._FlowView._SVGHelperProvider.createSVGElement('path');
+			tmpHitArea.setAttribute('class', 'pict-flow-connection-hitarea');
+			tmpHitArea.setAttribute('d', tmpPath);
+			tmpHitArea.setAttribute('data-connection-hash', pConnection.Hash);
+			tmpHitArea.setAttribute('data-element-type', 'connection-hitarea');
+			pConnectionsLayer.appendChild(tmpHitArea);
 
-		pConnectionsLayer.appendChild(tmpPathElement);
+			let tmpPathElement = this._FlowView._SVGHelperProvider.createSVGElement('path');
+			tmpPathElement.setAttribute('class', `pict-flow-connection ${pIsSelected ? 'selected' : ''}`);
+			tmpPathElement.setAttribute('d', tmpPath);
+			tmpPathElement.setAttribute('data-connection-hash', pConnection.Hash);
+			tmpPathElement.setAttribute('data-element-type', 'connection');
+
+			if (pIsSelected)
+			{
+				tmpPathElement.setAttribute('marker-end', `url(#flow-arrowhead-selected-${tmpViewIdentifier})`);
+			}
+			else
+			{
+				tmpPathElement.setAttribute('marker-end', `url(#flow-arrowhead-${tmpViewIdentifier})`);
+			}
+
+			pConnectionsLayer.appendChild(tmpPathElement);
+		}
 
 		// Render drag handles when selected
 		if (pIsSelected)
@@ -434,15 +445,30 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 	 */
 	_createHandle(pLayer, pConnectionHash, pHandleType, pX, pY, pClassName)
 	{
-		let tmpCircle = this._FlowView._SVGHelperProvider.createSVGElement('circle');
-		tmpCircle.setAttribute('class', pClassName);
-		tmpCircle.setAttribute('cx', String(pX));
-		tmpCircle.setAttribute('cy', String(pY));
-		tmpCircle.setAttribute('r', '6');
-		tmpCircle.setAttribute('data-element-type', 'connection-handle');
-		tmpCircle.setAttribute('data-connection-hash', pConnectionHash);
-		tmpCircle.setAttribute('data-handle-type', pHandleType);
-		pLayer.appendChild(tmpCircle);
+		let tmpShapeProvider = this._FlowView._ConnectorShapesProvider;
+		let tmpShapeKey = (pClassName === 'pict-flow-connection-handle-midpoint')
+			? 'connection-handle-midpoint' : 'connection-handle';
+
+		if (tmpShapeProvider)
+		{
+			let tmpHandle = tmpShapeProvider.createHandleElement(
+				pConnectionHash, pHandleType, pX, pY, tmpShapeKey);
+			tmpHandle.setAttribute('data-element-type', 'connection-handle');
+			tmpHandle.setAttribute('data-connection-hash', pConnectionHash);
+			pLayer.appendChild(tmpHandle);
+		}
+		else
+		{
+			let tmpCircle = this._FlowView._SVGHelperProvider.createSVGElement('circle');
+			tmpCircle.setAttribute('class', pClassName);
+			tmpCircle.setAttribute('cx', String(pX));
+			tmpCircle.setAttribute('cy', String(pY));
+			tmpCircle.setAttribute('r', '6');
+			tmpCircle.setAttribute('data-element-type', 'connection-handle');
+			tmpCircle.setAttribute('data-connection-hash', pConnectionHash);
+			tmpCircle.setAttribute('data-handle-type', pHandleType);
+			pLayer.appendChild(tmpCircle);
+		}
 	}
 
 	/**
@@ -476,9 +502,20 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 			{ x: pEndX,   y: pEndY,   side: 'left' }
 		);
 
-		let tmpPathElement = this._FlowView._SVGHelperProvider.createSVGElement('path');
-		tmpPathElement.setAttribute('class', 'pict-flow-drag-connection');
-		tmpPathElement.setAttribute('d', tmpPath);
+		let tmpShapeProvider = this._FlowView._ConnectorShapesProvider;
+		let tmpPathElement;
+
+		if (tmpShapeProvider)
+		{
+			tmpPathElement = tmpShapeProvider.createDragConnectionElement(tmpPath);
+		}
+		else
+		{
+			tmpPathElement = this._FlowView._SVGHelperProvider.createSVGElement('path');
+			tmpPathElement.setAttribute('class', 'pict-flow-drag-connection');
+			tmpPathElement.setAttribute('d', tmpPath);
+		}
+
 		pLayer.appendChild(tmpPathElement);
 
 		return tmpPathElement;

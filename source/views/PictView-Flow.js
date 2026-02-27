@@ -17,6 +17,7 @@ const libPictProviderFlowGeometry = require('../providers/PictProvider-Flow-Geom
 const libPictProviderFlowPanelChrome = require('../providers/PictProvider-Flow-PanelChrome.js');
 const libPictProviderFlowCSS = require('../providers/PictProvider-Flow-CSS.js');
 const libPictProviderFlowIcons = require('../providers/PictProvider-Flow-Icons.js');
+const libPictProviderFlowConnectorShapes = require('../providers/PictProvider-Flow-ConnectorShapes.js');
 
 const libPictViewFlowNode = require('./PictView-Flow-Node.js');
 const libPictViewFlowToolbar = require('./PictView-Flow-Toolbar.js');
@@ -75,24 +76,6 @@ const _DefaultConfiguration =
 			id="Flow-SVG-{~D:Record.ViewIdentifier~}"
 			xmlns="http://www.w3.org/2000/svg">
 			<defs>
-				<marker id="flow-arrowhead-{~D:Record.ViewIdentifier~}"
-					markerWidth="5" markerHeight="7"
-					refX="7.5" refY="3.5"
-					orient="auto" markerUnits="strokeWidth">
-					<polygon points="0 0, 5 3.5, 0 7" fill="#95a5a6" />
-				</marker>
-				<marker id="flow-arrowhead-selected-{~D:Record.ViewIdentifier~}"
-					markerWidth="5" markerHeight="7"
-					refX="7.5" refY="3.5"
-					orient="auto" markerUnits="strokeWidth">
-					<polygon points="0 0, 5 3.5, 0 7" fill="#3498db" />
-				</marker>
-				<marker id="flow-tether-arrowhead-{~D:Record.ViewIdentifier~}"
-					markerWidth="4" markerHeight="6"
-					refX="6" refY="3"
-					orient="auto" markerUnits="strokeWidth">
-					<polygon points="0 0, 4 3, 0 6" fill="#95a5a6" />
-				</marker>
 				<pattern id="flow-grid-{~D:Record.ViewIdentifier~}"
 					width="20" height="20" patternUnits="userSpaceOnUse">
 					<line x1="20" y1="0" x2="20" y2="20" class="pict-flow-grid-pattern" />
@@ -188,6 +171,10 @@ class PictViewFlow extends libPictView
 		{
 			this.fable.addServiceType('PictProviderFlowIcons', libPictProviderFlowIcons);
 		}
+		if (!this.fable.servicesMap.hasOwnProperty('PictProviderFlowConnectorShapes'))
+		{
+			this.fable.addServiceType('PictProviderFlowConnectorShapes', libPictProviderFlowConnectorShapes);
+		}
 		if (!this.fable.servicesMap.hasOwnProperty('PictProviderFlowNodeTypes'))
 		{
 			this.fable.addServiceType('PictProviderFlowNodeTypes', libPictProviderFlowNodeTypes);
@@ -266,6 +253,7 @@ class PictViewFlow extends libPictView
 		this._PanelManager = null;
 		this._CSSProvider = null;
 		this._IconProvider = null;
+		this._ConnectorShapesProvider = null;
 		this._SVGHelperProvider = null;
 		this._GeometryProvider = null;
 		this._PanelChromeProvider = null;
@@ -325,6 +313,9 @@ class PictViewFlow extends libPictView
 		// Instantiate the SVG icon provider
 		this._IconProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowIcons', { FlowView: this });
 		this._IconProvider.registerIconTemplates();
+
+		// Instantiate the connector shapes provider
+		this._ConnectorShapesProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowConnectorShapes', { FlowView: this });
 
 		// Instantiate shared utility providers first (used by services below)
 		this._SVGHelperProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowSVGHelpers');
@@ -416,6 +407,12 @@ class PictViewFlow extends libPictView
 			this._IconProvider.registerIconTemplates();
 		}
 
+		// Initialize connector shapes provider (fallback if not already created)
+		if (!this._ConnectorShapesProvider)
+		{
+			this._ConnectorShapesProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowConnectorShapes', { FlowView: this });
+		}
+
 		// Initialize shared utility providers (used by services below)
 		if (!this._SVGHelperProvider)
 		{
@@ -474,6 +471,24 @@ class PictViewFlow extends libPictView
 		if (!this._LayoutProvider)
 		{
 			this._LayoutProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowLayouts', { FlowView: this });
+		}
+
+		// Inject marker defs via the connector shapes provider
+		// Note: insertAdjacentHTML does not work on SVG elements (wrong namespace),
+		// so we parse via a temporary <svg> element to ensure SVG namespace.
+		if (this._ConnectorShapesProvider && this._SVGElement)
+		{
+			let tmpDefs = this._SVGElement.querySelector('defs');
+			if (tmpDefs)
+			{
+				let tmpMarkerMarkup = this._ConnectorShapesProvider.generateMarkerDefs(tmpViewIdentifier);
+				let tmpTempSVG = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+				tmpTempSVG.innerHTML = tmpMarkerMarkup;
+				while (tmpTempSVG.firstChild)
+				{
+					tmpDefs.appendChild(tmpTempSVG.firstChild);
+				}
+			}
 		}
 
 		// Setup the toolbar if enabled
