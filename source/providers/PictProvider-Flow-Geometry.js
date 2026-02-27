@@ -59,6 +59,49 @@ class PictProviderFlowGeometry extends libFableServiceProviderBase
 				return { x: pRectData.X + pRectData.Width, y: pRectData.Y + pRectData.Height / 2 };
 		}
 	}
+
+	/**
+	 * Calculate a port's local position relative to node origin.
+	 *
+	 * For left and right side ports, positioning is offset below the title bar
+	 * so that ports never overlap the header area.
+	 *
+	 * @param {string} pSide - 'left', 'right', 'top', 'bottom'
+	 * @param {number} pIndex - Index of this port on its side
+	 * @param {number} pTotal - Total ports on this side
+	 * @param {number} pWidth - Node width
+	 * @param {number} pHeight - Node height
+	 * @param {number} pTitleBarHeight - Height of the node title bar
+	 * @returns {{x: number, y: number}}
+	 */
+	getPortLocalPosition(pSide, pIndex, pTotal, pWidth, pHeight, pTitleBarHeight)
+	{
+		let tmpSpacing;
+
+		switch (pSide)
+		{
+			case 'left':
+			{
+				let tmpBodyHeight = pHeight - pTitleBarHeight;
+				tmpSpacing = tmpBodyHeight / (pTotal + 1);
+				return { x: 0, y: pTitleBarHeight + tmpSpacing * (pIndex + 1) };
+			}
+			case 'right':
+			{
+				let tmpBodyHeight = pHeight - pTitleBarHeight;
+				tmpSpacing = tmpBodyHeight / (pTotal + 1);
+				return { x: pWidth, y: pTitleBarHeight + tmpSpacing * (pIndex + 1) };
+			}
+			case 'top':
+				tmpSpacing = pWidth / (pTotal + 1);
+				return { x: tmpSpacing * (pIndex + 1), y: 0 };
+			case 'bottom':
+				tmpSpacing = pWidth / (pTotal + 1);
+				return { x: tmpSpacing * (pIndex + 1), y: pHeight };
+			default:
+				return { x: pWidth, y: pHeight / 2 };
+		}
+	}
 }
 
 module.exports = PictProviderFlowGeometry;

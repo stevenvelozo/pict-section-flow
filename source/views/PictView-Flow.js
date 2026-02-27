@@ -5,6 +5,9 @@ const libPictServiceFlowConnectionRenderer = require('../services/PictService-Fl
 const libPictServiceFlowTether = require('../services/PictService-Flow-Tether.js');
 const libPictServiceFlowLayout = require('../services/PictService-Flow-Layout.js');
 const libPictServiceFlowPathGenerator = require('../services/PictService-Flow-PathGenerator.js');
+const libPictServiceFlowViewportManager = require('../services/PictService-Flow-ViewportManager.js');
+const libPictServiceFlowSelectionManager = require('../services/PictService-Flow-SelectionManager.js');
+const libPictServiceFlowPanelManager = require('../services/PictService-Flow-PanelManager.js');
 
 const libPictProviderFlowNodeTypes = require('../providers/PictProvider-Flow-NodeTypes.js');
 const libPictProviderFlowEventHandler = require('../providers/PictProvider-Flow-EventHandler.js');
@@ -507,6 +510,18 @@ class PictViewFlow extends libPictView
 		{
 			this.fable.addServiceType('PictServiceFlowPathGenerator', libPictServiceFlowPathGenerator);
 		}
+		if (!this.fable.servicesMap.hasOwnProperty('PictServiceFlowViewportManager'))
+		{
+			this.fable.addServiceType('PictServiceFlowViewportManager', libPictServiceFlowViewportManager);
+		}
+		if (!this.fable.servicesMap.hasOwnProperty('PictServiceFlowSelectionManager'))
+		{
+			this.fable.addServiceType('PictServiceFlowSelectionManager', libPictServiceFlowSelectionManager);
+		}
+		if (!this.fable.servicesMap.hasOwnProperty('PictServiceFlowPanelManager'))
+		{
+			this.fable.addServiceType('PictServiceFlowPanelManager', libPictServiceFlowPanelManager);
+		}
 		if (!this.fable.servicesMap.hasOwnProperty('PictProviderFlowSVGHelpers'))
 		{
 			this.fable.addServiceType('PictProviderFlowSVGHelpers', libPictProviderFlowSVGHelpers);
@@ -592,6 +607,9 @@ class PictViewFlow extends libPictView
 		this._TetherService = null;
 		this._LayoutService = null;
 		this._PathGenerator = null;
+		this._ViewportManager = null;
+		this._SelectionManager = null;
+		this._PanelManager = null;
 		this._SVGHelperProvider = null;
 		this._GeometryProvider = null;
 		this._PanelChromeProvider = null;
@@ -601,8 +619,6 @@ class PictViewFlow extends libPictView
 		this._NodeView = null;
 		this._ToolbarView = null;
 		this._PropertiesPanelView = null;
-
-		this._IsFullscreen = false;
 
 		this.initialRenderComplete = false;
 	}
@@ -615,6 +631,12 @@ class PictViewFlow extends libPictView
 	get viewState()
 	{
 		return this._FlowData.ViewState;
+	}
+
+	// Backward-compatible getter for InteractionManager direct access
+	get _IsFullscreen()
+	{
+		return this._ViewportManager ? this._ViewportManager._IsFullscreen : false;
 	}
 
 	/**
@@ -651,6 +673,9 @@ class PictViewFlow extends libPictView
 		this._ConnectionRenderer = this.fable.instantiateServiceProviderWithoutRegistration('PictServiceFlowConnectionRenderer', { FlowView: this });
 		this._TetherService = this.fable.instantiateServiceProviderWithoutRegistration('PictServiceFlowTether', { FlowView: this });
 		this._LayoutService = this.fable.instantiateServiceProviderWithoutRegistration('PictServiceFlowLayout', { FlowView: this });
+		this._ViewportManager = this.fable.instantiateServiceProviderWithoutRegistration('PictServiceFlowViewportManager', { FlowView: this });
+		this._SelectionManager = this.fable.instantiateServiceProviderWithoutRegistration('PictServiceFlowSelectionManager', { FlowView: this });
+		this._PanelManager = this.fable.instantiateServiceProviderWithoutRegistration('PictServiceFlowPanelManager', { FlowView: this });
 
 		// Instantiate providers, passing any additional node types from view options
 		this._NodeTypeProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowNodeTypes', { FlowView: this, AdditionalNodeTypes: this.options.NodeTypes });
@@ -747,6 +772,18 @@ class PictViewFlow extends libPictView
 		if (!this._LayoutService)
 		{
 			this._LayoutService = this.fable.instantiateServiceProviderWithoutRegistration('PictServiceFlowLayout', { FlowView: this });
+		}
+		if (!this._ViewportManager)
+		{
+			this._ViewportManager = this.fable.instantiateServiceProviderWithoutRegistration('PictServiceFlowViewportManager', { FlowView: this });
+		}
+		if (!this._SelectionManager)
+		{
+			this._SelectionManager = this.fable.instantiateServiceProviderWithoutRegistration('PictServiceFlowSelectionManager', { FlowView: this });
+		}
+		if (!this._PanelManager)
+		{
+			this._PanelManager = this.fable.instantiateServiceProviderWithoutRegistration('PictServiceFlowPanelManager', { FlowView: this });
 		}
 		if (!this._NodeTypeProvider)
 		{
@@ -1107,18 +1144,7 @@ class PictViewFlow extends libPictView
 	 */
 	selectNode(pNodeHash)
 	{
-		let tmpPreviousSelection = this._FlowData.ViewState.SelectedNodeHash;
-		this._FlowData.ViewState.SelectedNodeHash = pNodeHash;
-		this._FlowData.ViewState.SelectedConnectionHash = null;
-		this._FlowData.ViewState.SelectedTetherHash = null;
-
-		this.renderFlow();
-
-		if (this._EventHandlerProvider && pNodeHash !== tmpPreviousSelection)
-		{
-			let tmpNode = pNodeHash ? this._FlowData.Nodes.find((pNode) => pNode.Hash === pNodeHash) : null;
-			this._EventHandlerProvider.fireEvent('onNodeSelected', tmpNode);
-		}
+		return this._SelectionManager.selectNode(pNodeHash);
 	}
 
 	/**
@@ -1127,18 +1153,7 @@ class PictViewFlow extends libPictView
 	 */
 	selectConnection(pConnectionHash)
 	{
-		let tmpPreviousSelection = this._FlowData.ViewState.SelectedConnectionHash;
-		this._FlowData.ViewState.SelectedConnectionHash = pConnectionHash;
-		this._FlowData.ViewState.SelectedNodeHash = null;
-		this._FlowData.ViewState.SelectedTetherHash = null;
-
-		this.renderFlow();
-
-		if (this._EventHandlerProvider && pConnectionHash !== tmpPreviousSelection)
-		{
-			let tmpConnection = pConnectionHash ? this._FlowData.Connections.find((pConn) => pConn.Hash === pConnectionHash) : null;
-			this._EventHandlerProvider.fireEvent('onConnectionSelected', tmpConnection);
-		}
+		return this._SelectionManager.selectConnection(pConnectionHash);
 	}
 
 	/**
@@ -1146,10 +1161,7 @@ class PictViewFlow extends libPictView
 	 */
 	deselectAll()
 	{
-		this._FlowData.ViewState.SelectedNodeHash = null;
-		this._FlowData.ViewState.SelectedConnectionHash = null;
-		this._FlowData.ViewState.SelectedTetherHash = null;
-		this.renderFlow();
+		return this._SelectionManager.deselectAll();
 	}
 
 	/**
@@ -1158,15 +1170,7 @@ class PictViewFlow extends libPictView
 	 */
 	deleteSelected()
 	{
-		if (this._FlowData.ViewState.SelectedNodeHash)
-		{
-			return this.removeNode(this._FlowData.ViewState.SelectedNodeHash);
-		}
-		if (this._FlowData.ViewState.SelectedConnectionHash)
-		{
-			return this.removeConnection(this._FlowData.ViewState.SelectedConnectionHash);
-		}
-		return false;
+		return this._SelectionManager.deleteSelected();
 	}
 
 	/**
@@ -1174,11 +1178,7 @@ class PictViewFlow extends libPictView
 	 */
 	updateViewportTransform()
 	{
-		if (!this._ViewportElement) return;
-		let tmpVS = this._FlowData.ViewState;
-		this._ViewportElement.setAttribute('transform',
-			`translate(${tmpVS.PanX}, ${tmpVS.PanY}) scale(${tmpVS.Zoom})`
-		);
+		return this._ViewportManager.updateViewportTransform();
 	}
 
 	/**
@@ -1189,19 +1189,7 @@ class PictViewFlow extends libPictView
 	 */
 	setZoom(pZoom, pFocusX, pFocusY)
 	{
-		let tmpNewZoom = Math.max(this.options.MinZoom, Math.min(this.options.MaxZoom, pZoom));
-		let tmpOldZoom = this._FlowData.ViewState.Zoom;
-
-		if (typeof pFocusX === 'number' && typeof pFocusY === 'number')
-		{
-			// Zoom toward focus point
-			let tmpVS = this._FlowData.ViewState;
-			tmpVS.PanX = pFocusX - (pFocusX - tmpVS.PanX) * (tmpNewZoom / tmpOldZoom);
-			tmpVS.PanY = pFocusY - (pFocusY - tmpVS.PanY) * (tmpNewZoom / tmpOldZoom);
-		}
-
-		this._FlowData.ViewState.Zoom = tmpNewZoom;
-		this.updateViewportTransform();
+		return this._ViewportManager.setZoom(pZoom, pFocusX, pFocusY);
 	}
 
 	/**
@@ -1209,39 +1197,7 @@ class PictViewFlow extends libPictView
 	 */
 	zoomToFit()
 	{
-		if (this._FlowData.Nodes.length === 0) return;
-		if (!this._SVGElement) return;
-
-		let tmpMinX = Infinity, tmpMinY = Infinity;
-		let tmpMaxX = -Infinity, tmpMaxY = -Infinity;
-
-		for (let i = 0; i < this._FlowData.Nodes.length; i++)
-		{
-			let tmpNode = this._FlowData.Nodes[i];
-			tmpMinX = Math.min(tmpMinX, tmpNode.X);
-			tmpMinY = Math.min(tmpMinY, tmpNode.Y);
-			tmpMaxX = Math.max(tmpMaxX, tmpNode.X + tmpNode.Width);
-			tmpMaxY = Math.max(tmpMaxY, tmpNode.Y + tmpNode.Height);
-		}
-
-		let tmpPadding = 50;
-		let tmpFlowWidth = tmpMaxX - tmpMinX + tmpPadding * 2;
-		let tmpFlowHeight = tmpMaxY - tmpMinY + tmpPadding * 2;
-
-		let tmpSVGRect = this._SVGElement.getBoundingClientRect();
-		let tmpScaleX = tmpSVGRect.width / tmpFlowWidth;
-		let tmpScaleY = tmpSVGRect.height / tmpFlowHeight;
-		let tmpZoom = Math.min(tmpScaleX, tmpScaleY, 1.0); // Don't zoom in past 1.0
-		tmpZoom = Math.max(this.options.MinZoom, Math.min(this.options.MaxZoom, tmpZoom));
-
-		let tmpCenterX = (tmpMinX + tmpMaxX) / 2;
-		let tmpCenterY = (tmpMinY + tmpMaxY) / 2;
-
-		this._FlowData.ViewState.Zoom = tmpZoom;
-		this._FlowData.ViewState.PanX = (tmpSVGRect.width / 2) - (tmpCenterX * tmpZoom);
-		this._FlowData.ViewState.PanY = (tmpSVGRect.height / 2) - (tmpCenterY * tmpZoom);
-
-		this.updateViewportTransform();
+		return this._ViewportManager.zoomToFit();
 	}
 
 	/**
@@ -1269,24 +1225,7 @@ class PictViewFlow extends libPictView
 	 */
 	toggleFullscreen()
 	{
-		let tmpViewIdentifier = this.options.ViewIdentifier;
-		let tmpContainerElements = this.pict.ContentAssignment.getElement(`#Flow-Wrapper-${tmpViewIdentifier}`);
-		if (tmpContainerElements.length < 1) return this._IsFullscreen;
-
-		let tmpContainer = tmpContainerElements[0];
-
-		this._IsFullscreen = !this._IsFullscreen;
-
-		if (this._IsFullscreen)
-		{
-			tmpContainer.classList.add('pict-flow-fullscreen');
-		}
-		else
-		{
-			tmpContainer.classList.remove('pict-flow-fullscreen');
-		}
-
-		return this._IsFullscreen;
+		return this._ViewportManager.toggleFullscreen();
 	}
 
 	/**
@@ -1294,16 +1233,7 @@ class PictViewFlow extends libPictView
 	 */
 	exitFullscreen()
 	{
-		if (!this._IsFullscreen) return;
-
-		let tmpViewIdentifier = this.options.ViewIdentifier;
-		let tmpContainerElements = this.pict.ContentAssignment.getElement(`#Flow-Wrapper-${tmpViewIdentifier}`);
-		if (tmpContainerElements.length > 0)
-		{
-			tmpContainerElements[0].classList.remove('pict-flow-fullscreen');
-		}
-
-		this._IsFullscreen = false;
+		return this._ViewportManager.exitFullscreen();
 	}
 
 	/**
@@ -1332,18 +1262,7 @@ class PictViewFlow extends libPictView
 	 */
 	selectTether(pPanelHash)
 	{
-		let tmpPreviousSelection = this._FlowData.ViewState.SelectedTetherHash;
-		this._FlowData.ViewState.SelectedTetherHash = pPanelHash;
-		this._FlowData.ViewState.SelectedNodeHash = null;
-		this._FlowData.ViewState.SelectedConnectionHash = null;
-
-		this.renderFlow();
-
-		if (this._EventHandlerProvider && pPanelHash !== tmpPreviousSelection)
-		{
-			let tmpPanel = pPanelHash ? this._FlowData.OpenPanels.find((pPanel) => pPanel.Hash === pPanelHash) : null;
-			this._EventHandlerProvider.fireEvent('onTetherSelected', tmpPanel);
-		}
+		return this._SelectionManager.selectTether(pPanelHash);
 	}
 
 	/**
@@ -1552,40 +1471,9 @@ class PictViewFlow extends libPictView
 
 		let tmpTitleBarHeight = (this._NodeView && this._NodeView.options.NodeTitleBarHeight) || 28;
 
-		let tmpX, tmpY;
+		let tmpLocal = this._GeometryProvider.getPortLocalPosition(tmpPort.Side, tmpPortIndex, tmpPortCount, tmpNode.Width, tmpNode.Height, tmpTitleBarHeight);
 
-		switch (tmpPort.Side)
-		{
-			case 'left':
-			{
-				// Distribute ports in the body area below the title bar
-				let tmpBodyHeight = tmpNode.Height - tmpTitleBarHeight;
-				tmpX = tmpNode.X;
-				tmpY = tmpNode.Y + tmpTitleBarHeight + ((tmpPortIndex + 1) / (tmpPortCount + 1)) * tmpBodyHeight;
-				break;
-			}
-			case 'right':
-			{
-				let tmpBodyHeight = tmpNode.Height - tmpTitleBarHeight;
-				tmpX = tmpNode.X + tmpNode.Width;
-				tmpY = tmpNode.Y + tmpTitleBarHeight + ((tmpPortIndex + 1) / (tmpPortCount + 1)) * tmpBodyHeight;
-				break;
-			}
-			case 'top':
-				tmpX = tmpNode.X + ((tmpPortIndex + 1) / (tmpPortCount + 1)) * tmpNode.Width;
-				tmpY = tmpNode.Y;
-				break;
-			case 'bottom':
-				tmpX = tmpNode.X + ((tmpPortIndex + 1) / (tmpPortCount + 1)) * tmpNode.Width;
-				tmpY = tmpNode.Y + tmpNode.Height;
-				break;
-			default:
-				tmpX = tmpNode.X + tmpNode.Width;
-				tmpY = tmpNode.Y + tmpNode.Height / 2;
-				break;
-		}
-
-		return { x: tmpX, y: tmpY, side: tmpPort.Side || 'right' };
+		return { x: tmpNode.X + tmpLocal.x, y: tmpNode.Y + tmpLocal.y, side: tmpPort.Side || 'right' };
 	}
 
 	/**
@@ -1596,29 +1484,7 @@ class PictViewFlow extends libPictView
 	 */
 	screenToSVGCoords(pScreenX, pScreenY)
 	{
-		if (!this._SVGElement)
-		{
-			return { x: pScreenX, y: pScreenY };
-		}
-
-		let tmpPoint = this._SVGElement.createSVGPoint();
-		tmpPoint.x = pScreenX;
-		tmpPoint.y = pScreenY;
-
-		let tmpCTM = this._SVGElement.getScreenCTM();
-		if (tmpCTM)
-		{
-			let tmpInverse = tmpCTM.inverse();
-			let tmpTransformed = tmpPoint.matrixTransform(tmpInverse);
-			// Account for viewport pan/zoom
-			let tmpVS = this._FlowData.ViewState;
-			return {
-				x: (tmpTransformed.x - tmpVS.PanX) / tmpVS.Zoom,
-				y: (tmpTransformed.y - tmpVS.PanY) / tmpVS.Zoom
-			};
-		}
-
-		return { x: pScreenX, y: pScreenY };
+		return this._ViewportManager.screenToSVGCoords(pScreenX, pScreenY);
 	}
 
 	/**
@@ -1773,59 +1639,7 @@ class PictViewFlow extends libPictView
 	 */
 	openPanel(pNodeHash)
 	{
-		let tmpNode = this.getNode(pNodeHash);
-		if (!tmpNode) return false;
-
-		let tmpNodeTypeConfig = this._NodeTypeProvider.getNodeType(tmpNode.Type);
-		if (!tmpNodeTypeConfig) return false;
-
-		// Check if a panel is already open for this node
-		let tmpExisting = this._FlowData.OpenPanels.find((pPanel) => pPanel.NodeHash === pNodeHash);
-		if (tmpExisting) return tmpExisting;
-
-		let tmpPanelConfig = tmpNodeTypeConfig.PropertiesPanel;
-		let tmpPanelHash = `panel-${this.fable.getUUID()}`;
-		let tmpWidth, tmpHeight, tmpPanelType, tmpTitle;
-
-		if (tmpPanelConfig)
-		{
-			tmpWidth = tmpPanelConfig.DefaultWidth || 300;
-			tmpHeight = tmpPanelConfig.DefaultHeight || 200;
-			tmpPanelType = tmpPanelConfig.PanelType || 'Base';
-			tmpTitle = tmpPanelConfig.Title || tmpNodeTypeConfig.Label || 'Properties';
-		}
-		else
-		{
-			// No PropertiesPanel configured — open an auto-generated info panel
-			tmpWidth = 240;
-			tmpHeight = 180;
-			tmpPanelType = 'Info';
-			tmpTitle = tmpNodeTypeConfig.Label || tmpNode.Title || 'Node Info';
-		}
-
-		let tmpPanelData =
-		{
-			Hash: tmpPanelHash,
-			NodeHash: pNodeHash,
-			PanelType: tmpPanelType,
-			Title: tmpTitle,
-			X: tmpNode.X + tmpNode.Width + 30,
-			Y: tmpNode.Y,
-			Width: tmpWidth,
-			Height: tmpHeight
-		};
-
-		this._FlowData.OpenPanels.push(tmpPanelData);
-		this.renderFlow();
-		this.marshalFromView();
-
-		if (this._EventHandlerProvider)
-		{
-			this._EventHandlerProvider.fireEvent('onPanelOpened', tmpPanelData);
-			this._EventHandlerProvider.fireEvent('onFlowChanged', this._FlowData);
-		}
-
-		return tmpPanelData;
+		return this._PanelManager.openPanel(pNodeHash);
 	}
 
 	/**
@@ -1835,27 +1649,7 @@ class PictViewFlow extends libPictView
 	 */
 	closePanel(pPanelHash)
 	{
-		let tmpIndex = this._FlowData.OpenPanels.findIndex((pPanel) => pPanel.Hash === pPanelHash);
-		if (tmpIndex < 0) return false;
-
-		let tmpRemovedPanel = this._FlowData.OpenPanels.splice(tmpIndex, 1)[0];
-
-		// Clean up the panel instance
-		if (this._PropertiesPanelView)
-		{
-			this._PropertiesPanelView.destroyPanel(pPanelHash);
-		}
-
-		this.renderFlow();
-		this.marshalFromView();
-
-		if (this._EventHandlerProvider)
-		{
-			this._EventHandlerProvider.fireEvent('onPanelClosed', tmpRemovedPanel);
-			this._EventHandlerProvider.fireEvent('onFlowChanged', this._FlowData);
-		}
-
-		return true;
+		return this._PanelManager.closePanel(pPanelHash);
 	}
 
 	/**
@@ -1865,23 +1659,7 @@ class PictViewFlow extends libPictView
 	 */
 	closePanelForNode(pNodeHash)
 	{
-		let tmpPanelsToClose = this._FlowData.OpenPanels.filter((pPanel) => pPanel.NodeHash === pNodeHash);
-		if (tmpPanelsToClose.length === 0) return false;
-
-		for (let i = 0; i < tmpPanelsToClose.length; i++)
-		{
-			let tmpIndex = this._FlowData.OpenPanels.indexOf(tmpPanelsToClose[i]);
-			if (tmpIndex >= 0)
-			{
-				this._FlowData.OpenPanels.splice(tmpIndex, 1);
-			}
-			if (this._PropertiesPanelView)
-			{
-				this._PropertiesPanelView.destroyPanel(tmpPanelsToClose[i].Hash);
-			}
-		}
-
-		return true;
+		return this._PanelManager.closePanelForNode(pNodeHash);
 	}
 
 	/**
@@ -1891,13 +1669,7 @@ class PictViewFlow extends libPictView
 	 */
 	togglePanel(pNodeHash)
 	{
-		let tmpExisting = this._FlowData.OpenPanels.find((pPanel) => pPanel.NodeHash === pNodeHash);
-		if (tmpExisting)
-		{
-			this.closePanel(tmpExisting.Hash);
-			return false;
-		}
-		return this.openPanel(pNodeHash);
+		return this._PanelManager.togglePanel(pNodeHash);
 	}
 
 	/**
@@ -1908,28 +1680,7 @@ class PictViewFlow extends libPictView
 	 */
 	updatePanelPosition(pPanelHash, pX, pY)
 	{
-		let tmpPanel = this._FlowData.OpenPanels.find((pPanel) => pPanel.Hash === pPanelHash);
-		if (!tmpPanel) return;
-
-		tmpPanel.X = pX;
-		tmpPanel.Y = pY;
-
-		// Reset tether handle positions when panel moves
-		this._resetHandlesForPanel(pPanelHash);
-
-		// Update the foreignObject position directly for smooth dragging
-		if (this._PanelsLayer)
-		{
-			let tmpFO = this._PanelsLayer.querySelector(`[data-panel-hash="${pPanelHash}"]`);
-			if (tmpFO)
-			{
-				tmpFO.setAttribute('x', String(pX));
-				tmpFO.setAttribute('y', String(pY));
-			}
-		}
-
-		// Update the tether for this panel
-		this._renderTethersForNode(tmpPanel.NodeHash);
+		return this._PanelManager.updatePanelPosition(pPanelHash, pX, pY);
 	}
 }
 

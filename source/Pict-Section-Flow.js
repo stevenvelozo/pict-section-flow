@@ -15,6 +15,9 @@ module.exports.PictServiceFlowConnectionRenderer = require('./services/PictServi
 module.exports.PictServiceFlowTether = require('./services/PictService-Flow-Tether.js');
 module.exports.PictServiceFlowLayout = require('./services/PictService-Flow-Layout.js');
 module.exports.PictServiceFlowPathGenerator = require('./services/PictService-Flow-PathGenerator.js');
+module.exports.PictServiceFlowViewportManager = require('./services/PictService-Flow-ViewportManager.js');
+module.exports.PictServiceFlowSelectionManager = require('./services/PictService-Flow-SelectionManager.js');
+module.exports.PictServiceFlowPanelManager = require('./services/PictService-Flow-PanelManager.js');
 
 // Providers
 module.exports.PictProviderFlowNodeTypes = require('./providers/PictProvider-Flow-NodeTypes.js');

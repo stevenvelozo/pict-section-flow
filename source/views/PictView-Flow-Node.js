@@ -309,33 +309,7 @@ class PictViewFlowNode extends libPictView
 	 */
 	_getPortLocalPosition(pSide, pIndex, pTotal, pWidth, pHeight)
 	{
-		let tmpSpacing;
-		let tmpTitleBarHeight = this.options.NodeTitleBarHeight;
-
-		switch (pSide)
-		{
-			case 'left':
-			{
-				// Distribute ports in the body area below the title bar
-				let tmpBodyHeight = pHeight - tmpTitleBarHeight;
-				tmpSpacing = tmpBodyHeight / (pTotal + 1);
-				return { x: 0, y: tmpTitleBarHeight + tmpSpacing * (pIndex + 1) };
-			}
-			case 'right':
-			{
-				let tmpBodyHeight = pHeight - tmpTitleBarHeight;
-				tmpSpacing = tmpBodyHeight / (pTotal + 1);
-				return { x: pWidth, y: tmpTitleBarHeight + tmpSpacing * (pIndex + 1) };
-			}
-			case 'top':
-				tmpSpacing = pWidth / (pTotal + 1);
-				return { x: tmpSpacing * (pIndex + 1), y: 0 };
-			case 'bottom':
-				tmpSpacing = pWidth / (pTotal + 1);
-				return { x: tmpSpacing * (pIndex + 1), y: pHeight };
-			default:
-				return { x: pWidth, y: pHeight / 2 };
-		}
+		return this._FlowView._GeometryProvider.getPortLocalPosition(pSide, pIndex, pTotal, pWidth, pHeight, this.options.NodeTitleBarHeight);
 	}
 }
 
