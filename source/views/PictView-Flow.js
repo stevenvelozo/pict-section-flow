@@ -338,6 +338,71 @@ const _DefaultConfiguration =
 		.pict-flow-fullscreen .pict-flow-svg {
 			min-height: calc(100vh - 50px);
 		}
+		.pict-flow-info-panel {
+			padding: 4px;
+			font-size: 12px;
+			line-height: 1.5;
+			color: #2c3e50;
+		}
+		.pict-flow-info-panel-header {
+			font-size: 14px;
+			font-weight: 600;
+			margin-bottom: 4px;
+		}
+		.pict-flow-info-panel-header.with-icon {
+			font-size: 16px;
+		}
+		.pict-flow-info-panel-description {
+			font-size: 11px;
+			color: #7f8c8d;
+			margin-bottom: 8px;
+		}
+		.pict-flow-info-panel-badges {
+			margin-bottom: 8px;
+		}
+		.pict-flow-info-panel-badge {
+			display: inline-block;
+			padding: 1px 6px;
+			border-radius: 3px;
+			font-size: 10px;
+			margin-right: 4px;
+		}
+		.pict-flow-info-panel-badge.category {
+			background: #ecf0f1;
+			color: #7f8c8d;
+		}
+		.pict-flow-info-panel-badge.code {
+			background: #eaf2f8;
+			color: #2980b9;
+			font-family: monospace;
+		}
+		.pict-flow-info-panel-section {
+			margin-bottom: 6px;
+		}
+		.pict-flow-info-panel-section-title {
+			font-size: 10px;
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
+			color: #95a5a6;
+			margin-bottom: 2px;
+		}
+		.pict-flow-info-panel-port {
+			padding: 2px 6px;
+			background: #f8f9fa;
+			margin-bottom: 2px;
+			font-size: 11px;
+		}
+		.pict-flow-info-panel-port.input {
+			border-left: 3px solid #3498db;
+		}
+		.pict-flow-info-panel-port.output {
+			border-left: 3px solid #2ecc71;
+		}
+		.pict-flow-info-panel-port-constraint {
+			color: #95a5a6;
+			font-size: 10px;
+		}
 	`,
 
 	Templates:
