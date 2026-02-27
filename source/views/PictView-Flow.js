@@ -1687,7 +1687,7 @@ class PictViewFlow extends libPictView
 		if (!tmpNode) return false;
 
 		let tmpNodeTypeConfig = this._NodeTypeProvider.getNodeType(tmpNode.Type);
-		if (!tmpNodeTypeConfig || !tmpNodeTypeConfig.PropertiesPanel) return false;
+		if (!tmpNodeTypeConfig) return false;
 
 		// Check if a panel is already open for this node
 		let tmpExisting = this._FlowData.OpenPanels.find((pPanel) => pPanel.NodeHash === pNodeHash);
@@ -1695,15 +1695,30 @@ class PictViewFlow extends libPictView
 
 		let tmpPanelConfig = tmpNodeTypeConfig.PropertiesPanel;
 		let tmpPanelHash = `panel-${this.fable.getUUID()}`;
-		let tmpWidth = tmpPanelConfig.DefaultWidth || 300;
-		let tmpHeight = tmpPanelConfig.DefaultHeight || 200;
+		let tmpWidth, tmpHeight, tmpPanelType, tmpTitle;
+
+		if (tmpPanelConfig)
+		{
+			tmpWidth = tmpPanelConfig.DefaultWidth || 300;
+			tmpHeight = tmpPanelConfig.DefaultHeight || 200;
+			tmpPanelType = tmpPanelConfig.PanelType || 'Base';
+			tmpTitle = tmpPanelConfig.Title || tmpNodeTypeConfig.Label || 'Properties';
+		}
+		else
+		{
+			// No PropertiesPanel configured — open an auto-generated info panel
+			tmpWidth = 240;
+			tmpHeight = 180;
+			tmpPanelType = 'Info';
+			tmpTitle = tmpNodeTypeConfig.Label || tmpNode.Title || 'Node Info';
+		}
 
 		let tmpPanelData =
 		{
 			Hash: tmpPanelHash,
 			NodeHash: pNodeHash,
-			PanelType: tmpPanelConfig.PanelType || 'Base',
-			Title: tmpPanelConfig.Title || tmpNodeTypeConfig.Label || 'Properties',
+			PanelType: tmpPanelType,
+			Title: tmpTitle,
 			X: tmpNode.X + tmpNode.Width + 30,
 			Y: tmpNode.Y,
 			Width: tmpWidth,

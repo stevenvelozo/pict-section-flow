@@ -1,6 +1,7 @@
 const libPictApplication = require('pict-application');
 const libPictRouter = require('pict-router');
 const libPictSectionForm = require('pict-section-form');
+const libPictSectionContent = require('pict-section-content');
 
 // Views
 const libViewLayout = require('./views/PictView-FlowExample-Layout.js');
@@ -41,6 +42,9 @@ class FlowExampleApplication extends libPictApplication
 
 		// Register pict-section-form service types so Form panels can use them
 		this.pict.addServiceType('PictFormMetacontroller', libPictSectionForm.PictFormMetacontroller);
+
+		// Register pict-section-content service types so Markdown panels can render content
+		this.pict.addServiceType('PictContentProvider', libPictSectionContent.PictContentProvider);
 	}
 
 	onAfterInitializeAsync(fCallback)

@@ -192,7 +192,14 @@ class PictViewFlowPropertiesPanel extends libPictView
 		if (!tmpNodeData) return;
 
 		let tmpNodeTypeConfig = this._FlowView._NodeTypeProvider.getNodeType(tmpNodeData.Type);
-		if (!tmpNodeTypeConfig || !tmpNodeTypeConfig.PropertiesPanel) return;
+		if (!tmpNodeTypeConfig) return;
+
+		// If no PropertiesPanel is configured, render the auto-generated info panel
+		if (!tmpNodeTypeConfig.PropertiesPanel)
+		{
+			this._renderInfoPanelContent(pBodyContainer, tmpNodeData, tmpNodeTypeConfig);
+			return;
+		}
 
 		let tmpPanelConfig = tmpNodeTypeConfig.PropertiesPanel;
 		let tmpPanelType = tmpPanelConfig.PanelType || 'Base';
@@ -230,6 +237,103 @@ class PictViewFlowPropertiesPanel extends libPictView
 		{
 			tmpInstance.render(pBodyContainer, tmpNodeData);
 		}
+	}
+
+	/**
+	 * Render an auto-generated info panel for nodes without a configured PropertiesPanel.
+	 * Shows the node type, description, and a summary of input/output ports with
+	 * their connection constraints.
+	 *
+	 * @param {HTMLDivElement} pContainer
+	 * @param {Object} pNodeData
+	 * @param {Object} pNodeTypeConfig
+	 */
+	_renderInfoPanelContent(pContainer, pNodeData, pNodeTypeConfig)
+	{
+		let tmpMeta = pNodeTypeConfig.CardMetadata || {};
+		let tmpPorts = pNodeTypeConfig.DefaultPorts || [];
+
+		let tmpInputs = tmpPorts.filter((pPort) => pPort.Direction === 'input');
+		let tmpOutputs = tmpPorts.filter((pPort) => pPort.Direction === 'output');
+
+		let tmpHTML = '<div style="padding:4px;font-size:12px;line-height:1.5;color:#2c3e50">';
+
+		// Header: icon + type label
+		let tmpLabel = pNodeTypeConfig.Label || pNodeData.Type;
+		if (tmpMeta.Icon)
+		{
+			tmpHTML += `<div style="font-size:16px;font-weight:600;margin-bottom:4px">${tmpMeta.Icon} ${tmpLabel}</div>`;
+		}
+		else
+		{
+			tmpHTML += `<div style="font-size:14px;font-weight:600;margin-bottom:4px">${tmpLabel}</div>`;
+		}
+
+		// Description
+		if (tmpMeta.Description)
+		{
+			tmpHTML += `<div style="font-size:11px;color:#7f8c8d;margin-bottom:8px">${tmpMeta.Description}</div>`;
+		}
+
+		// Category + Code badge
+		if (tmpMeta.Category || tmpMeta.Code)
+		{
+			tmpHTML += '<div style="margin-bottom:8px">';
+			if (tmpMeta.Category)
+			{
+				tmpHTML += `<span style="display:inline-block;padding:1px 6px;background:#ecf0f1;border-radius:3px;font-size:10px;color:#7f8c8d;margin-right:4px">${tmpMeta.Category}</span>`;
+			}
+			if (tmpMeta.Code)
+			{
+				tmpHTML += `<span style="display:inline-block;padding:1px 6px;background:#eaf2f8;border-radius:3px;font-size:10px;color:#2980b9;font-family:monospace">${tmpMeta.Code}</span>`;
+			}
+			tmpHTML += '</div>';
+		}
+
+		// Inputs
+		if (tmpInputs.length > 0)
+		{
+			tmpHTML += '<div style="margin-bottom:6px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#95a5a6;margin-bottom:2px">Inputs</div>';
+			for (let i = 0; i < tmpInputs.length; i++)
+			{
+				let tmpPort = tmpInputs[i];
+				let tmpConstraint = '';
+				let tmpMin = (typeof tmpPort.MinimumInputCount === 'number') ? tmpPort.MinimumInputCount : 0;
+				let tmpMax = (typeof tmpPort.MaximumInputCount === 'number') ? tmpPort.MaximumInputCount : -1;
+				if (tmpMin > 0 || tmpMax > 0)
+				{
+					if (tmpMax < 0)
+					{
+						tmpConstraint = ` <span style="color:#95a5a6;font-size:10px">(min ${tmpMin})</span>`;
+					}
+					else if (tmpMin === tmpMax)
+					{
+						tmpConstraint = ` <span style="color:#95a5a6;font-size:10px">(exactly ${tmpMin})</span>`;
+					}
+					else
+					{
+						tmpConstraint = ` <span style="color:#95a5a6;font-size:10px">(${tmpMin}\u2013${tmpMax})</span>`;
+					}
+				}
+				tmpHTML += `<div style="padding:2px 6px;background:#f8f9fa;border-left:3px solid #3498db;margin-bottom:2px;font-size:11px">${tmpPort.Label || 'In'}${tmpConstraint}</div>`;
+			}
+			tmpHTML += '</div>';
+		}
+
+		// Outputs
+		if (tmpOutputs.length > 0)
+		{
+			tmpHTML += '<div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#95a5a6;margin-bottom:2px">Outputs</div>';
+			for (let i = 0; i < tmpOutputs.length; i++)
+			{
+				let tmpPort = tmpOutputs[i];
+				tmpHTML += `<div style="padding:2px 6px;background:#f8f9fa;border-left:3px solid #2ecc71;margin-bottom:2px;font-size:11px">${tmpPort.Label || 'Out'}</div>`;
+			}
+			tmpHTML += '</div>';
+		}
+
+		tmpHTML += '</div>';
+		pContainer.innerHTML = tmpHTML;
 	}
 
 	/**

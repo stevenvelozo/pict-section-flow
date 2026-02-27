@@ -3,9 +3,14 @@ const libPictFlowCardPropertiesPanel = require('../PictFlowCardPropertiesPanel.j
 /**
  * FlowCardPropertiesPanel-Markdown
  *
- * Renders markdown content into the panel body using pict-section-content.
- * Supports extended syntax: KaTeX equations, Mermaid diagrams, syntax-highlighted
- * code blocks.
+ * Renders markdown content into the panel body using pict-section-content's
+ * PictContentProvider service.  When pict-section-content is installed and its
+ * PictContentProvider service type has been registered with the pict instance,
+ * full markdown rendering is available (headings, lists, tables, code blocks
+ * with syntax highlighting, KaTeX equations, Mermaid diagrams, etc.).
+ *
+ * If PictContentProvider is not available, the panel falls back to displaying
+ * the raw markdown as pre-formatted text.
  *
  * Configuration:
  *   {
@@ -72,7 +77,9 @@ class FlowCardPropertiesPanelMarkdown extends libPictFlowCardPropertiesPanel
 			return;
 		}
 
-		// Try to use pict-section-content for extended markdown rendering
+		// Use pict-section-content's PictContentProvider for markdown rendering.
+		// The consuming application must register the PictContentProvider service
+		// type (from pict-section-content) for this to work.
 		try
 		{
 			if (!this._ContentProvider)
@@ -100,7 +107,7 @@ class FlowCardPropertiesPanelMarkdown extends libPictFlowCardPropertiesPanel
 			}
 			else
 			{
-				// Fallback: render as plain text with basic formatting
+				// PictContentProvider not registered — render as pre-formatted text
 				this._ContentContainer.innerHTML = `<pre style="white-space: pre-wrap; font-family: inherit;">${this._escapeHTML(tmpMarkdown)}</pre>`;
 			}
 		}

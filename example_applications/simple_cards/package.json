@@ -16,6 +16,7 @@
 		"pict-router": "^1.0.4",
 		"pict-view": "^1.0.64",
 		"pict-provider": "^1.0.3",
+		"pict-section-content": "^0.0.6",
 		"pict-section-form": "^1.0.192",
 		"pict-section-flow": "file:../../"
 	},
