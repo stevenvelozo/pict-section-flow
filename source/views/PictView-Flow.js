@@ -2,6 +2,7 @@ const libPictView = require('pict-view');
 
 const libPictServiceFlowInteractionManager = require('../services/PictService-Flow-InteractionManager.js');
 const libPictServiceFlowConnectionRenderer = require('../services/PictService-Flow-ConnectionRenderer.js');
+const libPictServiceFlowTether = require('../services/PictService-Flow-Tether.js');
 const libPictServiceFlowLayout = require('../services/PictService-Flow-Layout.js');
 
 const libPictProviderFlowNodeTypes = require('../providers/PictProvider-Flow-NodeTypes.js');
@@ -486,6 +487,10 @@ class PictViewFlow extends libPictView
 		{
 			this.fable.addServiceType('PictServiceFlowConnectionRenderer', libPictServiceFlowConnectionRenderer);
 		}
+		if (!this.fable.servicesMap.hasOwnProperty('PictServiceFlowTether'))
+		{
+			this.fable.addServiceType('PictServiceFlowTether', libPictServiceFlowTether);
+		}
 		if (!this.fable.servicesMap.hasOwnProperty('PictServiceFlowLayout'))
 		{
 			this.fable.addServiceType('PictServiceFlowLayout', libPictServiceFlowLayout);
@@ -560,6 +565,7 @@ class PictViewFlow extends libPictView
 
 		this._InteractionManager = null;
 		this._ConnectionRenderer = null;
+		this._TetherService = null;
 		this._LayoutService = null;
 		this._NodeTypeProvider = null;
 		this._LayoutProvider = null;
@@ -609,6 +615,7 @@ class PictViewFlow extends libPictView
 		// Register services
 		this._InteractionManager = this.fable.instantiateServiceProviderWithoutRegistration('PictServiceFlowInteractionManager', { FlowView: this });
 		this._ConnectionRenderer = this.fable.instantiateServiceProviderWithoutRegistration('PictServiceFlowConnectionRenderer', { FlowView: this });
+		this._TetherService = this.fable.instantiateServiceProviderWithoutRegistration('PictServiceFlowTether', { FlowView: this });
 		this._LayoutService = this.fable.instantiateServiceProviderWithoutRegistration('PictServiceFlowLayout', { FlowView: this });
 
 		// Register providers, passing any additional node types from view options
@@ -680,6 +687,10 @@ class PictViewFlow extends libPictView
 		if (!this._ConnectionRenderer)
 		{
 			this._ConnectionRenderer = this.fable.instantiateServiceProviderWithoutRegistration('PictServiceFlowConnectionRenderer', { FlowView: this });
+		}
+		if (!this._TetherService)
+		{
+			this._TetherService = this.fable.instantiateServiceProviderWithoutRegistration('PictServiceFlowTether', { FlowView: this });
 		}
 		if (!this._LayoutService)
 		{
@@ -1348,6 +1359,7 @@ class PictViewFlow extends libPictView
 
 	/**
 	 * Update a tether handle position during drag (for real-time feedback).
+	 * Delegates state update to the TetherService.
 	 * @param {string} pPanelHash
 	 * @param {string} pHandleType - 'bezier-midpoint', 'ortho-corner1', 'ortho-corner2', 'ortho-midpoint'
 	 * @param {number} pX
@@ -1358,33 +1370,9 @@ class PictViewFlow extends libPictView
 		let tmpPanel = this._FlowData.OpenPanels.find((pPanel) => pPanel.Hash === pPanelHash);
 		if (!tmpPanel) return;
 
-		tmpPanel.TetherHandleCustomized = true;
-
-		switch (pHandleType)
+		if (this._TetherService)
 		{
-			case 'bezier-midpoint':
-				tmpPanel.TetherBezierHandleX = pX;
-				tmpPanel.TetherBezierHandleY = pY;
-				break;
-
-			case 'ortho-corner1':
-				tmpPanel.TetherOrthoCorner1X = pX;
-				tmpPanel.TetherOrthoCorner1Y = pY;
-				break;
-
-			case 'ortho-corner2':
-				tmpPanel.TetherOrthoCorner2X = pX;
-				tmpPanel.TetherOrthoCorner2Y = pY;
-				break;
-
-			case 'ortho-midpoint':
-				// For tethers, store offset directly
-				tmpPanel.TetherOrthoMidOffset = (tmpPanel.TetherOrthoMidOffset || 0);
-				// We'll compute the offset relative to auto midpoint in the tether renderer
-				// For now, store the desired position
-				tmpPanel._TetherMidDragX = pX;
-				tmpPanel._TetherMidDragY = pY;
-				break;
+			this._TetherService.updateHandlePosition(tmpPanel, pHandleType, pX, pY);
 		}
 
 		this._renderSingleTether(pPanelHash);
@@ -1418,7 +1406,7 @@ class PictViewFlow extends libPictView
 	 */
 	_renderSingleTether(pPanelHash)
 	{
-		if (!this._TethersLayer || !this._PropertiesPanelView) return;
+		if (!this._TethersLayer || !this._TetherService) return;
 
 		// Remove existing tether elements for this panel
 		let tmpExisting = this._TethersLayer.querySelectorAll(`[data-panel-hash="${pPanelHash}"]`);
@@ -1430,8 +1418,11 @@ class PictViewFlow extends libPictView
 		let tmpPanel = this._FlowData.OpenPanels.find((pPanel) => pPanel.Hash === pPanelHash);
 		if (!tmpPanel) return;
 
+		let tmpNodeData = this.getNode(tmpPanel.NodeHash);
+		if (!tmpNodeData) return;
+
 		let tmpIsSelected = (this._FlowData.ViewState.SelectedTetherHash === pPanelHash);
-		this._PropertiesPanelView._renderTether(tmpPanel, this._TethersLayer, tmpIsSelected);
+		this._TetherService.renderTether(tmpPanel, tmpNodeData, this._TethersLayer, tmpIsSelected, this.options.ViewIdentifier);
 	}
 
 	/**
@@ -1462,23 +1453,9 @@ class PictViewFlow extends libPictView
 		}
 
 		// Reset tether handles for panels attached to this node
-		for (let i = 0; i < this._FlowData.OpenPanels.length; i++)
+		if (this._TetherService)
 		{
-			let tmpPanel = this._FlowData.OpenPanels[i];
-			if (tmpPanel.NodeHash === pNodeHash)
-			{
-				if (tmpPanel.TetherHandleCustomized)
-				{
-					tmpPanel.TetherHandleCustomized = false;
-					tmpPanel.TetherBezierHandleX = null;
-					tmpPanel.TetherBezierHandleY = null;
-					tmpPanel.TetherOrthoCorner1X = null;
-					tmpPanel.TetherOrthoCorner1Y = null;
-					tmpPanel.TetherOrthoCorner2X = null;
-					tmpPanel.TetherOrthoCorner2Y = null;
-					tmpPanel.TetherOrthoMidOffset = 0;
-				}
-			}
+			this._TetherService.resetHandlesForNode(this._FlowData.OpenPanels, pNodeHash);
 		}
 	}
 
@@ -1492,16 +1469,9 @@ class PictViewFlow extends libPictView
 		let tmpPanel = this._FlowData.OpenPanels.find((pPanel) => pPanel.Hash === pPanelHash);
 		if (!tmpPanel) return;
 
-		if (tmpPanel.TetherHandleCustomized)
+		if (this._TetherService)
 		{
-			tmpPanel.TetherHandleCustomized = false;
-			tmpPanel.TetherBezierHandleX = null;
-			tmpPanel.TetherBezierHandleY = null;
-			tmpPanel.TetherOrthoCorner1X = null;
-			tmpPanel.TetherOrthoCorner1Y = null;
-			tmpPanel.TetherOrthoCorner2X = null;
-			tmpPanel.TetherOrthoCorner2Y = null;
-			tmpPanel.TetherOrthoMidOffset = 0;
+			this._TetherService.resetHandlePositions(tmpPanel);
 		}
 	}
 
@@ -1720,12 +1690,12 @@ class PictViewFlow extends libPictView
 	 */
 	_renderTethersForNode(pNodeHash)
 	{
-		if (!this._TethersLayer || !this._PropertiesPanelView) return;
+		if (!this._TethersLayer || !this._TetherService) return;
 
 		let tmpAffectedPanels = this._FlowData.OpenPanels.filter((pPanel) => pPanel.NodeHash === pNodeHash);
 		if (tmpAffectedPanels.length === 0) return;
 
-		// Remove existing tethers for these panels
+		// Remove existing tethers for these panels and re-render via TetherService
 		for (let i = 0; i < tmpAffectedPanels.length; i++)
 		{
 			let tmpExisting = this._TethersLayer.querySelectorAll(`[data-panel-hash="${tmpAffectedPanels[i].Hash}"]`);
@@ -1733,9 +1703,12 @@ class PictViewFlow extends libPictView
 			{
 				tmpExisting[j].remove();
 			}
-			// Re-render this tether with selection state
+
+			let tmpNodeData = this.getNode(tmpAffectedPanels[i].NodeHash);
+			if (!tmpNodeData) continue;
+
 			let tmpIsSelected = (this._FlowData.ViewState.SelectedTetherHash === tmpAffectedPanels[i].Hash);
-			this._PropertiesPanelView._renderTether(tmpAffectedPanels[i], this._TethersLayer, tmpIsSelected);
+			this._TetherService.renderTether(tmpAffectedPanels[i], tmpNodeData, this._TethersLayer, tmpIsSelected, this.options.ViewIdentifier);
 		}
 	}
 

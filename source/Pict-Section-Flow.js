@@ -12,6 +12,7 @@ module.exports.PictViewFlowToolbar = require('./views/PictView-Flow-Toolbar.js')
 // Services
 module.exports.PictServiceFlowInteractionManager = require('./services/PictService-Flow-InteractionManager.js');
 module.exports.PictServiceFlowConnectionRenderer = require('./services/PictService-Flow-ConnectionRenderer.js');
+module.exports.PictServiceFlowTether = require('./services/PictService-Flow-Tether.js');
 module.exports.PictServiceFlowLayout = require('./services/PictService-Flow-Layout.js');
 
 // Providers

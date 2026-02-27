@@ -638,17 +638,10 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		let tmpPanel = this._FlowView._FlowData.OpenPanels.find((pPanel) => pPanel.Hash === pPanelHash);
 		if (!tmpPanel) return;
 
-		let tmpCurrentMode = tmpPanel.TetherLineMode || 'bezier';
-		tmpPanel.TetherLineMode = (tmpCurrentMode === 'bezier') ? 'orthogonal' : 'bezier';
-
-		tmpPanel.TetherHandleCustomized = false;
-		tmpPanel.TetherBezierHandleX = null;
-		tmpPanel.TetherBezierHandleY = null;
-		tmpPanel.TetherOrthoCorner1X = null;
-		tmpPanel.TetherOrthoCorner1Y = null;
-		tmpPanel.TetherOrthoCorner2X = null;
-		tmpPanel.TetherOrthoCorner2Y = null;
-		tmpPanel.TetherOrthoMidOffset = 0;
+		if (this._FlowView._TetherService)
+		{
+			this._FlowView._TetherService.toggleLineMode(tmpPanel);
+		}
 
 		this._FlowView.renderFlow();
 		this._FlowView.marshalFromView();
