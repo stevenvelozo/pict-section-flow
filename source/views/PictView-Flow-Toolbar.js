@@ -49,13 +49,13 @@ const _DefaultConfiguration =
 		<button class="pict-flow-toolbar-btn danger" data-flow-action="delete-layout" title="Delete the selected saved layout">Delete</button>
 	</div>
 	<div class="pict-flow-toolbar-group">
-		<button class="pict-flow-toolbar-btn" data-flow-action="fullscreen" id="Flow-Toolbar-Fullscreen-{~D:Record.FlowViewIdentifier~}" title="Toggle Fullscreen">&#x26F6; Fullscreen</button>
+		<button class="pict-flow-toolbar-btn" data-flow-action="fullscreen" id="Flow-Toolbar-Fullscreen-{~D:Record.FlowViewIdentifier~}" title="Toggle Fullscreen"><span class="pict-flow-toolbar-btn-icon" id="Flow-Toolbar-Fullscreen-Icon-{~D:Record.FlowViewIdentifier~}"></span> Fullscreen</button>
 	</div>
 </div>
 <div class="pict-flow-palette-container" id="Flow-Palette-{~D:Record.FlowViewIdentifier~}">
 	<div class="pict-flow-palette-toggle" data-flow-action="toggle-palette">
 		<span>Card Palette</span>
-		<span class="pict-flow-palette-toggle-arrow" id="Flow-Palette-Arrow-{~D:Record.FlowViewIdentifier~}">&#9660;</span>
+		<span class="pict-flow-palette-toggle-arrow" id="Flow-Palette-Arrow-{~D:Record.FlowViewIdentifier~}"></span>
 	</div>
 	<div class="pict-flow-palette-body" id="Flow-Palette-Body-{~D:Record.FlowViewIdentifier~}">
 	</div>
@@ -149,6 +149,9 @@ class PictViewFlowToolbar extends libPictView
 		this._renderPalette();
 		this._populateLayoutDropdown();
 
+		// Populate SVG icons for toolbar buttons
+		this._populateToolbarIcons();
+
 		return super.onAfterRender(pRenderable, pRenderDestinationAddress, pRecord, pContent);
 	}
 
@@ -193,9 +196,17 @@ class PictViewFlowToolbar extends libPictView
 			let tmpOption = document.createElement('option');
 			tmpOption.value = tmpTypeKeys[i];
 
-			if (tmpTypeConfig.CardMetadata && tmpTypeConfig.CardMetadata.Icon)
+			let tmpDropdownMeta = tmpTypeConfig.CardMetadata || {};
+			let tmpIconProvider = this._FlowView ? this._FlowView._IconProvider : null;
+			if (tmpDropdownMeta.Icon && tmpIconProvider && !tmpIconProvider.isEmojiIcon(tmpDropdownMeta.Icon))
 			{
-				tmpOption.textContent = tmpTypeConfig.CardMetadata.Icon + ' ' + tmpTypeConfig.Label;
+				// SVG mode: <option> cannot contain HTML, use [CODE] Label
+				let tmpPrefix = tmpDropdownMeta.Code ? ('[' + tmpDropdownMeta.Code + '] ') : '';
+				tmpOption.textContent = tmpPrefix + tmpTypeConfig.Label;
+			}
+			else if (tmpDropdownMeta.Icon)
+			{
+				tmpOption.textContent = tmpDropdownMeta.Icon + ' ' + tmpTypeConfig.Label;
 			}
 			else
 			{
@@ -326,7 +337,24 @@ class PictViewFlowToolbar extends libPictView
 				{
 					let tmpIconSpan = document.createElement('span');
 					tmpIconSpan.className = 'pict-flow-palette-card-icon';
-					tmpIconSpan.textContent = tmpMeta.Icon;
+					let tmpIconProvider = this._FlowView._IconProvider;
+					if (tmpIconProvider && !tmpIconProvider.isEmojiIcon(tmpMeta.Icon))
+					{
+						let tmpResolvedKey = tmpIconProvider.resolveIconKey(tmpMeta);
+						tmpIconSpan.innerHTML = tmpIconProvider.getIconSVGMarkup(tmpResolvedKey, 14);
+					}
+					else
+					{
+						tmpIconSpan.textContent = tmpMeta.Icon;
+					}
+					tmpCardEl.appendChild(tmpIconSpan);
+				}
+				else if (this._FlowView._IconProvider)
+				{
+					// No icon specified — render default fallback
+					let tmpIconSpan = document.createElement('span');
+					tmpIconSpan.className = 'pict-flow-palette-card-icon';
+					tmpIconSpan.innerHTML = this._FlowView._IconProvider.getIconSVGMarkup('default', 14);
 					tmpCardEl.appendChild(tmpIconSpan);
 				}
 				else if (tmpCardConfig.TitleBarColor)
@@ -357,6 +385,31 @@ class PictViewFlowToolbar extends libPictView
 
 			tmpCategoryDiv.appendChild(tmpCardsDiv);
 			tmpBody.appendChild(tmpCategoryDiv);
+		}
+	}
+
+	/**
+	 * Populate SVG icons for the fullscreen button and palette toggle chevron.
+	 */
+	_populateToolbarIcons()
+	{
+		let tmpIconProvider = this._FlowView ? this._FlowView._IconProvider : null;
+		if (!tmpIconProvider) return;
+
+		let tmpFlowViewIdentifier = this.options.FlowViewIdentifier;
+
+		// Fullscreen button icon
+		let tmpFullscreenIcon = this.pict.ContentAssignment.getElement(`#Flow-Toolbar-Fullscreen-Icon-${tmpFlowViewIdentifier}`);
+		if (tmpFullscreenIcon.length > 0)
+		{
+			tmpFullscreenIcon[0].innerHTML = tmpIconProvider.getIconSVGMarkup('fullscreen', 14);
+		}
+
+		// Palette toggle chevron
+		let tmpArrow = this.pict.ContentAssignment.getElement(`#Flow-Palette-Arrow-${tmpFlowViewIdentifier}`);
+		if (tmpArrow.length > 0)
+		{
+			tmpArrow[0].innerHTML = tmpIconProvider.getIconSVGMarkup('chevron-down', 10);
 		}
 	}
 
@@ -519,10 +572,22 @@ class PictViewFlowToolbar extends libPictView
 			case 'fullscreen':
 				{
 					let tmpIsFullscreen = this._FlowView.toggleFullscreen();
+					let tmpIconProvider = this._FlowView._IconProvider;
+					let tmpIconElements = this.pict.ContentAssignment.getElement(`#Flow-Toolbar-Fullscreen-Icon-${tmpFlowViewIdentifier}`);
+					if (tmpIconElements.length > 0 && tmpIconProvider)
+					{
+						tmpIconElements[0].innerHTML = tmpIconProvider.getIconSVGMarkup(
+							tmpIsFullscreen ? 'exit-fullscreen' : 'fullscreen', 14);
+					}
 					let tmpBtnElements = this.pict.ContentAssignment.getElement(`#Flow-Toolbar-Fullscreen-${tmpFlowViewIdentifier}`);
 					if (tmpBtnElements.length > 0)
 					{
-						tmpBtnElements[0].innerHTML = tmpIsFullscreen ? '&#x2716; Exit Fullscreen' : '&#x26F6; Fullscreen';
+						// Update button text portion only (icon span is separate)
+						let tmpTextNode = tmpBtnElements[0].lastChild;
+						if (tmpTextNode && tmpTextNode.nodeType === 3)
+						{
+							tmpTextNode.textContent = tmpIsFullscreen ? ' Exit Fullscreen' : ' Fullscreen';
+						}
 					}
 				}
 				break;

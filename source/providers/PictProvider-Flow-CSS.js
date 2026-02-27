@@ -684,6 +684,51 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 		`;
 	}
 
+	// ── Icons ─────────────────────────────────────────────────────────────
+	/**
+	 * CSS for inline SVG icons in palette cards, toolbar buttons, info panel headers, and panel close buttons.
+	 * @returns {string}
+	 */
+	getIconCSS()
+	{
+		return /*css*/`
+		.pict-flow-icon-svg {
+			pointer-events: none;
+		}
+		.pict-flow-palette-card-icon svg {
+			display: inline-block;
+			vertical-align: middle;
+		}
+		.pict-flow-toolbar-btn-icon {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			line-height: 1;
+		}
+		.pict-flow-toolbar-btn-icon svg {
+			display: block;
+			vertical-align: middle;
+		}
+		.pict-flow-info-panel-header.with-icon svg {
+			display: inline-block;
+			vertical-align: middle;
+			margin-right: 4px;
+		}
+		.pict-flow-panel-close-icon {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			line-height: 1;
+		}
+		.pict-flow-panel-close-icon svg {
+			display: block;
+		}
+		.pict-flow-palette-toggle-arrow svg {
+			display: block;
+		}
+		`;
+	}
+
 	// ── Aggregate Methods ──────────────────────────────────────────────────
 
 	/**
@@ -704,7 +749,8 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 			this.getInfoPanelCSS() +
 			this.getFullscreenCSS() +
 			this.getToolbarCSS() +
-			this.getPaletteCSS()
+			this.getPaletteCSS() +
+			this.getIconCSS()
 		);
 	}
 

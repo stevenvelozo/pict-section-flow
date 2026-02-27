@@ -11,7 +11,7 @@ class FlowCardFileWrite extends libPictFlowCard
 				Name: 'Write File',
 				Code: 'FWRITE',
 				Description: 'Writes data to a file on the filesystem.',
-				Icon: '\uD83D\uDCBE',
+				Icon: 'FWRITE',
 				Tooltip: 'File Write: Write data to a file',
 				Category: 'I/O',
 				TitleBarColor: '#27ae60',

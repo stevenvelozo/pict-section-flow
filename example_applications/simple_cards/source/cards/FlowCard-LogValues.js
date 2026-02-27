@@ -11,7 +11,7 @@ class FlowCardLogValues extends libPictFlowCard
 				Name: 'Log to Console',
 				Code: 'LOG',
 				Description: 'Logs input values to the console or log output.',
-				Icon: '\uD83D\uDCDD',
+				Icon: 'LOG',
 				Tooltip: 'Log Values: Output values to the log',
 				Category: 'Debug',
 				TitleBarColor: '#7f8c8d',

@@ -279,9 +279,23 @@ class PictViewFlowPropertiesPanel extends libPictView
 		let tmpContentParts = [];
 
 		// Header
-		if (tmpMeta.Icon)
+		let tmpIconProvider = this._FlowView._IconProvider;
+		if (tmpMeta.Icon && tmpIconProvider && !tmpIconProvider.isEmojiIcon(tmpMeta.Icon))
+		{
+			// SVG icon markup for the header
+			let tmpResolvedKey = tmpIconProvider.resolveIconKey(tmpMeta);
+			let tmpIconMarkup = tmpIconProvider.getIconSVGMarkup(tmpResolvedKey, 18);
+			tmpContentParts.push(this.pict.parseTemplateByHash('Flow-InfoPanel-Header-Icon', { Icon: tmpIconMarkup, Label: tmpLabel }));
+		}
+		else if (tmpMeta.Icon)
 		{
 			tmpContentParts.push(this.pict.parseTemplateByHash('Flow-InfoPanel-Header-Icon', { Icon: tmpMeta.Icon, Label: tmpLabel }));
+		}
+		else if (tmpIconProvider)
+		{
+			// No icon specified — render default fallback
+			let tmpDefaultMarkup = tmpIconProvider.getIconSVGMarkup('default', 18);
+			tmpContentParts.push(this.pict.parseTemplateByHash('Flow-InfoPanel-Header-Icon', { Icon: tmpDefaultMarkup, Label: tmpLabel }));
 		}
 		else
 		{

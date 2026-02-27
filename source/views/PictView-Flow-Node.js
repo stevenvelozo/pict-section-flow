@@ -126,28 +126,60 @@ class PictViewFlowNode extends libPictView
 			let tmpMeta = pNodeTypeConfig.CardMetadata;
 			let tmpBodyCenterY = tmpTitleBarHeight + (tmpHeight - tmpTitleBarHeight) / 2;
 
-			// Icon (displayed as text, left-of-center or centered if no code)
-			if (tmpMeta.Icon)
+			// Determine icon X position based on whether a Code badge is present
+			let tmpIconX = tmpMeta.Code ? (tmpWidth * 0.33) : (tmpWidth / 2);
+			let tmpIconProvider = this._FlowView._IconProvider;
+			let tmpIconSize = 16;
+			let tmpIconRendered = false;
+
+			if (tmpMeta.Icon && tmpIconProvider && !tmpIconProvider.isEmojiIcon(tmpMeta.Icon))
 			{
+				// SVG icon via the icon provider (new path)
+				let tmpResolvedKey = tmpIconProvider.resolveIconKey(tmpMeta);
+				tmpIconProvider.renderIconIntoSVGGroup(
+					tmpResolvedKey, tmpGroup,
+					tmpIconX - (tmpIconSize / 2), tmpBodyCenterY - (tmpIconSize / 2),
+					tmpIconSize);
+				tmpIconRendered = true;
+			}
+			else if (tmpMeta.Icon && tmpIconProvider && tmpIconProvider.isEmojiIcon(tmpMeta.Icon))
+			{
+				// Legacy emoji rendering (backward compat)
 				let tmpIconText = this._FlowView._SVGHelperProvider.createSVGElement('text');
 				tmpIconText.setAttribute('class', 'pict-flow-node-card-icon');
-				tmpIconText.setAttribute('font-size', '16');
+				tmpIconText.setAttribute('font-size', String(tmpIconSize));
 				tmpIconText.setAttribute('text-anchor', 'middle');
 				tmpIconText.setAttribute('dominant-baseline', 'central');
 				tmpIconText.setAttribute('pointer-events', 'none');
-
-				if (tmpMeta.Code)
-				{
-					// Icon on the left, code on the right
-					tmpIconText.setAttribute('x', String(tmpWidth * 0.33));
-				}
-				else
-				{
-					tmpIconText.setAttribute('x', String(tmpWidth / 2));
-				}
+				tmpIconText.setAttribute('x', String(tmpIconX));
 				tmpIconText.setAttribute('y', String(tmpBodyCenterY));
 				tmpIconText.textContent = tmpMeta.Icon;
 				tmpGroup.appendChild(tmpIconText);
+				tmpIconRendered = true;
+			}
+			else if (tmpMeta.Icon)
+			{
+				// No icon provider — legacy text fallback
+				let tmpIconText = this._FlowView._SVGHelperProvider.createSVGElement('text');
+				tmpIconText.setAttribute('class', 'pict-flow-node-card-icon');
+				tmpIconText.setAttribute('font-size', String(tmpIconSize));
+				tmpIconText.setAttribute('text-anchor', 'middle');
+				tmpIconText.setAttribute('dominant-baseline', 'central');
+				tmpIconText.setAttribute('pointer-events', 'none');
+				tmpIconText.setAttribute('x', String(tmpIconX));
+				tmpIconText.setAttribute('y', String(tmpBodyCenterY));
+				tmpIconText.textContent = tmpMeta.Icon;
+				tmpGroup.appendChild(tmpIconText);
+				tmpIconRendered = true;
+			}
+
+			// Default fallback icon for nodes without an Icon value
+			if (!tmpIconRendered && tmpIconProvider)
+			{
+				tmpIconProvider.renderIconIntoSVGGroup(
+					'default', tmpGroup,
+					tmpIconX - (tmpIconSize / 2), tmpBodyCenterY - (tmpIconSize / 2),
+					tmpIconSize);
 			}
 
 			// Code badge (displayed as monospace text)

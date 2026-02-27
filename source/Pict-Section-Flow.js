@@ -27,6 +27,7 @@ module.exports.PictProviderFlowSVGHelpers = require('./providers/PictProvider-Fl
 module.exports.PictProviderFlowGeometry = require('./providers/PictProvider-Flow-Geometry.js');
 module.exports.PictProviderFlowPanelChrome = require('./providers/PictProvider-Flow-PanelChrome.js');
 module.exports.PictProviderFlowCSS = require('./providers/PictProvider-Flow-CSS.js');
+module.exports.PictProviderFlowIcons = require('./providers/PictProvider-Flow-Icons.js');
 
 // FlowCard base class
 module.exports.PictFlowCard = require('./PictFlowCard.js');

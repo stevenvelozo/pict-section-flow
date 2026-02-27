@@ -11,7 +11,7 @@ class FlowCardSwitch extends libPictFlowCard
 				Name: 'Multi-way Branch',
 				Code: 'SW',
 				Description: 'Routes flow to one of multiple cases based on a value.',
-				Icon: '\uD83D\uDD00',
+				Icon: 'SW',
 				Tooltip: 'Switch: Multi-way branch on a value',
 				Category: 'Control Flow',
 				TitleBarColor: '#d35400',

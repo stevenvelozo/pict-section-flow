@@ -11,7 +11,7 @@ class FlowCardFileRead extends libPictFlowCard
 				Name: 'Read File',
 				Code: 'FREAD',
 				Description: 'Reads the contents of a file from the filesystem.',
-				Icon: '\uD83D\uDCC4',
+				Icon: 'FREAD',
 				Tooltip: 'File Read: Read data from a file',
 				Category: 'I/O',
 				TitleBarColor: '#2980b9',

@@ -11,7 +11,7 @@ class FlowCardGetValue extends libPictFlowCard
 				Name: 'Read Value',
 				Code: 'GET',
 				Description: 'Retrieves a named value from the flow context.',
-				Icon: '\uD83D\uDD0D',
+				Icon: 'GET',
 				Tooltip: 'Get Value: Read a value from the context',
 				Category: 'Data',
 				TitleBarColor: '#2c3e50',

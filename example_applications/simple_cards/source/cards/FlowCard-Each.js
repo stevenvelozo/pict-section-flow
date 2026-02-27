@@ -11,7 +11,7 @@ class FlowCardEach extends libPictFlowCard
 				Name: 'Loop Iterator',
 				Code: 'EACH',
 				Description: 'Iterates over a collection, executing the body for each item.',
-				Icon: '\uD83D\uDD01',
+				Icon: 'EACH',
 				Tooltip: 'Each: Iterate over items in a collection',
 				Category: 'Control Flow',
 				TitleBarColor: '#8e44ad',

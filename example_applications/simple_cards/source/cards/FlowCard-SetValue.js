@@ -11,7 +11,7 @@ class FlowCardSetValue extends libPictFlowCard
 				Name: 'Assign Value',
 				Code: 'SET',
 				Description: 'Sets a named value in the flow context.',
-				Icon: '\u270F\uFE0F',
+				Icon: 'SET',
 				Tooltip: 'Set Value: Assign a value in the context',
 				Category: 'Data',
 				TitleBarColor: '#16a085',

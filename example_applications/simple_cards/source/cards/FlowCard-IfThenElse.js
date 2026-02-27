@@ -11,7 +11,7 @@ class FlowCardIfThenElse extends libPictFlowCard
 				Name: 'Conditional Branch',
 				Code: 'ITE',
 				Description: 'Evaluates a condition and routes to the Then or Else branch.',
-				Icon: '\u2753',
+				Icon: 'ITE',
 				Tooltip: 'If-Then-Else: Routes flow based on a boolean condition',
 				Category: 'Control Flow',
 				TitleBarColor: '#e67e22',

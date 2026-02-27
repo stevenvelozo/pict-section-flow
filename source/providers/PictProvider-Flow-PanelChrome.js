@@ -54,6 +54,17 @@ class PictProviderFlowPanelChrome extends libFableServiceProviderBase
 
 		tmpFO.innerHTML = tmpChromeHTML;
 
+		// Populate the close button icon
+		let tmpCloseIcon = tmpFO.querySelector('.pict-flow-panel-close-icon');
+		if (tmpCloseIcon && this._FlowView && this._FlowView._IconProvider)
+		{
+			tmpCloseIcon.innerHTML = this._FlowView._IconProvider.getIconSVGMarkup('close', 12);
+		}
+		else if (tmpCloseIcon)
+		{
+			tmpCloseIcon.textContent = '\u2715';
+		}
+
 		// Attach event isolation to the panel body so pointer/wheel events
 		// inside the panel content do not trigger SVG interactions
 		let tmpBody = tmpFO.querySelector('.pict-flow-panel-body');

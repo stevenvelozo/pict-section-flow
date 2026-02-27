@@ -16,6 +16,7 @@ const libPictProviderFlowSVGHelpers = require('../providers/PictProvider-Flow-SV
 const libPictProviderFlowGeometry = require('../providers/PictProvider-Flow-Geometry.js');
 const libPictProviderFlowPanelChrome = require('../providers/PictProvider-Flow-PanelChrome.js');
 const libPictProviderFlowCSS = require('../providers/PictProvider-Flow-CSS.js');
+const libPictProviderFlowIcons = require('../providers/PictProvider-Flow-Icons.js');
 
 const libPictViewFlowNode = require('./PictView-Flow-Node.js');
 const libPictViewFlowToolbar = require('./PictView-Flow-Toolbar.js');
@@ -62,7 +63,7 @@ const _DefaultConfiguration =
 	[
 		{
 			Hash: 'Flow-PanelChrome-Template',
-			Template: /*html*/`<div class="pict-flow-panel" xmlns="http://www.w3.org/1999/xhtml"><div class="pict-flow-panel-titlebar" data-element-type="panel-titlebar" data-panel-hash="{~D:Record.Hash~}"><span class="pict-flow-panel-title-text">{~D:Record.Title~}</span><span class="pict-flow-panel-close-btn" data-element-type="panel-close" data-panel-hash="{~D:Record.Hash~}">\u2715</span></div><div class="pict-flow-panel-body" data-panel-hash="{~D:Record.Hash~}"></div></div>`
+			Template: /*html*/`<div class="pict-flow-panel" xmlns="http://www.w3.org/1999/xhtml"><div class="pict-flow-panel-titlebar" data-element-type="panel-titlebar" data-panel-hash="{~D:Record.Hash~}"><span class="pict-flow-panel-title-text">{~D:Record.Title~}</span><span class="pict-flow-panel-close-btn" data-element-type="panel-close" data-panel-hash="{~D:Record.Hash~}"><span class="pict-flow-panel-close-icon"></span></span></div><div class="pict-flow-panel-body" data-panel-hash="{~D:Record.Hash~}"></div></div>`
 		},
 		{
 			Hash: 'Flow-Container-Template',
@@ -183,6 +184,10 @@ class PictViewFlow extends libPictView
 		{
 			this.fable.addServiceType('PictProviderFlowCSS', libPictProviderFlowCSS);
 		}
+		if (!this.fable.servicesMap.hasOwnProperty('PictProviderFlowIcons'))
+		{
+			this.fable.addServiceType('PictProviderFlowIcons', libPictProviderFlowIcons);
+		}
 		if (!this.fable.servicesMap.hasOwnProperty('PictProviderFlowNodeTypes'))
 		{
 			this.fable.addServiceType('PictProviderFlowNodeTypes', libPictProviderFlowNodeTypes);
@@ -260,6 +265,7 @@ class PictViewFlow extends libPictView
 		this._SelectionManager = null;
 		this._PanelManager = null;
 		this._CSSProvider = null;
+		this._IconProvider = null;
 		this._SVGHelperProvider = null;
 		this._GeometryProvider = null;
 		this._PanelChromeProvider = null;
@@ -315,6 +321,10 @@ class PictViewFlow extends libPictView
 		// Instantiate and register the centralized CSS provider
 		this._CSSProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowCSS', { FlowView: this });
 		this._CSSProvider.registerCSS();
+
+		// Instantiate the SVG icon provider
+		this._IconProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowIcons', { FlowView: this });
+		this._IconProvider.registerIconTemplates();
 
 		// Instantiate shared utility providers first (used by services below)
 		this._SVGHelperProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowSVGHelpers');
@@ -397,6 +407,13 @@ class PictViewFlow extends libPictView
 		{
 			this._CSSProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowCSS', { FlowView: this });
 			this._CSSProvider.registerCSS();
+		}
+
+		// Initialize icon provider (fallback if not already created)
+		if (!this._IconProvider)
+		{
+			this._IconProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowIcons', { FlowView: this });
+			this._IconProvider.registerIconTemplates();
 		}
 
 		// Initialize shared utility providers (used by services below)
