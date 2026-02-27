@@ -20,7 +20,7 @@
 		"pict-section-flow": "file:../../"
 	},
 	"devDependencies": {
-		"quackage": "^1.0.42"
+		"quackage": "^1.0.58"
 	},
 	"copyFilesSettings": {
 		"whenFileExists": "overwrite"
