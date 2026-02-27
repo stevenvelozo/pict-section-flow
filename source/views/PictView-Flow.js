@@ -15,6 +15,7 @@ const libPictProviderFlowLayouts = require('../providers/PictProvider-Flow-Layou
 const libPictProviderFlowSVGHelpers = require('../providers/PictProvider-Flow-SVGHelpers.js');
 const libPictProviderFlowGeometry = require('../providers/PictProvider-Flow-Geometry.js');
 const libPictProviderFlowPanelChrome = require('../providers/PictProvider-Flow-PanelChrome.js');
+const libPictProviderFlowCSS = require('../providers/PictProvider-Flow-CSS.js');
 
 const libPictViewFlowNode = require('./PictView-Flow-Node.js');
 const libPictViewFlowToolbar = require('./PictView-Flow-Toolbar.js');
@@ -55,363 +56,7 @@ const _DefaultConfiguration =
 	DefaultNodeWidth: 180,
 	DefaultNodeHeight: 80,
 
-	CSS: /*css*/`
-		.pict-flow-container {
-			position: relative;
-			width: 100%;
-			height: 100%;
-			min-height: 400px;
-			overflow: hidden;
-			background-color: #fafafa;
-			border: 1px solid #e0e0e0;
-			border-radius: 4px;
-			display: flex;
-			flex-direction: column;
-		}
-		.pict-flow-svg-container {
-			flex: 1;
-			min-height: 0;
-			position: relative;
-		}
-		.pict-flow-svg {
-			width: 100%;
-			height: 100%;
-			cursor: grab;
-			user-select: none;
-			-webkit-user-select: none;
-		}
-		.pict-flow-svg.panning {
-			cursor: grabbing;
-		}
-		.pict-flow-svg.connecting {
-			cursor: crosshair;
-		}
-		.pict-flow-grid-pattern line {
-			stroke: #e8e8e8;
-			stroke-width: 0.5;
-		}
-		.pict-flow-node {
-			cursor: pointer;
-		}
-		.pict-flow-node:hover .pict-flow-node-body {
-			filter: brightness(0.97);
-		}
-		.pict-flow-node.selected .pict-flow-node-body {
-			stroke: #3498db;
-			stroke-width: 2.5;
-		}
-		.pict-flow-node.dragging {
-			opacity: 0.85;
-			cursor: grabbing;
-		}
-		.pict-flow-node-body {
-			fill: #ffffff;
-			stroke: #bdc3c7;
-			stroke-width: 1.5;
-			rx: 6;
-			ry: 6;
-			transition: filter 0.15s;
-		}
-		.pict-flow-node-title-bar {
-			fill: #2c3e50;
-			rx: 6;
-			ry: 6;
-		}
-		.pict-flow-node-title-bar-bottom {
-			fill: #2c3e50;
-		}
-		.pict-flow-node-title {
-			fill: #ffffff;
-			font-size: 12px;
-			font-weight: 700;
-			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-			pointer-events: none;
-		}
-		.pict-flow-node-type-label {
-			fill: #95a5a6;
-			font-size: 10px;
-			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-			pointer-events: none;
-		}
-		.pict-flow-port {
-			cursor: crosshair;
-			transition: r 0.15s;
-		}
-		.pict-flow-port.input {
-			fill: #3498db;
-			stroke: #2980b9;
-			stroke-width: 1.5;
-		}
-		.pict-flow-port.output {
-			fill: #2ecc71;
-			stroke: #27ae60;
-			stroke-width: 1.5;
-		}
-		.pict-flow-port:hover {
-			r: 7;
-		}
-		.pict-flow-port-label {
-			fill: #7f8c8d;
-			font-size: 9px;
-			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-			pointer-events: none;
-		}
-		.pict-flow-connection {
-			fill: none;
-			stroke: #95a5a6;
-			stroke-width: 2;
-			cursor: pointer;
-			transition: stroke 0.15s;
-		}
-		.pict-flow-connection:hover {
-			stroke: #7f8c8d;
-			stroke-width: 3;
-		}
-		.pict-flow-connection.selected {
-			stroke: #3498db;
-			stroke-width: 3;
-		}
-		.pict-flow-connection-hitarea {
-			fill: none;
-			stroke: transparent;
-			stroke-width: 12;
-			cursor: pointer;
-		}
-		.pict-flow-drag-connection {
-			fill: none;
-			stroke: #3498db;
-			stroke-width: 2;
-			stroke-dasharray: 6 3;
-			pointer-events: none;
-		}
-		.pict-flow-node-decision .pict-flow-node-body {
-			fill: #fff9e6;
-			stroke: #f39c12;
-		}
-		.pict-flow-node-start .pict-flow-node-body {
-			fill: #eafaf1;
-			stroke: #27ae60;
-			rx: 25;
-			ry: 25;
-		}
-		.pict-flow-node-end .pict-flow-node-body {
-			fill: #fdedec;
-			stroke: #e74c3c;
-			rx: 25;
-			ry: 25;
-		}
-		.pict-flow-connection-handle {
-			fill: #ffffff;
-			stroke: #3498db;
-			stroke-width: 2;
-			cursor: grab;
-			transition: r 0.15s;
-			filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
-		}
-		.pict-flow-connection-handle:hover {
-			r: 8;
-			stroke-width: 2.5;
-		}
-		.pict-flow-connection-handle-midpoint {
-			fill: #ffffff;
-			stroke: #e67e22;
-			stroke-width: 2;
-			cursor: grab;
-			transition: r 0.15s;
-			filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
-		}
-		.pict-flow-connection-handle-midpoint:hover {
-			r: 8;
-			stroke-width: 2.5;
-		}
-		.pict-flow-tether-line {
-			fill: none;
-			stroke: #95a5a6;
-			stroke-width: 1.5;
-			stroke-dasharray: 6 4;
-			pointer-events: visibleStroke;
-			cursor: pointer;
-		}
-		.pict-flow-tether-line.selected {
-			stroke: #3498db;
-			stroke-width: 2;
-		}
-		.pict-flow-tether-hitarea {
-			fill: none;
-			stroke: transparent;
-			stroke-width: 10;
-			cursor: pointer;
-		}
-		.pict-flow-tether-handle {
-			fill: #ffffff;
-			stroke: #3498db;
-			stroke-width: 2;
-			cursor: grab;
-			transition: r 0.15s;
-			filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
-		}
-		.pict-flow-tether-handle:hover {
-			r: 8;
-			stroke-width: 2.5;
-		}
-		.pict-flow-tether-handle-midpoint {
-			fill: #ffffff;
-			stroke: #e67e22;
-			stroke-width: 2;
-			cursor: grab;
-			transition: r 0.15s;
-			filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
-		}
-		.pict-flow-tether-handle-midpoint:hover {
-			r: 8;
-			stroke-width: 2.5;
-		}
-		.pict-flow-node-panel-indicator {
-			fill: #3498db;
-			stroke: #2980b9;
-			stroke-width: 1;
-			cursor: pointer;
-		}
-		.pict-flow-node-panel-indicator:hover {
-			fill: #2980b9;
-		}
-		.pict-flow-panel-foreign-object {
-			overflow: visible;
-		}
-		.pict-flow-panel {
-			background: #ffffff;
-			border: 1px solid #bdc3c7;
-			border-radius: 6px;
-			box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-			display: flex;
-			flex-direction: column;
-			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-			font-size: 13px;
-			overflow: hidden;
-			width: 100%;
-			height: 100%;
-			box-sizing: border-box;
-		}
-		.pict-flow-panel-titlebar {
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			padding: 6px 10px;
-			background: #ecf0f1;
-			border-bottom: 1px solid #d5dbdb;
-			cursor: grab;
-			user-select: none;
-			-webkit-user-select: none;
-			flex-shrink: 0;
-		}
-		.pict-flow-panel-titlebar.dragging {
-			cursor: grabbing;
-		}
-		.pict-flow-panel-title-text {
-			font-weight: 600;
-			font-size: 12px;
-			color: #2c3e50;
-			white-space: nowrap;
-			overflow: hidden;
-			text-overflow: ellipsis;
-		}
-		.pict-flow-panel-close-btn {
-			cursor: pointer;
-			color: #95a5a6;
-			font-size: 14px;
-			line-height: 1;
-			padding: 2px 4px;
-			border: none;
-			background: none;
-		}
-		.pict-flow-panel-close-btn:hover {
-			color: #e74c3c;
-		}
-		.pict-flow-panel-body {
-			flex: 1;
-			overflow: auto;
-			padding: 8px;
-		}
-		.pict-flow-fullscreen {
-			position: fixed;
-			top: 0;
-			left: 0;
-			width: 100vw;
-			height: 100vh;
-			z-index: 9999;
-			border-radius: 0;
-			border: none;
-			min-height: 100vh;
-		}
-		.pict-flow-fullscreen .pict-flow-svg {
-			min-height: calc(100vh - 50px);
-		}
-		.pict-flow-info-panel {
-			padding: 4px;
-			font-size: 12px;
-			line-height: 1.5;
-			color: #2c3e50;
-		}
-		.pict-flow-info-panel-header {
-			font-size: 14px;
-			font-weight: 600;
-			margin-bottom: 4px;
-		}
-		.pict-flow-info-panel-header.with-icon {
-			font-size: 16px;
-		}
-		.pict-flow-info-panel-description {
-			font-size: 11px;
-			color: #7f8c8d;
-			margin-bottom: 8px;
-		}
-		.pict-flow-info-panel-badges {
-			margin-bottom: 8px;
-		}
-		.pict-flow-info-panel-badge {
-			display: inline-block;
-			padding: 1px 6px;
-			border-radius: 3px;
-			font-size: 10px;
-			margin-right: 4px;
-		}
-		.pict-flow-info-panel-badge.category {
-			background: #ecf0f1;
-			color: #7f8c8d;
-		}
-		.pict-flow-info-panel-badge.code {
-			background: #eaf2f8;
-			color: #2980b9;
-			font-family: monospace;
-		}
-		.pict-flow-info-panel-section {
-			margin-bottom: 6px;
-		}
-		.pict-flow-info-panel-section-title {
-			font-size: 10px;
-			font-weight: 700;
-			text-transform: uppercase;
-			letter-spacing: 0.5px;
-			color: #95a5a6;
-			margin-bottom: 2px;
-		}
-		.pict-flow-info-panel-port {
-			padding: 2px 6px;
-			background: #f8f9fa;
-			margin-bottom: 2px;
-			font-size: 11px;
-		}
-		.pict-flow-info-panel-port.input {
-			border-left: 3px solid #3498db;
-		}
-		.pict-flow-info-panel-port.output {
-			border-left: 3px solid #2ecc71;
-		}
-		.pict-flow-info-panel-port-constraint {
-			color: #95a5a6;
-			font-size: 10px;
-		}
-	`,
+	CSS: false,
 
 	Templates:
 	[
@@ -534,6 +179,10 @@ class PictViewFlow extends libPictView
 		{
 			this.fable.addServiceType('PictProviderFlowPanelChrome', libPictProviderFlowPanelChrome);
 		}
+		if (!this.fable.servicesMap.hasOwnProperty('PictProviderFlowCSS'))
+		{
+			this.fable.addServiceType('PictProviderFlowCSS', libPictProviderFlowCSS);
+		}
 		if (!this.fable.servicesMap.hasOwnProperty('PictProviderFlowNodeTypes'))
 		{
 			this.fable.addServiceType('PictProviderFlowNodeTypes', libPictProviderFlowNodeTypes);
@@ -610,6 +259,7 @@ class PictViewFlow extends libPictView
 		this._ViewportManager = null;
 		this._SelectionManager = null;
 		this._PanelManager = null;
+		this._CSSProvider = null;
 		this._SVGHelperProvider = null;
 		this._GeometryProvider = null;
 		this._PanelChromeProvider = null;
@@ -661,6 +311,10 @@ class PictViewFlow extends libPictView
 	onBeforeInitialize()
 	{
 		super.onBeforeInitialize();
+
+		// Instantiate and register the centralized CSS provider
+		this._CSSProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowCSS', { FlowView: this });
+		this._CSSProvider.registerCSS();
 
 		// Instantiate shared utility providers first (used by services below)
 		this._SVGHelperProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowSVGHelpers');
@@ -736,6 +390,13 @@ class PictViewFlow extends libPictView
 		if (tmpPanelsElements.length > 0)
 		{
 			this._PanelsLayer = tmpPanelsElements[0];
+		}
+
+		// Initialize CSS provider (fallback if not already created)
+		if (!this._CSSProvider)
+		{
+			this._CSSProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowCSS', { FlowView: this });
+			this._CSSProvider.registerCSS();
 		}
 
 		// Initialize shared utility providers (used by services below)

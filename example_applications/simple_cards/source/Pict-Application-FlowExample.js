@@ -242,6 +242,21 @@ class FlowExampleApplication extends libPictApplication
 						{ Hash: 'port-logerr-out', Direction: 'output', Side: 'right', Label: 'Pass' }
 					],
 					Data: {}
+				},
+				// ── Halt: premature termination on write error ────
+				{
+					Hash: 'node-halt',
+					Type: 'halt',
+					X: 1870,
+					Y: 380,
+					Width: 140,
+					Height: 80,
+					Title: 'Halt',
+					Ports:
+					[
+						{ Hash: 'port-halt-in', Direction: 'input', Side: 'left', Label: 'In' }
+					],
+					Data: {}
 				}
 			],
 			Connections:
@@ -379,6 +394,15 @@ class FlowExampleApplication extends libPictApplication
 					SourcePortHash: 'port-logerr-out',
 					TargetNodeHash: 'node-end',
 					TargetPortHash: 'port-end-in',
+					Data: {}
+				},
+				// Write error → Halt
+				{
+					Hash: 'conn-16',
+					SourceNodeHash: 'node-fwrite',
+					SourcePortHash: 'port-fwrite-err',
+					TargetNodeHash: 'node-halt',
+					TargetPortHash: 'port-halt-in',
 					Data: {}
 				}
 			],

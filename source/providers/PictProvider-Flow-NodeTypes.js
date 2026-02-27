@@ -30,9 +30,7 @@ const _DefaultNodeTypes =
 		BodyStyle:
 		{
 			'fill': '#eafaf1',
-			'stroke': '#27ae60',
-			'rx': '25',
-			'ry': '25'
+			'stroke': '#27ae60'
 		}
 	},
 	'end':
@@ -45,13 +43,28 @@ const _DefaultNodeTypes =
 		[
 			{ Hash: null, Direction: 'input', Side: 'left', Label: 'In' }
 		],
+		TitleBarColor: '#1abc9c',
+		BodyStyle:
+		{
+			'fill': '#e8f8f5',
+			'stroke': '#1abc9c'
+		}
+	},
+	'halt':
+	{
+		Hash: 'halt',
+		Label: 'Halt',
+		DefaultWidth: 140,
+		DefaultHeight: 80,
+		DefaultPorts:
+		[
+			{ Hash: null, Direction: 'input', Side: 'left', Label: 'In' }
+		],
 		TitleBarColor: '#e74c3c',
 		BodyStyle:
 		{
 			'fill': '#fdedec',
-			'stroke': '#e74c3c',
-			'rx': '25',
-			'ry': '25'
+			'stroke': '#e74c3c'
 		}
 	},
 	'decision':
