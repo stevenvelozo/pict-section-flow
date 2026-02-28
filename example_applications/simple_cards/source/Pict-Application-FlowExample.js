@@ -257,6 +257,68 @@ class FlowExampleApplication extends libPictApplication
 						{ Hash: 'port-halt-in', Direction: 'input', Side: 'left', Label: 'In' }
 					],
 					Data: {}
+				},
+				// ── Body Content Examples ──────────────────────────
+				// SVG body: Status Monitor
+				{
+					Hash: 'node-status',
+					Type: 'STAT',
+					X: 50,
+					Y: 530,
+					Width: 200,
+					Height: 110,
+					Title: 'Service Health',
+					Ports:
+					[
+						{ Hash: 'port-stat-in', Direction: 'input', Side: 'left', Label: 'Check' },
+						{ Hash: 'port-stat-ok', Direction: 'output', Side: 'right', Label: 'Healthy' },
+						{ Hash: 'port-stat-warn', Direction: 'output', Side: 'bottom', Label: 'Degraded' }
+					],
+					Data: {}
+				},
+				// HTML body: Data Preview
+				{
+					Hash: 'node-preview',
+					Type: 'PREV',
+					X: 340,
+					Y: 530,
+					Width: 200,
+					Height: 120,
+					Title: 'Inspect Payload',
+					Ports:
+					[
+						{ Hash: 'port-prev-in', Direction: 'input', Side: 'left', Label: 'Data' },
+						{ Hash: 'port-prev-out', Direction: 'output', Side: 'right', Label: 'Pass' }
+					],
+					Data: {}
+				},
+				// Canvas body: Sparkline
+				{
+					Hash: 'node-spark',
+					Type: 'SPKL',
+					X: 630,
+					Y: 530,
+					Width: 220,
+					Height: 110,
+					Title: 'Throughput',
+					Ports:
+					[
+						{ Hash: 'port-spark-in', Direction: 'input', Side: 'left', Label: 'Values' },
+						{ Hash: 'port-spark-out', Direction: 'output', Side: 'right', Label: 'Stats' }
+					],
+					Data: {}
+				},
+				// HTML body (template): Comment
+				{
+					Hash: 'node-comment',
+					Type: 'NOTE',
+					X: 940,
+					Y: 540,
+					Width: 180,
+					Height: 100,
+					Title: 'Note',
+					Ports: [],
+					Data: { NoteText: 'These four cards demonstrate the three BodyContent renderer types: SVG, HTML, and Canvas.' }
 				}
 			],
 			Connections:
@@ -403,6 +465,25 @@ class FlowExampleApplication extends libPictApplication
 					SourcePortHash: 'port-fwrite-err',
 					TargetNodeHash: 'node-halt',
 					TargetPortHash: 'port-halt-in',
+					Data: {}
+				},
+				// ── Body Content example connections ────────────────
+				// Service Health → Inspect Payload
+				{
+					Hash: 'conn-17',
+					SourceNodeHash: 'node-status',
+					SourcePortHash: 'port-stat-ok',
+					TargetNodeHash: 'node-preview',
+					TargetPortHash: 'port-prev-in',
+					Data: {}
+				},
+				// Inspect Payload → Throughput
+				{
+					Hash: 'conn-18',
+					SourceNodeHash: 'node-preview',
+					SourcePortHash: 'port-prev-out',
+					TargetNodeHash: 'node-spark',
+					TargetPortHash: 'port-spark-in',
 					Data: {}
 				}
 			],

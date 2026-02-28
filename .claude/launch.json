@@ -4,7 +4,7 @@
     {
       "name": "simple-cards",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["http-server", "example_applications/simple_cards/dist", "-p", "8085", "-c-1"],
+      "runtimeArgs": ["http-server", "example_applications/simple_cards", "-p", "8085", "-c-1"],
       "port": 8085
     }
   ]

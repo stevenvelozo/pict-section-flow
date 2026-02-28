@@ -74,6 +74,14 @@ class PictProviderFlowPanelChrome extends libFableServiceProviderBase
 			tmpBody.addEventListener('wheel', (pEvent) => { pEvent.stopPropagation(); });
 		}
 
+		// Isolate events on the collapsible node properties editor section
+		let tmpNodeProps = tmpFO.querySelector('.pict-flow-panel-node-props');
+		if (tmpNodeProps)
+		{
+			tmpNodeProps.addEventListener('pointerdown', (pEvent) => { pEvent.stopPropagation(); });
+			tmpNodeProps.addEventListener('wheel', (pEvent) => { pEvent.stopPropagation(); });
+		}
+
 		pPanelsLayer.appendChild(tmpFO);
 
 		return tmpBody;

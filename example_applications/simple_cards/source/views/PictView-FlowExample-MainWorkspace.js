@@ -10,6 +10,10 @@ const libFlowCardFileWrite = require('../cards/FlowCard-FileWrite.js');
 const libFlowCardLogValues = require('../cards/FlowCard-LogValues.js');
 const libFlowCardSetValue = require('../cards/FlowCard-SetValue.js');
 const libFlowCardGetValue = require('../cards/FlowCard-GetValue.js');
+const libFlowCardStatusMonitor = require('../cards/FlowCard-StatusMonitor.js');
+const libFlowCardDataPreview = require('../cards/FlowCard-DataPreview.js');
+const libFlowCardSparkline = require('../cards/FlowCard-Sparkline.js');
+const libFlowCardComment = require('../cards/FlowCard-Comment.js');
 
 const _ViewConfiguration =
 {
@@ -219,7 +223,11 @@ class FlowExampleMainWorkspaceView extends libPictView
 			libFlowCardFileWrite,
 			libFlowCardLogValues,
 			libFlowCardSetValue,
-			libFlowCardGetValue
+			libFlowCardGetValue,
+			libFlowCardStatusMonitor,
+			libFlowCardDataPreview,
+			libFlowCardSparkline,
+			libFlowCardComment
 		];
 
 		let tmpNodeTypes = {};

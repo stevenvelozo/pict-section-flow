@@ -31,6 +31,18 @@ const libFableServiceProviderBase = require('fable-serviceproviderbase');
  *       - DefaultHeight  (number)  - Panel height (default 200)
  *       - Title          (string)  - Panel title bar text
  *       - Configuration  (object)  - Panel-type-specific configuration
+ *   - BodyContent     (object, optional) - Custom content rendered in the node body area
+ *       - ContentType    (string)  - 'svg', 'html', or 'canvas'
+ *       - Template       (string)  - Pict template string (html/svg only)
+ *       - TemplateHash   (string)  - Registered template hash (takes precedence over Template)
+ *       - Templates      (array)   - Template definitions to register [{Hash, Template}]
+ *       - RenderCallback (function)- Imperative render callback (required for canvas)
+ *       - Padding        (number)  - Inner padding in pixels (default 2)
+ *   - ShowTypeLabel    (boolean, default true)  - Whether to show the type label/code badge on hover
+ *   - PortLabelsOnHover (boolean, default false) - When true, port labels only appear on hover
+ *   - PortLabelsVertical (boolean, default false) - When true, port labels render vertically
+ *   - PortLabelPadding  (boolean, default false) - When true, port labels have extra padding to avoid overlapping body content
+ *   - LabelsInFront     (boolean, default true)  - When true, labels render in front of body content; when false, behind
  *
  * Usage:
  *   class MyCard extends PictFlowCard {
@@ -82,6 +94,18 @@ class PictFlowCard extends libFableServiceProviderBase
 		this.cardPropertiesPanel = (tmpOptions.PropertiesPanel && typeof tmpOptions.PropertiesPanel === 'object')
 			? tmpOptions.PropertiesPanel
 			: null;
+
+		// --- Body content configuration ---
+		this.cardBodyContent = (tmpOptions.BodyContent && typeof tmpOptions.BodyContent === 'object')
+			? tmpOptions.BodyContent
+			: null;
+
+		// --- Label display booleans ---
+		this.cardShowTypeLabel = (typeof tmpOptions.ShowTypeLabel === 'boolean') ? tmpOptions.ShowTypeLabel : true;
+		this.cardPortLabelsOnHover = (typeof tmpOptions.PortLabelsOnHover === 'boolean') ? tmpOptions.PortLabelsOnHover : false;
+		this.cardPortLabelsVertical = (typeof tmpOptions.PortLabelsVertical === 'boolean') ? tmpOptions.PortLabelsVertical : false;
+		this.cardPortLabelPadding = (typeof tmpOptions.PortLabelPadding === 'boolean') ? tmpOptions.PortLabelPadding : false;
+		this.cardLabelsInFront = (typeof tmpOptions.LabelsInFront === 'boolean') ? tmpOptions.LabelsInFront : true;
 	}
 
 	/**
@@ -155,10 +179,28 @@ class PictFlowCard extends libFableServiceProviderBase
 			}
 		};
 
+		// Include label display booleans
+		tmpResult.ShowTypeLabel = this.cardShowTypeLabel;
+		tmpResult.PortLabelsOnHover = this.cardPortLabelsOnHover;
+		tmpResult.PortLabelsVertical = this.cardPortLabelsVertical;
+		tmpResult.PortLabelPadding = this.cardPortLabelPadding;
+		tmpResult.LabelsInFront = this.cardLabelsInFront;
+
 		// Include properties panel config if defined
 		if (this.cardPropertiesPanel)
 		{
 			tmpResult.PropertiesPanel = JSON.parse(JSON.stringify(this.cardPropertiesPanel));
+		}
+
+		// Include body content config if defined
+		if (this.cardBodyContent)
+		{
+			tmpResult.BodyContent = JSON.parse(JSON.stringify(this.cardBodyContent));
+			// RenderCallback cannot be serialized — preserve the original function reference
+			if (typeof this.options.BodyContent.RenderCallback === 'function')
+			{
+				tmpResult.BodyContent.RenderCallback = this.options.BodyContent.RenderCallback;
+			}
 		}
 
 		return tmpResult;
@@ -203,5 +245,11 @@ module.exports.default_configuration =
 	Width: 180,
 	Height: 80,
 	Category: 'General',
-	PropertiesPanel: null
+	PropertiesPanel: null,
+	BodyContent: null,
+	ShowTypeLabel: true,
+	PortLabelsOnHover: false,
+	PortLabelsVertical: false,
+	PortLabelPadding: false,
+	LabelsInFront: true
 };

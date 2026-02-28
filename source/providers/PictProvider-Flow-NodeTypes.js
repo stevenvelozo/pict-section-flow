@@ -113,11 +113,21 @@ class PictProviderFlowNodeTypes extends libPictProvider
 			let tmpAdditionalKeys = Object.keys(pOptions.AdditionalNodeTypes);
 			for (let i = 0; i < tmpAdditionalKeys.length; i++)
 			{
+				let tmpOriginal = pOptions.AdditionalNodeTypes[tmpAdditionalKeys[i]];
 				this._NodeTypes[tmpAdditionalKeys[i]] = Object.assign(
 					{},
 					this._NodeTypes[tmpAdditionalKeys[i]] || {},
-					JSON.parse(JSON.stringify(pOptions.AdditionalNodeTypes[tmpAdditionalKeys[i]]))
+					JSON.parse(JSON.stringify(tmpOriginal))
 				);
+				// Preserve BodyContent.RenderCallback (functions are stripped by JSON serialization)
+				if (tmpOriginal.BodyContent && typeof tmpOriginal.BodyContent.RenderCallback === 'function')
+				{
+					if (!this._NodeTypes[tmpAdditionalKeys[i]].BodyContent)
+					{
+						this._NodeTypes[tmpAdditionalKeys[i]].BodyContent = {};
+					}
+					this._NodeTypes[tmpAdditionalKeys[i]].BodyContent.RenderCallback = tmpOriginal.BodyContent.RenderCallback;
+				}
 			}
 		}
 	}

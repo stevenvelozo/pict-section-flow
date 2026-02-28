@@ -34,12 +34,56 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 	{
 		return /*css*/`
 		.pict-flow-container {
+			/* ── Design Tokens ─────────────────────────────────────
+			   Override these custom properties to theme the flow diagram.
+			   Node-type classes (.pict-flow-node-{type}) can scope-override
+			   any variable for per-type variation. */
+
+			/* Node */
+			--pf-node-body-fill: #ffffff;
+			--pf-node-body-stroke: #d0d4d8;
+			--pf-node-body-stroke-width: 1;
+			--pf-node-body-radius: 8px;
+			--pf-node-shadow: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.10));
+			--pf-node-shadow-hover: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.15));
+			--pf-node-shadow-selected: drop-shadow(0 2px 8px rgba(52, 152, 219, 0.25));
+			--pf-node-shadow-dragging: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.20));
+			--pf-node-title-fill: #ffffff;
+			--pf-node-title-size: 11.5px;
+			--pf-node-title-weight: 600;
+			--pf-node-title-bar-color: #2c3e50;
+			--pf-node-type-label-fill: #a0a8b0;
+			--pf-node-selected-stroke: #3498db;
+
+			/* Ports */
+			--pf-port-input-fill: #3498db;
+			--pf-port-output-fill: #2ecc71;
+			--pf-port-stroke: #ffffff;
+			--pf-port-stroke-width: 2;
+
+			/* Panels */
+			--pf-panel-bg: #ffffff;
+			--pf-panel-border: #d0d4d8;
+			--pf-panel-radius: 8px;
+			--pf-panel-shadow: 0 4px 12px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06);
+			--pf-panel-titlebar-bg: #f7f8fa;
+			--pf-panel-titlebar-border: #e8eaed;
+			--pf-panel-title-color: #2c3e50;
+
+			/* Connections */
+			--pf-connection-stroke: #95a5a6;
+			--pf-connection-selected-stroke: #3498db;
+
+			/* Canvas */
+			--pf-canvas-bg: #fafafa;
+			--pf-grid-stroke: #e8e8e8;
+
 			position: relative;
 			width: 100%;
 			height: 100%;
 			min-height: 400px;
 			overflow: hidden;
-			background-color: #fafafa;
+			background-color: var(--pf-canvas-bg);
 			border: 1px solid #e0e0e0;
 			border-radius: 4px;
 			display: flex;
@@ -64,7 +108,7 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 			cursor: crosshair;
 		}
 		.pict-flow-grid-pattern line {
-			stroke: #e8e8e8;
+			stroke: var(--pf-grid-stroke);
 			stroke-width: 0.5;
 		}
 		`;
@@ -80,46 +124,106 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 		return /*css*/`
 		.pict-flow-node {
 			cursor: pointer;
+			filter: var(--pf-node-shadow);
+			transition: filter 0.2s;
+		}
+		.pict-flow-node:hover {
+			filter: var(--pf-node-shadow-hover);
 		}
 		.pict-flow-node:hover .pict-flow-node-body {
-			filter: brightness(0.97);
+			stroke: #b0b8c0;
+			stroke-width: 1.5;
+		}
+		.pict-flow-node.selected {
+			filter: var(--pf-node-shadow-selected);
 		}
 		.pict-flow-node.selected .pict-flow-node-body {
-			stroke: #3498db;
-			stroke-width: 2.5;
+			stroke: var(--pf-node-selected-stroke);
+			stroke-width: 2;
 		}
 		.pict-flow-node.dragging {
-			opacity: 0.85;
+			opacity: 0.9;
 			cursor: grabbing;
+			filter: var(--pf-node-shadow-dragging);
 		}
 		.pict-flow-node-body {
-			fill: #ffffff;
-			stroke: #bdc3c7;
-			stroke-width: 1.5;
-			rx: 6;
-			ry: 6;
-			transition: filter 0.15s;
+			fill: var(--pf-node-body-fill);
+			stroke: var(--pf-node-body-stroke);
+			stroke-width: var(--pf-node-body-stroke-width);
+			rx: 8;
+			ry: 8;
+			transition: stroke 0.2s, stroke-width 0.2s;
 		}
 		.pict-flow-node-title-bar {
-			fill: #2c3e50;
-			rx: 6;
-			ry: 6;
+			fill: var(--pf-node-title-bar-color);
+			rx: 8;
+			ry: 8;
 		}
 		.pict-flow-node-title-bar-bottom {
-			fill: #2c3e50;
+			fill: var(--pf-node-title-bar-color);
 		}
 		.pict-flow-node-title {
-			fill: #ffffff;
-			font-size: 12px;
-			font-weight: 700;
+			fill: var(--pf-node-title-fill);
+			font-size: var(--pf-node-title-size);
+			font-weight: var(--pf-node-title-weight);
 			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+			letter-spacing: 0.2px;
 			pointer-events: none;
 		}
 		.pict-flow-node-type-label {
-			fill: #95a5a6;
-			font-size: 10px;
+			fill: var(--pf-node-type-label-fill);
+			font-size: 9.5px;
 			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+			text-transform: uppercase;
+			letter-spacing: 0.3px;
 			pointer-events: none;
+			opacity: 0;
+			transition: opacity 0.2s;
+		}
+		.pict-flow-node:hover .pict-flow-node-type-label {
+			opacity: 1;
+		}
+		.pict-flow-node-card-code {
+			opacity: 0;
+			transition: opacity 0.2s;
+		}
+		.pict-flow-node:hover .pict-flow-node-card-code {
+			opacity: 1;
+		}
+		/* Title-bar icon: invert SVG paths to white for dark title bars */
+		.pict-flow-node-title-icon {
+			filter: brightness(0) invert(1);
+		}
+		`;
+	}
+
+	// ── Body Content ──────────────────────────────────────────────────────
+	/**
+	 * CSS for custom body content in nodes: SVG group, foreignObject, HTML container, canvas.
+	 * @returns {string}
+	 */
+	getBodyContentCSS()
+	{
+		return /*css*/`
+		.pict-flow-node-body-content {
+			pointer-events: none;
+		}
+		.pict-flow-node-body-content-fo {
+			overflow: hidden;
+		}
+		.pict-flow-node-body-content-html {
+			overflow: hidden;
+			width: 100%;
+			height: 100%;
+			box-sizing: border-box;
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+			font-size: 11px;
+			color: #2c3e50;
+			pointer-events: auto;
+		}
+		.pict-flow-node-body-content-canvas {
+			display: block;
+			pointer-events: auto;
 		}
 		`;
 	}
@@ -135,21 +239,22 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 		.pict-flow-node-decision .pict-flow-node-body {
 			fill: #fff9e6;
 			stroke: #f39c12;
+			stroke-width: 1.5;
 		}
 		.pict-flow-node-start .pict-flow-node-body {
 			fill: #eafaf1;
 			stroke: #27ae60;
-			stroke-width: 2.25;
+			stroke-width: 1.5;
 		}
 		.pict-flow-node-end .pict-flow-node-body {
 			fill: #e8f8f5;
 			stroke: #1abc9c;
-			stroke-width: 2.25;
+			stroke-width: 1.5;
 		}
 		.pict-flow-node-halt .pict-flow-node-body {
 			fill: #fdedec;
 			stroke: #e74c3c;
-			stroke-width: 2.25;
+			stroke-width: 1.5;
 		}
 		`;
 	}
@@ -164,26 +269,36 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 		return /*css*/`
 		.pict-flow-port {
 			cursor: crosshair;
-			transition: r 0.15s;
+			transition: r 0.15s, filter 0.15s;
+			filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.12));
 		}
 		.pict-flow-port.input {
-			fill: #3498db;
-			stroke: #2980b9;
-			stroke-width: 1.5;
+			fill: var(--pf-port-input-fill);
+			stroke: var(--pf-port-stroke);
+			stroke-width: var(--pf-port-stroke-width);
 		}
 		.pict-flow-port.output {
-			fill: #2ecc71;
-			stroke: #27ae60;
-			stroke-width: 1.5;
+			fill: var(--pf-port-output-fill);
+			stroke: var(--pf-port-stroke);
+			stroke-width: var(--pf-port-stroke-width);
 		}
 		.pict-flow-port:hover {
 			r: 7;
+			filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.20));
 		}
 		.pict-flow-port-label {
 			fill: #7f8c8d;
 			font-size: 9px;
 			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 			pointer-events: none;
+		}
+		/* Port labels on hover: hidden by default, revealed on node hover */
+		.pict-flow-node-port-labels-hover .pict-flow-port-label {
+			opacity: 0;
+			transition: opacity 0.2s;
+		}
+		.pict-flow-node-port-labels-hover:hover .pict-flow-port-label {
+			opacity: 1;
 		}
 		`;
 	}
@@ -198,7 +313,7 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 		return /*css*/`
 		.pict-flow-connection {
 			fill: none;
-			stroke: #95a5a6;
+			stroke: var(--pf-connection-stroke);
 			stroke-width: 2;
 			cursor: pointer;
 			transition: stroke 0.15s;
@@ -208,7 +323,7 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 			stroke-width: 3;
 		}
 		.pict-flow-connection.selected {
-			stroke: #3498db;
+			stroke: var(--pf-connection-selected-stroke);
 			stroke-width: 3;
 		}
 		.pict-flow-connection-hitarea {
@@ -324,22 +439,23 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 	{
 		return /*css*/`
 		.pict-flow-node-panel-indicator {
-			fill: #3498db;
-			stroke: #2980b9;
-			stroke-width: 1;
+			fill: var(--pf-node-selected-stroke);
+			stroke: none;
+			opacity: 0.6;
 			cursor: pointer;
+			transition: opacity 0.15s;
 		}
 		.pict-flow-node-panel-indicator:hover {
-			fill: #2980b9;
+			opacity: 1.0;
 		}
 		.pict-flow-panel-foreign-object {
 			overflow: visible;
 		}
 		.pict-flow-panel {
-			background: #ffffff;
-			border: 1px solid #bdc3c7;
-			border-radius: 6px;
-			box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+			background: var(--pf-panel-bg);
+			border: 1px solid var(--pf-panel-border);
+			border-radius: var(--pf-panel-radius);
+			box-shadow: var(--pf-panel-shadow);
 			display: flex;
 			flex-direction: column;
 			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -353,9 +469,9 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
-			padding: 6px 10px;
-			background: #ecf0f1;
-			border-bottom: 1px solid #d5dbdb;
+			padding: 8px 12px;
+			background: var(--pf-panel-titlebar-bg);
+			border-bottom: 1px solid var(--pf-panel-titlebar-border);
 			cursor: grab;
 			user-select: none;
 			-webkit-user-select: none;
@@ -367,27 +483,31 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 		.pict-flow-panel-title-text {
 			font-weight: 600;
 			font-size: 12px;
-			color: #2c3e50;
+			color: var(--pf-panel-title-color);
 			white-space: nowrap;
 			overflow: hidden;
 			text-overflow: ellipsis;
+			letter-spacing: 0.1px;
 		}
 		.pict-flow-panel-close-btn {
 			cursor: pointer;
-			color: #95a5a6;
+			color: #b0b8c0;
 			font-size: 14px;
 			line-height: 1;
-			padding: 2px 4px;
+			padding: 4px;
 			border: none;
 			background: none;
+			border-radius: 4px;
+			transition: background-color 0.15s, color 0.15s;
 		}
 		.pict-flow-panel-close-btn:hover {
 			color: #e74c3c;
+			background-color: rgba(231, 76, 60, 0.08);
 		}
 		.pict-flow-panel-body {
 			flex: 1;
 			overflow: auto;
-			padding: 8px;
+			padding: 10px 12px;
 		}
 		`;
 	}
@@ -401,69 +521,165 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 	{
 		return /*css*/`
 		.pict-flow-info-panel {
-			padding: 4px;
+			padding: 2px 0;
 			font-size: 12px;
 			line-height: 1.5;
 			color: #2c3e50;
 		}
 		.pict-flow-info-panel-header {
-			font-size: 14px;
+			font-size: 13px;
 			font-weight: 600;
-			margin-bottom: 4px;
+			margin-bottom: 6px;
+			color: #1a252f;
 		}
 		.pict-flow-info-panel-header.with-icon {
-			font-size: 16px;
+			font-size: 14px;
+			display: flex;
+			align-items: center;
+			gap: 6px;
 		}
 		.pict-flow-info-panel-description {
 			font-size: 11px;
 			color: #7f8c8d;
-			margin-bottom: 8px;
+			margin-bottom: 10px;
+			line-height: 1.45;
 		}
 		.pict-flow-info-panel-badges {
-			margin-bottom: 8px;
+			margin-bottom: 10px;
+			display: flex;
+			flex-wrap: wrap;
+			gap: 4px;
 		}
 		.pict-flow-info-panel-badge {
 			display: inline-block;
-			padding: 1px 6px;
-			border-radius: 3px;
+			padding: 2px 8px;
+			border-radius: 4px;
 			font-size: 10px;
-			margin-right: 4px;
 		}
 		.pict-flow-info-panel-badge.category {
-			background: #ecf0f1;
-			color: #7f8c8d;
+			background: #f0f2f4;
+			color: #6b7b8d;
 		}
 		.pict-flow-info-panel-badge.code {
 			background: #eaf2f8;
 			color: #2980b9;
-			font-family: monospace;
+			font-family: "SF Mono", "Fira Code", monospace;
 		}
 		.pict-flow-info-panel-section {
-			margin-bottom: 6px;
+			margin-bottom: 8px;
 		}
 		.pict-flow-info-panel-section-title {
 			font-size: 10px;
-			font-weight: 700;
+			font-weight: 600;
 			text-transform: uppercase;
 			letter-spacing: 0.5px;
-			color: #95a5a6;
-			margin-bottom: 2px;
+			color: #8e99a4;
+			margin-bottom: 4px;
+			padding-bottom: 2px;
+			border-bottom: 1px solid #f0f2f4;
 		}
 		.pict-flow-info-panel-port {
-			padding: 2px 6px;
+			padding: 3px 8px;
 			background: #f8f9fa;
-			margin-bottom: 2px;
+			margin-bottom: 3px;
 			font-size: 11px;
+			border-radius: 3px;
 		}
 		.pict-flow-info-panel-port.input {
-			border-left: 3px solid #3498db;
+			border-left: 3px solid var(--pf-port-input-fill);
 		}
 		.pict-flow-info-panel-port.output {
-			border-left: 3px solid #2ecc71;
+			border-left: 3px solid var(--pf-port-output-fill);
 		}
 		.pict-flow-info-panel-port-constraint {
-			color: #95a5a6;
+			color: #8e99a4;
 			font-size: 10px;
+		}
+		`;
+	}
+
+	// ── Node Properties Editor ────────────────────────────────────────────
+	/**
+	 * CSS for the collapsible node properties editor at the bottom of panels.
+	 * @returns {string}
+	 */
+	getNodePropsEditorCSS()
+	{
+		return /*css*/`
+		.pict-flow-panel-node-props {
+			border-top: 1px solid var(--pf-panel-titlebar-border);
+			flex-shrink: 0;
+		}
+		.pict-flow-panel-node-props-header {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			padding: 6px 12px;
+			cursor: pointer;
+			user-select: none;
+			-webkit-user-select: none;
+			background: var(--pf-panel-titlebar-bg);
+			transition: background-color 0.15s;
+		}
+		.pict-flow-panel-node-props-header:hover {
+			background: #eef0f2;
+		}
+		.pict-flow-panel-node-props-chevron {
+			font-size: 8px;
+			color: #95a5a6;
+			transition: transform 0.2s;
+			display: inline-block;
+		}
+		.pict-flow-panel-node-props-chevron.expanded {
+			transform: rotate(90deg);
+		}
+		.pict-flow-panel-node-props-title {
+			font-size: 10px;
+			font-weight: 600;
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
+			color: #8e99a4;
+		}
+		.pict-flow-panel-node-props-body {
+			padding: 8px 12px;
+			max-height: 240px;
+			overflow-y: auto;
+		}
+		.pict-flow-node-props-fields {
+			display: flex;
+			flex-direction: column;
+			gap: 6px;
+		}
+		.pict-flow-node-props-field {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
+		.pict-flow-node-props-label {
+			font-size: 11px;
+			color: #7f8c8d;
+			min-width: 72px;
+			flex-shrink: 0;
+		}
+		.pict-flow-node-props-input {
+			flex: 1;
+			padding: 3px 6px;
+			border: 1px solid #d5d8dc;
+			border-radius: 3px;
+			font-size: 11px;
+			outline: none;
+			box-sizing: border-box;
+			min-width: 0;
+		}
+		.pict-flow-node-props-input:focus {
+			border-color: #3498db;
+		}
+		.pict-flow-node-props-color {
+			width: 28px;
+			height: 24px;
+			padding: 1px;
+			cursor: pointer;
+			flex: 0 0 28px;
 		}
 		`;
 	}
@@ -1032,6 +1248,7 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 		return (
 			this.getContainerCSS() +
 			this.getNodeCSS() +
+			this.getBodyContentCSS() +
 			this.getNodeVariantCSS() +
 			this.getPortCSS() +
 			this.getConnectionCSS() +
@@ -1039,6 +1256,7 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 			this.getTetherCSS() +
 			this.getPanelCSS() +
 			this.getInfoPanelCSS() +
+			this.getNodePropsEditorCSS() +
 			this.getFullscreenCSS() +
 			this.getToolbarCSS() +
 			this.getPaletteCSS() +

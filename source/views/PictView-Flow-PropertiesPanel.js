@@ -55,6 +55,10 @@ const _DefaultConfiguration =
 		{
 			Hash: 'Flow-InfoPanel-Port-Constraint',
 			Template: ' <span class="pict-flow-info-panel-port-constraint">{~D:Record.ConstraintText~}</span>'
+		},
+		{
+			Hash: 'Flow-NodeProps-Editor',
+			Template: '<div class="pict-flow-node-props-fields"><div class="pict-flow-node-props-field"><label class="pict-flow-node-props-label">Title</label><input type="text" class="pict-flow-node-props-input" data-prop="Title" value="{~D:Record.Title~}" /></div><div class="pict-flow-node-props-field"><label class="pict-flow-node-props-label">Width</label><input type="number" class="pict-flow-node-props-input" data-prop="Width" value="{~D:Record.Width~}" min="60" step="10" /></div><div class="pict-flow-node-props-field"><label class="pict-flow-node-props-label">Height</label><input type="number" class="pict-flow-node-props-input" data-prop="Height" value="{~D:Record.Height~}" min="40" step="10" /></div><div class="pict-flow-node-props-field"><label class="pict-flow-node-props-label">Body Fill</label><input type="color" class="pict-flow-node-props-input pict-flow-node-props-color" data-prop="Style.BodyFill" value="{~D:Record.BodyFillValue~}" /></div><div class="pict-flow-node-props-field"><label class="pict-flow-node-props-label">Body Stroke</label><input type="color" class="pict-flow-node-props-input pict-flow-node-props-color" data-prop="Style.BodyStroke" value="{~D:Record.BodyStrokeValue~}" /></div><div class="pict-flow-node-props-field"><label class="pict-flow-node-props-label">Stroke Width</label><input type="number" class="pict-flow-node-props-input" data-prop="Style.BodyStrokeWidth" value="{~D:Record.BodyStrokeWidthValue~}" min="0" max="10" step="0.5" /></div><div class="pict-flow-node-props-field"><label class="pict-flow-node-props-label">Title Bar</label><input type="color" class="pict-flow-node-props-input pict-flow-node-props-color" data-prop="Style.TitleBarColor" value="{~D:Record.TitleBarColorValue~}" /></div></div>'
 		}
 	]
 };
@@ -191,6 +195,13 @@ class PictViewFlowPropertiesPanel extends libPictView
 		if (tmpBody)
 		{
 			this._renderPanelContent(pPanelData, tmpBody);
+		}
+
+		// Render the collapsible node properties editor at the bottom of the panel
+		let tmpFO = pPanelsLayer.querySelector(`[data-panel-hash="${pPanelData.Hash}"]`);
+		if (tmpFO)
+		{
+			this._renderNodePropsEditor(pPanelData, tmpFO);
 		}
 	}
 
@@ -380,6 +391,156 @@ class PictViewFlowPropertiesPanel extends libPictView
 			return this.pict.parseTemplateByHash('Flow-InfoPanel-Port-Constraint', { ConstraintText: tmpConstraintText });
 		}
 		return '';
+	}
+
+	/**
+	 * Render the collapsible node properties editor into a panel's foreignObject.
+	 * Populates the editor fields with current node values and wires up live
+	 * change handlers for immediate visual feedback.
+	 *
+	 * @param {Object} pPanelData - Panel data from OpenPanels
+	 * @param {Element} pForeignObject - The panel's SVG foreignObject element
+	 */
+	_renderNodePropsEditor(pPanelData, pForeignObject)
+	{
+		let tmpNodeData = this._FlowView.getNode(pPanelData.NodeHash);
+		if (!tmpNodeData) return;
+
+		let tmpPropsBody = pForeignObject.querySelector('.pict-flow-panel-node-props-body');
+		if (!tmpPropsBody) return;
+
+		// Build the template record with safe defaults for Style values
+		let tmpStyle = tmpNodeData.Style || {};
+
+		// Resolve default colors from the node type config or CSS token defaults
+		let tmpNodeTypeConfig = this._FlowView._NodeTypeProvider.getNodeType(tmpNodeData.Type);
+		let tmpDefaultTitleBarColor = '#2c3e50';
+		let tmpDefaultBodyFill = '#ffffff';
+		let tmpDefaultBodyStroke = '#d0d4d8';
+		if (tmpNodeTypeConfig)
+		{
+			if (tmpNodeTypeConfig.TitleBarColor) tmpDefaultTitleBarColor = tmpNodeTypeConfig.TitleBarColor;
+			if (tmpNodeTypeConfig.BodyStyle)
+			{
+				if (tmpNodeTypeConfig.BodyStyle.fill) tmpDefaultBodyFill = tmpNodeTypeConfig.BodyStyle.fill;
+				if (tmpNodeTypeConfig.BodyStyle.stroke) tmpDefaultBodyStroke = tmpNodeTypeConfig.BodyStyle.stroke;
+			}
+		}
+
+		let tmpRecord =
+		{
+			Title: tmpNodeData.Title || '',
+			Width: tmpNodeData.Width || 180,
+			Height: tmpNodeData.Height || 80,
+			BodyFillValue: tmpStyle.BodyFill || tmpDefaultBodyFill,
+			BodyStrokeValue: tmpStyle.BodyStroke || tmpDefaultBodyStroke,
+			BodyStrokeWidthValue: tmpStyle.BodyStrokeWidth || 1,
+			TitleBarColorValue: tmpStyle.TitleBarColor || tmpDefaultTitleBarColor
+		};
+
+		tmpPropsBody.innerHTML = this.pict.parseTemplateByHash('Flow-NodeProps-Editor', tmpRecord);
+
+		// Wire up the expand/collapse toggle with dynamic panel height adjustment
+		let tmpHeader = pForeignObject.querySelector('.pict-flow-panel-node-props-header');
+		if (tmpHeader)
+		{
+			// Store the original panel height before the section was expanded
+			let tmpOriginalHeight = parseInt(pForeignObject.getAttribute('height'), 10) || 200;
+
+			tmpHeader.addEventListener('click', (pEvent) =>
+			{
+				pEvent.stopPropagation();
+				let tmpIsExpanded = tmpPropsBody.style.display !== 'none';
+				tmpPropsBody.style.display = tmpIsExpanded ? 'none' : 'block';
+				let tmpChevron = tmpHeader.querySelector('.pict-flow-panel-node-props-chevron');
+				if (tmpChevron)
+				{
+					tmpChevron.classList.toggle('expanded', !tmpIsExpanded);
+				}
+
+				// Resize the foreignObject to accommodate the expanded/collapsed section
+				let tmpEditorHeight = tmpIsExpanded ? 0 : tmpPropsBody.scrollHeight;
+				let tmpNewHeight = tmpOriginalHeight + tmpEditorHeight;
+				pForeignObject.setAttribute('height', String(tmpNewHeight));
+
+				// Update the panel data so tethers and position tracking stay in sync
+				let tmpPanelDataEntry = this._FlowView._FlowData.OpenPanels.find(
+					(pPanel) => pPanel.Hash === pPanelData.Hash);
+				if (tmpPanelDataEntry)
+				{
+					tmpPanelDataEntry.Height = tmpNewHeight;
+				}
+			});
+		}
+
+		// Wire up live change handlers on all input fields
+		let tmpInputs = tmpPropsBody.querySelectorAll('.pict-flow-node-props-input');
+		for (let i = 0; i < tmpInputs.length; i++)
+		{
+			let tmpInput = tmpInputs[i];
+			let tmpProp = tmpInput.getAttribute('data-prop');
+
+			tmpInput.addEventListener('input', (pEvent) =>
+			{
+				pEvent.stopPropagation();
+				this._applyNodePropChange(pPanelData.NodeHash, tmpProp, tmpInput.value, tmpInput.type);
+			});
+
+			// Prevent pointer events from propagating to SVG drag handler
+			tmpInput.addEventListener('pointerdown', (pEvent) => { pEvent.stopPropagation(); });
+		}
+	}
+
+	/**
+	 * Apply a node property change from the properties editor and re-render.
+	 *
+	 * @param {string} pNodeHash - Hash of the node to update
+	 * @param {string} pPropPath - Property path (e.g. 'Title', 'Width', 'Style.BodyFill')
+	 * @param {string} pValue - The new value from the input
+	 * @param {string} pInputType - The input element type ('text', 'number', 'color')
+	 */
+	_applyNodePropChange(pNodeHash, pPropPath, pValue, pInputType)
+	{
+		let tmpNodeData = this._FlowView.getNode(pNodeHash);
+		if (!tmpNodeData) return;
+
+		// Parse numeric values
+		let tmpValue = pValue;
+		if (pInputType === 'number')
+		{
+			tmpValue = parseFloat(pValue);
+			if (isNaN(tmpValue)) return;
+		}
+
+		// Apply the value based on the property path
+		if (pPropPath === 'Title')
+		{
+			tmpNodeData.Title = tmpValue;
+		}
+		else if (pPropPath === 'Width')
+		{
+			tmpNodeData.Width = tmpValue;
+		}
+		else if (pPropPath === 'Height')
+		{
+			tmpNodeData.Height = tmpValue;
+		}
+		else if (pPropPath.startsWith('Style.'))
+		{
+			if (!tmpNodeData.Style) tmpNodeData.Style = {};
+			let tmpStyleKey = pPropPath.substring(6); // Remove 'Style.' prefix
+			tmpNodeData.Style[tmpStyleKey] = tmpValue;
+		}
+
+		// Re-render the flow to reflect changes
+		this._FlowView.renderFlow();
+		this._FlowView.marshalFromView();
+
+		// Fire change event
+		if (this._FlowView._EventHandlerProvider)
+		{
+			this._FlowView._EventHandlerProvider.fireEvent('onFlowChanged', this._FlowView._FlowData);
+		}
 	}
 
 	/**

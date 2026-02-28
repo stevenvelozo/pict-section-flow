@@ -32,7 +32,15 @@ class PictViewFlowNode extends libPictView
 	renderNode(pNodeData, pNodesLayer, pIsSelected, pNodeTypeConfig)
 	{
 		let tmpGroup = this._FlowView._SVGHelperProvider.createSVGElement('g');
-		tmpGroup.setAttribute('class', `pict-flow-node ${pIsSelected ? 'selected' : ''} pict-flow-node-${pNodeData.Type || 'default'}`);
+
+		// Build CSS class list with optional per-type modifier classes
+		let tmpClassList = `pict-flow-node ${pIsSelected ? 'selected' : ''} pict-flow-node-${pNodeData.Type || 'default'}`;
+		if (pNodeTypeConfig)
+		{
+			if (pNodeTypeConfig.PortLabelsOnHover) tmpClassList += ' pict-flow-node-port-labels-hover';
+			if (pNodeTypeConfig.PortLabelsVertical) tmpClassList += ' pict-flow-node-port-labels-vertical';
+		}
+		tmpGroup.setAttribute('class', tmpClassList);
 		tmpGroup.setAttribute('transform', `translate(${pNodeData.X}, ${pNodeData.Y})`);
 		tmpGroup.setAttribute('data-node-hash', pNodeData.Hash);
 		tmpGroup.setAttribute('data-element-type', 'node');
@@ -60,6 +68,21 @@ class PictViewFlowNode extends libPictView
 			}
 		}
 
+		// Apply per-instance style overrides (for node-specific editing)
+		// These must be applied as inline styles so they override CSS rules
+		// (CSS declarations take precedence over SVG presentation attributes).
+		if (pNodeData.Style)
+		{
+			let tmpInlineStyles = [];
+			if (pNodeData.Style.BodyFill) tmpInlineStyles.push('fill:' + pNodeData.Style.BodyFill);
+			if (pNodeData.Style.BodyStroke) tmpInlineStyles.push('stroke:' + pNodeData.Style.BodyStroke);
+			if (pNodeData.Style.BodyStrokeWidth) tmpInlineStyles.push('stroke-width:' + pNodeData.Style.BodyStrokeWidth);
+			if (tmpInlineStyles.length > 0)
+			{
+				tmpBody.setAttribute('style', tmpInlineStyles.join(';'));
+			}
+		}
+
 		tmpGroup.appendChild(tmpBody);
 
 		// Title bar background (top portion)
@@ -84,9 +107,9 @@ class PictViewFlowNode extends libPictView
 		let tmpTitleBarBottom = this._FlowView._SVGHelperProvider.createSVGElement('rect');
 		tmpTitleBarBottom.setAttribute('class', 'pict-flow-node-title-bar-bottom');
 		tmpTitleBarBottom.setAttribute('x', '0');
-		tmpTitleBarBottom.setAttribute('y', String(tmpTitleBarHeight - 6));
+		tmpTitleBarBottom.setAttribute('y', String(tmpTitleBarHeight - 8));
 		tmpTitleBarBottom.setAttribute('width', String(tmpWidth));
-		tmpTitleBarBottom.setAttribute('height', '6');
+		tmpTitleBarBottom.setAttribute('height', '8');
 		tmpTitleBarBottom.setAttribute('data-node-hash', pNodeData.Hash);
 		tmpTitleBarBottom.setAttribute('data-element-type', 'node-body');
 
@@ -95,129 +118,184 @@ class PictViewFlowNode extends libPictView
 			tmpTitleBarBottom.setAttribute('fill', pNodeTypeConfig.TitleBarColor);
 		}
 
+		// Per-instance title bar color override
+		// Applied as inline style to override CSS rules.
+		if (pNodeData.Style && pNodeData.Style.TitleBarColor)
+		{
+			tmpTitleBar.setAttribute('style', 'fill:' + pNodeData.Style.TitleBarColor);
+			tmpTitleBarBottom.setAttribute('style', 'fill:' + pNodeData.Style.TitleBarColor);
+		}
+
 		tmpGroup.appendChild(tmpTitleBarBottom);
 
-		// Title text
+		// Determine if this node has a title-bar icon (FlowCard with CardMetadata)
+		let tmpHasTitleIcon = false;
+		let tmpTitleIconSize = 12;
+		let tmpTitleIconMarginLeft = 8;
+		let tmpTitleIconGap = 4;
+
+		if (pNodeTypeConfig && pNodeTypeConfig.CardMetadata)
+		{
+			let tmpMeta = pNodeTypeConfig.CardMetadata;
+			let tmpIconProvider = this._FlowView._IconProvider;
+			if (tmpMeta.Icon || tmpIconProvider)
+			{
+				tmpHasTitleIcon = true;
+			}
+		}
+
+		// Title text (position adjusts when a title-bar icon is present)
 		let tmpTitle = this._FlowView._SVGHelperProvider.createSVGElement('text');
 		tmpTitle.setAttribute('class', 'pict-flow-node-title');
-		tmpTitle.setAttribute('x', String(tmpWidth / 2));
+		if (tmpHasTitleIcon)
+		{
+			tmpTitle.setAttribute('x', String(tmpTitleIconMarginLeft + tmpTitleIconSize + tmpTitleIconGap));
+			tmpTitle.setAttribute('text-anchor', 'start');
+		}
+		else
+		{
+			tmpTitle.setAttribute('x', String(tmpWidth / 2));
+			tmpTitle.setAttribute('text-anchor', 'middle');
+		}
 		tmpTitle.setAttribute('y', String(tmpTitleBarHeight / 2 + 1));
-		tmpTitle.setAttribute('text-anchor', 'middle');
 		tmpTitle.setAttribute('dominant-baseline', 'central');
 		tmpTitle.textContent = pNodeData.Title || 'Untitled';
 		tmpGroup.appendChild(tmpTitle);
 
-		// Type label (below title bar)
-		if (pNodeTypeConfig && pNodeTypeConfig.Label && pNodeTypeConfig.Label !== pNodeData.Title)
+		// Determine whether labels should be rendered
+		let tmpShowTypeLabel = (!pNodeTypeConfig || pNodeTypeConfig.ShowTypeLabel !== false);
+		let tmpLabelsInFront = (!pNodeTypeConfig || pNodeTypeConfig.LabelsInFront !== false);
+
+		// Helper: render type label + code badge + tooltip (the "middle labels")
+		let tmpRenderTypeLabels = () =>
 		{
-			let tmpTypeLabel = this._FlowView._SVGHelperProvider.createSVGElement('text');
-			tmpTypeLabel.setAttribute('class', 'pict-flow-node-type-label');
-			tmpTypeLabel.setAttribute('x', String(tmpWidth / 2));
-			tmpTypeLabel.setAttribute('y', String(tmpTitleBarHeight + 18));
-			tmpTypeLabel.setAttribute('text-anchor', 'middle');
-			tmpTypeLabel.setAttribute('dominant-baseline', 'central');
-			tmpTypeLabel.textContent = pNodeTypeConfig.Label;
-			tmpGroup.appendChild(tmpTypeLabel);
-		}
-
-		// FlowCard metadata: render icon and code in the node body
-		if (pNodeTypeConfig && pNodeTypeConfig.CardMetadata)
-		{
-			let tmpMeta = pNodeTypeConfig.CardMetadata;
-			let tmpBodyCenterY = tmpTitleBarHeight + (tmpHeight - tmpTitleBarHeight) / 2;
-
-			// Determine icon X position based on whether a Code badge is present
-			let tmpIconX = tmpMeta.Code ? (tmpWidth * 0.33) : (tmpWidth / 2);
-			let tmpIconProvider = this._FlowView._IconProvider;
-			let tmpIconSize = 16;
-			let tmpIconRendered = false;
-
-			if (tmpMeta.Icon && tmpIconProvider && !tmpIconProvider.isEmojiIcon(tmpMeta.Icon))
+			// Type label (below title bar — hover-only for FlowCard nodes via CSS)
+			if (tmpShowTypeLabel && pNodeTypeConfig && pNodeTypeConfig.Label && pNodeTypeConfig.Label !== pNodeData.Title)
 			{
-				// SVG icon via the icon provider (new path)
-				let tmpResolvedKey = tmpIconProvider.resolveIconKey(tmpMeta);
-				tmpIconProvider.renderIconIntoSVGGroup(
-					tmpResolvedKey, tmpGroup,
-					tmpIconX - (tmpIconSize / 2), tmpBodyCenterY - (tmpIconSize / 2),
-					tmpIconSize);
-				tmpIconRendered = true;
-			}
-			else if (tmpMeta.Icon && tmpIconProvider && tmpIconProvider.isEmojiIcon(tmpMeta.Icon))
-			{
-				// Legacy emoji rendering (backward compat)
-				let tmpIconText = this._FlowView._SVGHelperProvider.createSVGElement('text');
-				tmpIconText.setAttribute('class', 'pict-flow-node-card-icon');
-				tmpIconText.setAttribute('font-size', String(tmpIconSize));
-				tmpIconText.setAttribute('text-anchor', 'middle');
-				tmpIconText.setAttribute('dominant-baseline', 'central');
-				tmpIconText.setAttribute('pointer-events', 'none');
-				tmpIconText.setAttribute('x', String(tmpIconX));
-				tmpIconText.setAttribute('y', String(tmpBodyCenterY));
-				tmpIconText.textContent = tmpMeta.Icon;
-				tmpGroup.appendChild(tmpIconText);
-				tmpIconRendered = true;
-			}
-			else if (tmpMeta.Icon)
-			{
-				// No icon provider — legacy text fallback
-				let tmpIconText = this._FlowView._SVGHelperProvider.createSVGElement('text');
-				tmpIconText.setAttribute('class', 'pict-flow-node-card-icon');
-				tmpIconText.setAttribute('font-size', String(tmpIconSize));
-				tmpIconText.setAttribute('text-anchor', 'middle');
-				tmpIconText.setAttribute('dominant-baseline', 'central');
-				tmpIconText.setAttribute('pointer-events', 'none');
-				tmpIconText.setAttribute('x', String(tmpIconX));
-				tmpIconText.setAttribute('y', String(tmpBodyCenterY));
-				tmpIconText.textContent = tmpMeta.Icon;
-				tmpGroup.appendChild(tmpIconText);
-				tmpIconRendered = true;
+				let tmpTypeLabel = this._FlowView._SVGHelperProvider.createSVGElement('text');
+				tmpTypeLabel.setAttribute('class', 'pict-flow-node-type-label');
+				tmpTypeLabel.setAttribute('x', String(tmpWidth / 2));
+				tmpTypeLabel.setAttribute('y', String(tmpTitleBarHeight + 16));
+				tmpTypeLabel.setAttribute('text-anchor', 'middle');
+				tmpTypeLabel.setAttribute('dominant-baseline', 'central');
+				tmpTypeLabel.textContent = pNodeTypeConfig.Label;
+				tmpGroup.appendChild(tmpTypeLabel);
 			}
 
-			// Default fallback icon for nodes without an Icon value
-			if (!tmpIconRendered && tmpIconProvider)
+			// FlowCard metadata: icon in title bar, code badge in body (hover-only via CSS)
+			if (pNodeTypeConfig && pNodeTypeConfig.CardMetadata)
 			{
-				tmpIconProvider.renderIconIntoSVGGroup(
-					'default', tmpGroup,
-					tmpIconX - (tmpIconSize / 2), tmpBodyCenterY - (tmpIconSize / 2),
-					tmpIconSize);
-			}
+				let tmpMeta = pNodeTypeConfig.CardMetadata;
+				let tmpIconProvider = this._FlowView._IconProvider;
+				let tmpTitleIconRendered = false;
 
-			// Code badge (displayed as monospace text)
-			if (tmpMeta.Code)
-			{
-				let tmpCodeText = this._FlowView._SVGHelperProvider.createSVGElement('text');
-				tmpCodeText.setAttribute('class', 'pict-flow-node-card-code');
-				tmpCodeText.setAttribute('font-size', '10');
-				tmpCodeText.setAttribute('font-family', 'monospace');
-				tmpCodeText.setAttribute('fill', '#7f8c8d');
-				tmpCodeText.setAttribute('text-anchor', 'middle');
-				tmpCodeText.setAttribute('dominant-baseline', 'central');
-				tmpCodeText.setAttribute('pointer-events', 'none');
+				// Icon position in title bar (vertically centered)
+				let tmpIconX = tmpTitleIconMarginLeft;
+				let tmpIconY = (tmpTitleBarHeight - tmpTitleIconSize) / 2;
 
-				if (tmpMeta.Icon)
+				if (tmpMeta.Icon && tmpIconProvider && !tmpIconProvider.isEmojiIcon(tmpMeta.Icon))
 				{
-					tmpCodeText.setAttribute('x', String(tmpWidth * 0.67));
+					// SVG icon via the icon provider — rendered into title bar
+					let tmpResolvedKey = tmpIconProvider.resolveIconKey(tmpMeta);
+					let tmpIconGroup = tmpIconProvider.renderIconIntoSVGGroup(
+						tmpResolvedKey, tmpGroup,
+						tmpIconX, tmpIconY,
+						tmpTitleIconSize);
+					if (tmpIconGroup)
+					{
+						tmpIconGroup.setAttribute('class',
+							(tmpIconGroup.getAttribute('class') || '') + ' pict-flow-node-title-icon');
+					}
+					tmpTitleIconRendered = true;
 				}
-				else
+				else if (tmpMeta.Icon && tmpIconProvider && tmpIconProvider.isEmojiIcon(tmpMeta.Icon))
 				{
+					// Emoji icon in title bar
+					let tmpIconText = this._FlowView._SVGHelperProvider.createSVGElement('text');
+					tmpIconText.setAttribute('class', 'pict-flow-node-card-icon pict-flow-node-title-icon-emoji');
+					tmpIconText.setAttribute('font-size', String(tmpTitleIconSize));
+					tmpIconText.setAttribute('text-anchor', 'middle');
+					tmpIconText.setAttribute('dominant-baseline', 'central');
+					tmpIconText.setAttribute('pointer-events', 'none');
+					tmpIconText.setAttribute('x', String(tmpIconX + tmpTitleIconSize / 2));
+					tmpIconText.setAttribute('y', String(tmpTitleBarHeight / 2));
+					tmpIconText.textContent = tmpMeta.Icon;
+					tmpGroup.appendChild(tmpIconText);
+					tmpTitleIconRendered = true;
+				}
+				else if (tmpMeta.Icon)
+				{
+					// No icon provider — text fallback in title bar
+					let tmpIconText = this._FlowView._SVGHelperProvider.createSVGElement('text');
+					tmpIconText.setAttribute('class', 'pict-flow-node-card-icon pict-flow-node-title-icon-emoji');
+					tmpIconText.setAttribute('font-size', String(tmpTitleIconSize));
+					tmpIconText.setAttribute('text-anchor', 'middle');
+					tmpIconText.setAttribute('dominant-baseline', 'central');
+					tmpIconText.setAttribute('pointer-events', 'none');
+					tmpIconText.setAttribute('x', String(tmpIconX + tmpTitleIconSize / 2));
+					tmpIconText.setAttribute('y', String(tmpTitleBarHeight / 2));
+					tmpIconText.textContent = tmpMeta.Icon;
+					tmpGroup.appendChild(tmpIconText);
+					tmpTitleIconRendered = true;
+				}
+
+				// Default fallback icon in title bar
+				if (!tmpTitleIconRendered && tmpIconProvider)
+				{
+					let tmpIconGroup = tmpIconProvider.renderIconIntoSVGGroup(
+						'default', tmpGroup,
+						tmpIconX, tmpIconY,
+						tmpTitleIconSize);
+					if (tmpIconGroup)
+					{
+						tmpIconGroup.setAttribute('class',
+							(tmpIconGroup.getAttribute('class') || '') + ' pict-flow-node-title-icon');
+					}
+				}
+
+				// Code badge in body (hover-only via CSS, skipped when ShowTypeLabel is false)
+				let tmpBodyCenterY = tmpTitleBarHeight + (tmpHeight - tmpTitleBarHeight) / 2;
+				if (tmpShowTypeLabel && tmpMeta.Code)
+				{
+					let tmpCodeText = this._FlowView._SVGHelperProvider.createSVGElement('text');
+					tmpCodeText.setAttribute('class', 'pict-flow-node-card-code');
+					tmpCodeText.setAttribute('font-size', '10');
+					tmpCodeText.setAttribute('font-family', 'monospace');
+					tmpCodeText.setAttribute('fill', '#7f8c8d');
+					tmpCodeText.setAttribute('text-anchor', 'middle');
+					tmpCodeText.setAttribute('dominant-baseline', 'central');
+					tmpCodeText.setAttribute('pointer-events', 'none');
 					tmpCodeText.setAttribute('x', String(tmpWidth / 2));
+					tmpCodeText.setAttribute('y', String(tmpBodyCenterY));
+					tmpCodeText.textContent = tmpMeta.Code;
+					tmpGroup.appendChild(tmpCodeText);
 				}
-				tmpCodeText.setAttribute('y', String(tmpBodyCenterY));
-				tmpCodeText.textContent = tmpMeta.Code;
-				tmpGroup.appendChild(tmpCodeText);
-			}
 
-			// Tooltip via SVG <title> element
-			if (tmpMeta.Tooltip || tmpMeta.Description)
-			{
-				let tmpSVGTitle = this._FlowView._SVGHelperProvider.createSVGElement('title');
-				tmpSVGTitle.textContent = tmpMeta.Tooltip || tmpMeta.Description;
-				tmpGroup.appendChild(tmpSVGTitle);
+				// Tooltip via SVG <title> element
+				if (tmpMeta.Tooltip || tmpMeta.Description)
+				{
+					let tmpSVGTitle = this._FlowView._SVGHelperProvider.createSVGElement('title');
+					tmpSVGTitle.textContent = tmpMeta.Tooltip || tmpMeta.Description;
+					tmpGroup.appendChild(tmpSVGTitle);
+				}
 			}
+		};
+
+		// Render order depends on LabelsInFront:
+		//   true  (default): body content first, then labels + ports (labels on top)
+		//   false:           labels + ports first, then body content (content on top)
+		if (tmpLabelsInFront)
+		{
+			this._renderBodyContent(pNodeData, tmpGroup, tmpWidth, tmpHeight, pNodeTypeConfig);
+			tmpRenderTypeLabels();
+			this._renderPorts(pNodeData, tmpGroup, tmpWidth, tmpHeight, pNodeTypeConfig);
 		}
-
-		// Render ports
-		this._renderPorts(pNodeData, tmpGroup, tmpWidth, tmpHeight);
+		else
+		{
+			tmpRenderTypeLabels();
+			this._renderPorts(pNodeData, tmpGroup, tmpWidth, tmpHeight, pNodeTypeConfig);
+			this._renderBodyContent(pNodeData, tmpGroup, tmpWidth, tmpHeight, pNodeTypeConfig);
+		}
 
 		// Panel indicator icon (small rect in bottom-right corner)
 		if (pNodeTypeConfig && pNodeTypeConfig.PropertiesPanel)
@@ -265,10 +343,14 @@ class PictViewFlowNode extends libPictView
 	 * @param {SVGGElement} pGroup - The node's SVG group
 	 * @param {number} pWidth
 	 * @param {number} pHeight
+	 * @param {Object} [pNodeTypeConfig] - Node type configuration (for label display options)
 	 */
-	_renderPorts(pNodeData, pGroup, pWidth, pHeight)
+	_renderPorts(pNodeData, pGroup, pWidth, pHeight, pNodeTypeConfig)
 	{
 		if (!pNodeData.Ports || !Array.isArray(pNodeData.Ports)) return;
+
+		let tmpPortLabelsVertical = (pNodeTypeConfig && pNodeTypeConfig.PortLabelsVertical);
+		let tmpPortLabelPadding = (pNodeTypeConfig && pNodeTypeConfig.PortLabelPadding);
 
 		// Group ports by side and direction for positioning
 		let tmpPortsBySide = { left: [], right: [], top: [], bottom: [] };
@@ -318,29 +400,69 @@ class PictViewFlowNode extends libPictView
 					tmpLabel.setAttribute('class', 'pict-flow-port-label');
 					tmpLabel.textContent = tmpPort.Label;
 
+					// Base offset from port center; PortLabelPadding adds extra space
 					let tmpLabelOffset = 12;
-					switch (tmpSide)
+					let tmpPaddingExtra = tmpPortLabelPadding ? 8 : 0;
+
+					if (tmpPortLabelsVertical)
 					{
-						case 'left':
-							tmpLabel.setAttribute('x', String(tmpPosition.x + tmpLabelOffset));
-							tmpLabel.setAttribute('y', String(tmpPosition.y));
-							tmpLabel.setAttribute('text-anchor', 'start');
-							break;
-						case 'right':
-							tmpLabel.setAttribute('x', String(tmpPosition.x - tmpLabelOffset));
-							tmpLabel.setAttribute('y', String(tmpPosition.y));
-							tmpLabel.setAttribute('text-anchor', 'end');
-							break;
-						case 'top':
-							tmpLabel.setAttribute('x', String(tmpPosition.x));
-							tmpLabel.setAttribute('y', String(tmpPosition.y + tmpLabelOffset));
-							tmpLabel.setAttribute('text-anchor', 'middle');
-							break;
-						case 'bottom':
-							tmpLabel.setAttribute('x', String(tmpPosition.x));
-							tmpLabel.setAttribute('y', String(tmpPosition.y - tmpLabelOffset));
-							tmpLabel.setAttribute('text-anchor', 'middle');
-							break;
+						// Vertical labels: rotated -90° and centered on the port position.
+						// After rotation, text-anchor controls vertical centering, so 'middle'
+						// ensures the label is centered next to its port circle.
+						switch (tmpSide)
+						{
+							case 'left':
+								tmpLabel.setAttribute('x', String(tmpPosition.x + tmpLabelOffset + tmpPaddingExtra));
+								tmpLabel.setAttribute('y', String(tmpPosition.y));
+								tmpLabel.setAttribute('text-anchor', 'middle');
+								tmpLabel.setAttribute('transform', `rotate(-90, ${tmpPosition.x + tmpLabelOffset + tmpPaddingExtra}, ${tmpPosition.y})`);
+								break;
+							case 'right':
+								tmpLabel.setAttribute('x', String(tmpPosition.x - tmpLabelOffset - tmpPaddingExtra));
+								tmpLabel.setAttribute('y', String(tmpPosition.y));
+								tmpLabel.setAttribute('text-anchor', 'middle');
+								tmpLabel.setAttribute('transform', `rotate(-90, ${tmpPosition.x - tmpLabelOffset - tmpPaddingExtra}, ${tmpPosition.y})`);
+								break;
+							case 'top':
+								tmpLabel.setAttribute('x', String(tmpPosition.x));
+								tmpLabel.setAttribute('y', String(tmpPosition.y + tmpLabelOffset + tmpPaddingExtra));
+								tmpLabel.setAttribute('text-anchor', 'middle');
+								tmpLabel.setAttribute('transform', `rotate(-90, ${tmpPosition.x}, ${tmpPosition.y + tmpLabelOffset + tmpPaddingExtra})`);
+								break;
+							case 'bottom':
+								tmpLabel.setAttribute('x', String(tmpPosition.x));
+								tmpLabel.setAttribute('y', String(tmpPosition.y - tmpLabelOffset - tmpPaddingExtra));
+								tmpLabel.setAttribute('text-anchor', 'middle');
+								tmpLabel.setAttribute('transform', `rotate(-90, ${tmpPosition.x}, ${tmpPosition.y - tmpLabelOffset - tmpPaddingExtra})`);
+								break;
+						}
+					}
+					else
+					{
+						// Horizontal labels (default)
+						switch (tmpSide)
+						{
+							case 'left':
+								tmpLabel.setAttribute('x', String(tmpPosition.x + tmpLabelOffset + tmpPaddingExtra));
+								tmpLabel.setAttribute('y', String(tmpPosition.y));
+								tmpLabel.setAttribute('text-anchor', 'start');
+								break;
+							case 'right':
+								tmpLabel.setAttribute('x', String(tmpPosition.x - tmpLabelOffset - tmpPaddingExtra));
+								tmpLabel.setAttribute('y', String(tmpPosition.y));
+								tmpLabel.setAttribute('text-anchor', 'end');
+								break;
+							case 'top':
+								tmpLabel.setAttribute('x', String(tmpPosition.x));
+								tmpLabel.setAttribute('y', String(tmpPosition.y + tmpLabelOffset + tmpPaddingExtra));
+								tmpLabel.setAttribute('text-anchor', 'middle');
+								break;
+							case 'bottom':
+								tmpLabel.setAttribute('x', String(tmpPosition.x));
+								tmpLabel.setAttribute('y', String(tmpPosition.y - tmpLabelOffset - tmpPaddingExtra));
+								tmpLabel.setAttribute('text-anchor', 'middle');
+								break;
+						}
 					}
 					tmpLabel.setAttribute('dominant-baseline', 'central');
 					pGroup.appendChild(tmpLabel);
@@ -365,6 +487,195 @@ class PictViewFlowNode extends libPictView
 	_getPortLocalPosition(pSide, pIndex, pTotal, pWidth, pHeight)
 	{
 		return this._FlowView._GeometryProvider.getPortLocalPosition(pSide, pIndex, pTotal, pWidth, pHeight, this.options.NodeTitleBarHeight);
+	}
+
+	/**
+	 * Render custom body content for a node (svg, html, or canvas).
+	 *
+	 * Checks for a BodyContent configuration on the node type and renders
+	 * the appropriate content type into the node's SVG group.
+	 *
+	 * @param {Object} pNodeData - The node data object
+	 * @param {SVGGElement} pGroup - The node's SVG group
+	 * @param {number} pWidth - Node width
+	 * @param {number} pHeight - Node height
+	 * @param {Object} pNodeTypeConfig - The node type configuration
+	 */
+	_renderBodyContent(pNodeData, pGroup, pWidth, pHeight, pNodeTypeConfig)
+	{
+		if (!pNodeTypeConfig || !pNodeTypeConfig.BodyContent) return;
+
+		let tmpBodyContent = pNodeTypeConfig.BodyContent;
+		let tmpContentType = tmpBodyContent.ContentType;
+		if (!tmpContentType) return;
+
+		let tmpTitleBarHeight = this.options.NodeTitleBarHeight;
+		let tmpPadding = (typeof tmpBodyContent.Padding === 'number') ? tmpBodyContent.Padding : 2;
+		let tmpBodyBounds =
+		{
+			x: tmpPadding,
+			y: tmpTitleBarHeight + tmpPadding,
+			width: pWidth - (tmpPadding * 2),
+			height: pHeight - tmpTitleBarHeight - (tmpPadding * 2)
+		};
+
+		let tmpPict = this._FlowView.pict || this.pict;
+
+		// Register any templates defined in the BodyContent config (once)
+		if (tmpBodyContent.Templates && Array.isArray(tmpBodyContent.Templates))
+		{
+			if (!this._registeredBodyTemplates)
+			{
+				this._registeredBodyTemplates = new Set();
+			}
+			for (let i = 0; i < tmpBodyContent.Templates.length; i++)
+			{
+				let tmpTpl = tmpBodyContent.Templates[i];
+				if (tmpTpl.Hash && tmpTpl.Template && !this._registeredBodyTemplates.has(tmpTpl.Hash))
+				{
+					tmpPict.TemplateProvider.addTemplate(tmpTpl.Hash, tmpTpl.Template, 'PictViewFlowNode-BodyContent');
+					this._registeredBodyTemplates.add(tmpTpl.Hash);
+				}
+			}
+		}
+
+		switch (tmpContentType)
+		{
+			case 'svg':
+				this._renderBodyContentSVG(pNodeData, pGroup, tmpBodyContent, tmpBodyBounds, pNodeTypeConfig, tmpPict);
+				break;
+			case 'html':
+				this._renderBodyContentHTML(pNodeData, pGroup, tmpBodyContent, tmpBodyBounds, pNodeTypeConfig, tmpPict);
+				break;
+			case 'canvas':
+				this._renderBodyContentCanvas(pNodeData, pGroup, tmpBodyContent, tmpBodyBounds, pNodeTypeConfig);
+				break;
+			default:
+				this.log.warn('PictViewFlowNode _renderBodyContent: unknown ContentType [' + tmpContentType + ']');
+				break;
+		}
+	}
+
+	/**
+	 * Render SVG body content into a <g> group.
+	 */
+	_renderBodyContentSVG(pNodeData, pGroup, pBodyContent, pBounds, pNodeTypeConfig, pPict)
+	{
+		let tmpContentGroup = this._FlowView._SVGHelperProvider.createSVGElement('g');
+		tmpContentGroup.setAttribute('class', 'pict-flow-node-body-content');
+		tmpContentGroup.setAttribute('transform', `translate(${pBounds.x}, ${pBounds.y})`);
+
+		// Render template content
+		let tmpRenderedContent = this._resolveBodyTemplate(pBodyContent, pNodeData, pPict);
+		if (tmpRenderedContent)
+		{
+			// Parse SVG markup into the group via a temporary SVG element
+			let tmpTempSVG = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+			tmpTempSVG.innerHTML = tmpRenderedContent;
+			while (tmpTempSVG.firstChild)
+			{
+				tmpContentGroup.appendChild(tmpTempSVG.firstChild);
+			}
+		}
+
+		// Invoke render callback if provided
+		if (typeof pBodyContent.RenderCallback === 'function')
+		{
+			pBodyContent.RenderCallback(tmpContentGroup, pNodeData, pNodeTypeConfig, pBounds);
+		}
+
+		pGroup.appendChild(tmpContentGroup);
+	}
+
+	/**
+	 * Render HTML body content into a foreignObject.
+	 */
+	_renderBodyContentHTML(pNodeData, pGroup, pBodyContent, pBounds, pNodeTypeConfig, pPict)
+	{
+		let tmpFO = this._FlowView._SVGHelperProvider.createSVGElement('foreignObject');
+		tmpFO.setAttribute('class', 'pict-flow-node-body-content-fo');
+		tmpFO.setAttribute('x', String(pBounds.x));
+		tmpFO.setAttribute('y', String(pBounds.y));
+		tmpFO.setAttribute('width', String(pBounds.width));
+		tmpFO.setAttribute('height', String(pBounds.height));
+
+		let tmpDiv = document.createElement('div');
+		tmpDiv.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+		tmpDiv.setAttribute('class', 'pict-flow-node-body-content-html');
+
+		// Pointer event isolation — prevent node drag/canvas pan
+		tmpDiv.addEventListener('pointerdown', (pEvent) => { pEvent.stopPropagation(); });
+		tmpDiv.addEventListener('wheel', (pEvent) => { pEvent.stopPropagation(); });
+
+		// Render template content
+		let tmpRenderedContent = this._resolveBodyTemplate(pBodyContent, pNodeData, pPict);
+		if (tmpRenderedContent)
+		{
+			tmpDiv.innerHTML = tmpRenderedContent;
+		}
+
+		// Invoke render callback if provided
+		if (typeof pBodyContent.RenderCallback === 'function')
+		{
+			pBodyContent.RenderCallback(tmpDiv, pNodeData, pNodeTypeConfig, pBounds);
+		}
+
+		tmpFO.appendChild(tmpDiv);
+		pGroup.appendChild(tmpFO);
+	}
+
+	/**
+	 * Render canvas body content into a foreignObject.
+	 */
+	_renderBodyContentCanvas(pNodeData, pGroup, pBodyContent, pBounds, pNodeTypeConfig)
+	{
+		let tmpFO = this._FlowView._SVGHelperProvider.createSVGElement('foreignObject');
+		tmpFO.setAttribute('class', 'pict-flow-node-body-content-fo');
+		tmpFO.setAttribute('x', String(pBounds.x));
+		tmpFO.setAttribute('y', String(pBounds.y));
+		tmpFO.setAttribute('width', String(pBounds.width));
+		tmpFO.setAttribute('height', String(pBounds.height));
+
+		let tmpCanvas = document.createElement('canvas');
+		tmpCanvas.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+		tmpCanvas.setAttribute('class', 'pict-flow-node-body-content-canvas');
+		tmpCanvas.width = Math.floor(pBounds.width);
+		tmpCanvas.height = Math.floor(pBounds.height);
+		tmpCanvas.style.width = '100%';
+		tmpCanvas.style.height = '100%';
+
+		// Pointer event isolation
+		tmpCanvas.addEventListener('pointerdown', (pEvent) => { pEvent.stopPropagation(); });
+		tmpCanvas.addEventListener('wheel', (pEvent) => { pEvent.stopPropagation(); });
+
+		// Invoke render callback (the primary rendering path for canvas)
+		if (typeof pBodyContent.RenderCallback === 'function')
+		{
+			pBodyContent.RenderCallback(tmpCanvas, pNodeData, pNodeTypeConfig, pBounds);
+		}
+
+		tmpFO.appendChild(tmpCanvas);
+		pGroup.appendChild(tmpFO);
+	}
+
+	/**
+	 * Resolve and render a body content template string.
+	 * @param {Object} pBodyContent - The BodyContent config
+	 * @param {Object} pNodeData - The node data (template record)
+	 * @param {Object} pPict - The Pict instance
+	 * @returns {string|null} Rendered template content, or null
+	 */
+	_resolveBodyTemplate(pBodyContent, pNodeData, pPict)
+	{
+		if (pBodyContent.TemplateHash)
+		{
+			return pPict.parseTemplateByHash(pBodyContent.TemplateHash, pNodeData);
+		}
+		if (pBodyContent.Template)
+		{
+			return pPict.parseTemplate(pBodyContent.Template, pNodeData, null, [pNodeData]);
+		}
+		return null;
 	}
 }
 

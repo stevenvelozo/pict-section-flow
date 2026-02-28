@@ -235,7 +235,7 @@ class PictProviderFlowLayouts extends libPictProvider
 		let tmpNodePositions = {};
 		let tmpPanelPositions = {};
 
-		// Capture node positions (arrangement only, no content)
+		// Capture node positions and per-instance overrides (Title, Style)
 		for (let i = 0; i < tmpFlowData.Nodes.length; i++)
 		{
 			let tmpNode = tmpFlowData.Nodes[i];
@@ -244,8 +244,15 @@ class PictProviderFlowLayouts extends libPictProvider
 				X: tmpNode.X,
 				Y: tmpNode.Y,
 				Width: tmpNode.Width,
-				Height: tmpNode.Height
+				Height: tmpNode.Height,
+				Title: tmpNode.Title
 			};
+
+			// Only include Style if it has been customized
+			if (tmpNode.Style && Object.keys(tmpNode.Style).length > 0)
+			{
+				tmpNodePositions[tmpNode.Hash].Style = JSON.parse(JSON.stringify(tmpNode.Style));
+			}
 		}
 
 		// Capture panel positions keyed by NodeHash (panels get new hashes on each open)
@@ -341,6 +348,11 @@ class PictProviderFlowLayouts extends libPictProvider
 				tmpNode.Y = tmpSaved.Y;
 				if (typeof tmpSaved.Width === 'number') tmpNode.Width = tmpSaved.Width;
 				if (typeof tmpSaved.Height === 'number') tmpNode.Height = tmpSaved.Height;
+				if (typeof tmpSaved.Title === 'string') tmpNode.Title = tmpSaved.Title;
+				if (tmpSaved.Style && typeof tmpSaved.Style === 'object')
+				{
+					tmpNode.Style = JSON.parse(JSON.stringify(tmpSaved.Style));
+				}
 				tmpMatchedNodes.push(tmpNode);
 			}
 			else

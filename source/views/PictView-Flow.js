@@ -65,7 +65,7 @@ const _DefaultConfiguration =
 	[
 		{
 			Hash: 'Flow-PanelChrome-Template',
-			Template: /*html*/`<div class="pict-flow-panel" xmlns="http://www.w3.org/1999/xhtml"><div class="pict-flow-panel-titlebar" data-element-type="panel-titlebar" data-panel-hash="{~D:Record.Hash~}"><span class="pict-flow-panel-title-text">{~D:Record.Title~}</span><span class="pict-flow-panel-close-btn" data-element-type="panel-close" data-panel-hash="{~D:Record.Hash~}"><span class="pict-flow-panel-close-icon"></span></span></div><div class="pict-flow-panel-body" data-panel-hash="{~D:Record.Hash~}"></div></div>`
+			Template: /*html*/`<div class="pict-flow-panel" xmlns="http://www.w3.org/1999/xhtml"><div class="pict-flow-panel-titlebar" data-element-type="panel-titlebar" data-panel-hash="{~D:Record.Hash~}"><span class="pict-flow-panel-title-text">{~D:Record.Title~}</span><span class="pict-flow-panel-close-btn" data-element-type="panel-close" data-panel-hash="{~D:Record.Hash~}"><span class="pict-flow-panel-close-icon"></span></span></div><div class="pict-flow-panel-body" data-panel-hash="{~D:Record.Hash~}"></div><div class="pict-flow-panel-node-props" data-panel-hash="{~D:Record.Hash~}"><div class="pict-flow-panel-node-props-header" data-element-type="node-props-toggle" data-panel-hash="{~D:Record.Hash~}"><span class="pict-flow-panel-node-props-chevron">&#9654;</span><span class="pict-flow-panel-node-props-title">Node Properties</span></div><div class="pict-flow-panel-node-props-body" style="display:none;"></div></div></div>`
 		},
 		{
 			Hash: 'Flow-Container-Template',
