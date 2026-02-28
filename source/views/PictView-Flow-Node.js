@@ -49,84 +49,25 @@ class PictViewFlowNode extends libPictView
 		let tmpHeight = pNodeData.Height || 80;
 		let tmpTitleBarHeight = this.options.NodeTitleBarHeight;
 
-		// Node body (main rectangle)
-		let tmpBody = this._FlowView._SVGHelperProvider.createSVGElement('rect');
-		tmpBody.setAttribute('class', 'pict-flow-node-body');
-		tmpBody.setAttribute('x', '0');
-		tmpBody.setAttribute('y', '0');
-		tmpBody.setAttribute('width', String(tmpWidth));
-		tmpBody.setAttribute('height', String(tmpHeight));
-		tmpBody.setAttribute('data-node-hash', pNodeData.Hash);
-		tmpBody.setAttribute('data-element-type', 'node-body');
-
-		// Apply custom styles from node type
-		if (pNodeTypeConfig && pNodeTypeConfig.BodyStyle)
+		// Determine node body mode from theme (bracket vs rect)
+		let tmpNodeBodyMode = 'rect';
+		if (this._FlowView._ThemeProvider)
 		{
-			for (let tmpStyleKey in pNodeTypeConfig.BodyStyle)
+			let tmpActiveTheme = this._FlowView._ThemeProvider.getActiveTheme();
+			if (tmpActiveTheme && tmpActiveTheme.NodeBodyMode)
 			{
-				tmpBody.setAttribute(tmpStyleKey, pNodeTypeConfig.BodyStyle[tmpStyleKey]);
+				tmpNodeBodyMode = tmpActiveTheme.NodeBodyMode;
 			}
 		}
 
-		// Apply per-instance style overrides (for node-specific editing)
-		// These must be applied as inline styles so they override CSS rules
-		// (CSS declarations take precedence over SVG presentation attributes).
-		if (pNodeData.Style)
+		if (tmpNodeBodyMode === 'bracket')
 		{
-			let tmpInlineStyles = [];
-			if (pNodeData.Style.BodyFill) tmpInlineStyles.push('fill:' + pNodeData.Style.BodyFill);
-			if (pNodeData.Style.BodyStroke) tmpInlineStyles.push('stroke:' + pNodeData.Style.BodyStroke);
-			if (pNodeData.Style.BodyStrokeWidth) tmpInlineStyles.push('stroke-width:' + pNodeData.Style.BodyStrokeWidth);
-			if (tmpInlineStyles.length > 0)
-			{
-				tmpBody.setAttribute('style', tmpInlineStyles.join(';'));
-			}
+			this._renderBracketNodeBody(tmpGroup, pNodeData, tmpWidth, tmpHeight, tmpTitleBarHeight, pNodeTypeConfig);
 		}
-
-		tmpGroup.appendChild(tmpBody);
-
-		// Title bar background (top portion)
-		let tmpTitleBar = this._FlowView._SVGHelperProvider.createSVGElement('rect');
-		tmpTitleBar.setAttribute('class', 'pict-flow-node-title-bar');
-		tmpTitleBar.setAttribute('x', '0');
-		tmpTitleBar.setAttribute('y', '0');
-		tmpTitleBar.setAttribute('width', String(tmpWidth));
-		tmpTitleBar.setAttribute('height', String(tmpTitleBarHeight));
-		tmpTitleBar.setAttribute('data-node-hash', pNodeData.Hash);
-		tmpTitleBar.setAttribute('data-element-type', 'node-body');
-
-		// Apply custom title bar color
-		if (pNodeTypeConfig && pNodeTypeConfig.TitleBarColor)
+		else
 		{
-			tmpTitleBar.setAttribute('fill', pNodeTypeConfig.TitleBarColor);
+			this._renderRectNodeBody(tmpGroup, pNodeData, tmpWidth, tmpHeight, tmpTitleBarHeight, pNodeTypeConfig);
 		}
-
-		tmpGroup.appendChild(tmpTitleBar);
-
-		// Title bar bottom fill (to square off the rounded corners at the bottom of the title bar)
-		let tmpTitleBarBottom = this._FlowView._SVGHelperProvider.createSVGElement('rect');
-		tmpTitleBarBottom.setAttribute('class', 'pict-flow-node-title-bar-bottom');
-		tmpTitleBarBottom.setAttribute('x', '0');
-		tmpTitleBarBottom.setAttribute('y', String(tmpTitleBarHeight - 8));
-		tmpTitleBarBottom.setAttribute('width', String(tmpWidth));
-		tmpTitleBarBottom.setAttribute('height', '8');
-		tmpTitleBarBottom.setAttribute('data-node-hash', pNodeData.Hash);
-		tmpTitleBarBottom.setAttribute('data-element-type', 'node-body');
-
-		if (pNodeTypeConfig && pNodeTypeConfig.TitleBarColor)
-		{
-			tmpTitleBarBottom.setAttribute('fill', pNodeTypeConfig.TitleBarColor);
-		}
-
-		// Per-instance title bar color override
-		// Applied as inline style to override CSS rules.
-		if (pNodeData.Style && pNodeData.Style.TitleBarColor)
-		{
-			tmpTitleBar.setAttribute('style', 'fill:' + pNodeData.Style.TitleBarColor);
-			tmpTitleBarBottom.setAttribute('style', 'fill:' + pNodeData.Style.TitleBarColor);
-		}
-
-		tmpGroup.appendChild(tmpTitleBarBottom);
 
 		// Determine if this node has a title-bar icon (FlowCard with CardMetadata)
 		let tmpHasTitleIcon = false;
@@ -676,6 +617,210 @@ class PictViewFlowNode extends libPictView
 			return pPict.parseTemplate(pBodyContent.Template, pNodeData, null, [pNodeData]);
 		}
 		return null;
+	}
+
+	// ── Node Body Renderers ──────────────────────────────────────────────
+
+	/**
+	 * Render the standard rect-based node body (default mode).
+	 * @param {SVGGElement} pGroup
+	 * @param {Object} pNodeData
+	 * @param {number} pWidth
+	 * @param {number} pHeight
+	 * @param {number} pTitleBarHeight
+	 * @param {Object} pNodeTypeConfig
+	 */
+	_renderRectNodeBody(pGroup, pNodeData, pWidth, pHeight, pTitleBarHeight, pNodeTypeConfig)
+	{
+		// Node body (main rectangle)
+		let tmpBody = this._FlowView._SVGHelperProvider.createSVGElement('rect');
+		tmpBody.setAttribute('class', 'pict-flow-node-body');
+		tmpBody.setAttribute('x', '0');
+		tmpBody.setAttribute('y', '0');
+		tmpBody.setAttribute('width', String(pWidth));
+		tmpBody.setAttribute('height', String(pHeight));
+		tmpBody.setAttribute('data-node-hash', pNodeData.Hash);
+		tmpBody.setAttribute('data-element-type', 'node-body');
+
+		// Apply custom styles from node type
+		if (pNodeTypeConfig && pNodeTypeConfig.BodyStyle)
+		{
+			for (let tmpStyleKey in pNodeTypeConfig.BodyStyle)
+			{
+				tmpBody.setAttribute(tmpStyleKey, pNodeTypeConfig.BodyStyle[tmpStyleKey]);
+			}
+		}
+
+		// Apply per-instance style overrides (for node-specific editing)
+		// These must be applied as inline styles so they override CSS rules
+		// (CSS declarations take precedence over SVG presentation attributes).
+		if (pNodeData.Style)
+		{
+			let tmpInlineStyles = [];
+			if (pNodeData.Style.BodyFill) tmpInlineStyles.push('fill:' + pNodeData.Style.BodyFill);
+			if (pNodeData.Style.BodyStroke) tmpInlineStyles.push('stroke:' + pNodeData.Style.BodyStroke);
+			if (pNodeData.Style.BodyStrokeWidth) tmpInlineStyles.push('stroke-width:' + pNodeData.Style.BodyStrokeWidth);
+			if (tmpInlineStyles.length > 0)
+			{
+				tmpBody.setAttribute('style', tmpInlineStyles.join(';'));
+			}
+		}
+
+		pGroup.appendChild(tmpBody);
+
+		// Title bar background (top portion)
+		let tmpTitleBar = this._FlowView._SVGHelperProvider.createSVGElement('rect');
+		tmpTitleBar.setAttribute('class', 'pict-flow-node-title-bar');
+		tmpTitleBar.setAttribute('x', '0');
+		tmpTitleBar.setAttribute('y', '0');
+		tmpTitleBar.setAttribute('width', String(pWidth));
+		tmpTitleBar.setAttribute('height', String(pTitleBarHeight));
+		tmpTitleBar.setAttribute('data-node-hash', pNodeData.Hash);
+		tmpTitleBar.setAttribute('data-element-type', 'node-body');
+
+		// Apply custom title bar color
+		if (pNodeTypeConfig && pNodeTypeConfig.TitleBarColor)
+		{
+			tmpTitleBar.setAttribute('fill', pNodeTypeConfig.TitleBarColor);
+		}
+
+		pGroup.appendChild(tmpTitleBar);
+
+		// Title bar bottom fill (to square off the rounded corners at the bottom of the title bar)
+		let tmpTitleBarBottom = this._FlowView._SVGHelperProvider.createSVGElement('rect');
+		tmpTitleBarBottom.setAttribute('class', 'pict-flow-node-title-bar-bottom');
+		tmpTitleBarBottom.setAttribute('x', '0');
+		tmpTitleBarBottom.setAttribute('y', String(pTitleBarHeight - 8));
+		tmpTitleBarBottom.setAttribute('width', String(pWidth));
+		tmpTitleBarBottom.setAttribute('height', '8');
+		tmpTitleBarBottom.setAttribute('data-node-hash', pNodeData.Hash);
+		tmpTitleBarBottom.setAttribute('data-element-type', 'node-body');
+
+		if (pNodeTypeConfig && pNodeTypeConfig.TitleBarColor)
+		{
+			tmpTitleBarBottom.setAttribute('fill', pNodeTypeConfig.TitleBarColor);
+		}
+
+		// Per-instance title bar color override
+		// Applied as inline style to override CSS rules.
+		if (pNodeData.Style && pNodeData.Style.TitleBarColor)
+		{
+			tmpTitleBar.setAttribute('style', 'fill:' + pNodeData.Style.TitleBarColor);
+			tmpTitleBarBottom.setAttribute('style', 'fill:' + pNodeData.Style.TitleBarColor);
+		}
+
+		pGroup.appendChild(tmpTitleBarBottom);
+	}
+
+	/**
+	 * Render a bracket-style node body (used by sketch/blueprint themes).
+	 *
+	 * The bracket body consists of:
+	 * 1. A fill rect for the body background (no stroke)
+	 * 2. A fill rect for the title bar background (no stroke)
+	 * 3. A bracket path drawn via the noise provider (outline + title divider)
+	 *
+	 * @param {SVGGElement} pGroup
+	 * @param {Object} pNodeData
+	 * @param {number} pWidth
+	 * @param {number} pHeight
+	 * @param {number} pTitleBarHeight
+	 * @param {Object} pNodeTypeConfig
+	 */
+	_renderBracketNodeBody(pGroup, pNodeData, pWidth, pHeight, pTitleBarHeight, pNodeTypeConfig)
+	{
+		// 1. Body fill rect (background only, no stroke)
+		let tmpBodyFill = this._FlowView._SVGHelperProvider.createSVGElement('rect');
+		tmpBodyFill.setAttribute('class', 'pict-flow-node-body pict-flow-node-bracket-fill');
+		tmpBodyFill.setAttribute('x', '0');
+		tmpBodyFill.setAttribute('y', '0');
+		tmpBodyFill.setAttribute('width', String(pWidth));
+		tmpBodyFill.setAttribute('height', String(pHeight));
+		tmpBodyFill.setAttribute('data-node-hash', pNodeData.Hash);
+		tmpBodyFill.setAttribute('data-element-type', 'node-body');
+
+		// Per-instance style overrides
+		if (pNodeData.Style)
+		{
+			let tmpInlineStyles = [];
+			if (pNodeData.Style.BodyFill) tmpInlineStyles.push('fill:' + pNodeData.Style.BodyFill);
+			if (tmpInlineStyles.length > 0)
+			{
+				tmpBodyFill.setAttribute('style', tmpInlineStyles.join(';'));
+			}
+		}
+
+		pGroup.appendChild(tmpBodyFill);
+
+		// 2. Title bar fill rect (background only, no stroke)
+		let tmpTitleFill = this._FlowView._SVGHelperProvider.createSVGElement('rect');
+		tmpTitleFill.setAttribute('class', 'pict-flow-node-title-bar pict-flow-node-bracket-title-fill');
+		tmpTitleFill.setAttribute('x', '0');
+		tmpTitleFill.setAttribute('y', '0');
+		tmpTitleFill.setAttribute('width', String(pWidth));
+		tmpTitleFill.setAttribute('height', String(pTitleBarHeight));
+		tmpTitleFill.setAttribute('data-node-hash', pNodeData.Hash);
+		tmpTitleFill.setAttribute('data-element-type', 'node-body');
+
+		if (pNodeTypeConfig && pNodeTypeConfig.TitleBarColor)
+		{
+			tmpTitleFill.setAttribute('style', 'fill:' + pNodeTypeConfig.TitleBarColor);
+		}
+		if (pNodeData.Style && pNodeData.Style.TitleBarColor)
+		{
+			tmpTitleFill.setAttribute('style', 'fill:' + pNodeData.Style.TitleBarColor);
+		}
+
+		pGroup.appendChild(tmpTitleFill);
+
+		// 3. Bracket path (outline + title divider with optional noise)
+		let tmpBracketConfig = { SerifLength: 6, TitleSeparator: true };
+		if (this._FlowView._ThemeProvider)
+		{
+			let tmpActiveTheme = this._FlowView._ThemeProvider.getActiveTheme();
+			if (tmpActiveTheme && tmpActiveTheme.BracketConfig)
+			{
+				tmpBracketConfig = Object.assign(tmpBracketConfig, tmpActiveTheme.BracketConfig);
+			}
+		}
+
+		let tmpAmplitude = 0;
+		if (this._FlowView._ThemeProvider)
+		{
+			tmpAmplitude = this._FlowView._ThemeProvider.getNodeNoiseAmplitude();
+		}
+
+		let tmpBracketD = '';
+		if (this._FlowView._NoiseProvider)
+		{
+			tmpBracketD = this._FlowView._NoiseProvider.generateBracketPath(
+				pWidth, pHeight,
+				tmpBracketConfig.SerifLength,
+				tmpBracketConfig.TitleSeparator ? pTitleBarHeight : 0,
+				tmpAmplitude,
+				pNodeData.Hash
+			);
+		}
+
+		let tmpBracketPath = this._FlowView._SVGHelperProvider.createSVGElement('path');
+		tmpBracketPath.setAttribute('class', 'pict-flow-node-bracket');
+		tmpBracketPath.setAttribute('d', tmpBracketD);
+		tmpBracketPath.setAttribute('data-node-hash', pNodeData.Hash);
+		tmpBracketPath.setAttribute('data-element-type', 'node-body');
+
+		// Per-instance stroke overrides
+		if (pNodeData.Style)
+		{
+			let tmpInlineStyles = [];
+			if (pNodeData.Style.BodyStroke) tmpInlineStyles.push('stroke:' + pNodeData.Style.BodyStroke);
+			if (pNodeData.Style.BodyStrokeWidth) tmpInlineStyles.push('stroke-width:' + pNodeData.Style.BodyStrokeWidth);
+			if (tmpInlineStyles.length > 0)
+			{
+				tmpBracketPath.setAttribute('style', tmpInlineStyles.join(';'));
+			}
+		}
+
+		pGroup.appendChild(tmpBracketPath);
 	}
 }
 

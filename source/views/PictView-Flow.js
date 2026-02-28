@@ -18,6 +18,8 @@ const libPictProviderFlowPanelChrome = require('../providers/PictProvider-Flow-P
 const libPictProviderFlowCSS = require('../providers/PictProvider-Flow-CSS.js');
 const libPictProviderFlowIcons = require('../providers/PictProvider-Flow-Icons.js');
 const libPictProviderFlowConnectorShapes = require('../providers/PictProvider-Flow-ConnectorShapes.js');
+const libPictProviderFlowTheme = require('../providers/PictProvider-Flow-Theme.js');
+const libPictProviderFlowNoise = require('../providers/PictProvider-Flow-Noise.js');
 
 const libPictViewFlowNode = require('./PictView-Flow-Node.js');
 const libPictViewFlowToolbar = require('./PictView-Flow-Toolbar.js');
@@ -177,6 +179,14 @@ class PictViewFlow extends libPictView
 		{
 			this.fable.addServiceType('PictProviderFlowConnectorShapes', libPictProviderFlowConnectorShapes);
 		}
+		if (!this.fable.servicesMap.hasOwnProperty('PictProviderFlowTheme'))
+		{
+			this.fable.addServiceType('PictProviderFlowTheme', libPictProviderFlowTheme);
+		}
+		if (!this.fable.servicesMap.hasOwnProperty('PictProviderFlowNoise'))
+		{
+			this.fable.addServiceType('PictProviderFlowNoise', libPictProviderFlowNoise);
+		}
 		if (!this.fable.servicesMap.hasOwnProperty('PictProviderFlowNodeTypes'))
 		{
 			this.fable.addServiceType('PictProviderFlowNodeTypes', libPictProviderFlowNodeTypes);
@@ -260,6 +270,8 @@ class PictViewFlow extends libPictView
 		this._CSSProvider = null;
 		this._IconProvider = null;
 		this._ConnectorShapesProvider = null;
+		this._ThemeProvider = null;
+		this._NoiseProvider = null;
 		this._SVGHelperProvider = null;
 		this._GeometryProvider = null;
 		this._PanelChromeProvider = null;
@@ -311,6 +323,20 @@ class PictViewFlow extends libPictView
 	onBeforeInitialize()
 	{
 		super.onBeforeInitialize();
+
+		// Instantiate theme and noise providers (before CSS so theme state is available)
+		this._ThemeProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowTheme', { FlowView: this });
+		this._NoiseProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowNoise');
+
+		// Apply initial theme from options
+		if (this.options.Theme)
+		{
+			this._ThemeProvider.setTheme(this.options.Theme);
+		}
+		if (typeof this.options.NoiseLevel === 'number')
+		{
+			this._ThemeProvider.setNoiseLevel(this.options.NoiseLevel);
+		}
 
 		// Instantiate and register the centralized CSS provider
 		this._CSSProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowCSS', { FlowView: this });
@@ -398,6 +424,16 @@ class PictViewFlow extends libPictView
 		if (tmpPanelsElements.length > 0)
 		{
 			this._PanelsLayer = tmpPanelsElements[0];
+		}
+
+		// Initialize theme and noise providers (fallback if not already created)
+		if (!this._ThemeProvider)
+		{
+			this._ThemeProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowTheme', { FlowView: this });
+		}
+		if (!this._NoiseProvider)
+		{
+			this._NoiseProvider = this.fable.instantiateServiceProviderWithoutRegistration('PictProviderFlowNoise');
 		}
 
 		// Initialize CSS provider (fallback if not already created)
@@ -941,6 +977,120 @@ class PictViewFlow extends libPictView
 	exitFullscreen()
 	{
 		return this._ViewportManager.exitFullscreen();
+	}
+
+	// ── Theme API ────────────────────────────────────────────────────────
+
+	/**
+	 * Switch the active theme and re-render.
+	 * @param {string} pThemeKey - Theme key (e.g. 'default', 'sketch', 'blueprint', 'mono', 'retro-80s', 'retro-90s')
+	 */
+	setTheme(pThemeKey)
+	{
+		if (!this._ThemeProvider)
+		{
+			this.log.warn('PictSectionFlow setTheme: ThemeProvider not available');
+			return;
+		}
+
+		let tmpApplied = this._ThemeProvider.setTheme(pThemeKey);
+		if (!tmpApplied) return;
+
+		// Re-register CSS with the new theme overrides
+		if (this._CSSProvider)
+		{
+			this._CSSProvider.registerCSS();
+		}
+
+		// Re-inject marker defs (arrowhead colors may have changed)
+		this._reinjectMarkerDefs();
+
+		// Full re-render
+		if (this.initialRenderComplete)
+		{
+			this.renderFlow();
+		}
+
+		if (this._EventHandlerProvider)
+		{
+			this._EventHandlerProvider.fireEvent('onThemeChanged', pThemeKey);
+		}
+	}
+
+	/**
+	 * Set the noise level (0 to 1) and re-render.
+	 * @param {number} pLevel - 0 = precise, 1 = maximum wobble
+	 */
+	setNoiseLevel(pLevel)
+	{
+		if (!this._ThemeProvider)
+		{
+			this.log.warn('PictSectionFlow setNoiseLevel: ThemeProvider not available');
+			return;
+		}
+
+		this._ThemeProvider.setNoiseLevel(pLevel);
+
+		// Full re-render to apply new noise
+		if (this.initialRenderComplete)
+		{
+			this.renderFlow();
+		}
+	}
+
+	/**
+	 * Get the current noise level (0 to 1).
+	 * @returns {number}
+	 */
+	getNoiseLevel()
+	{
+		if (this._ThemeProvider)
+		{
+			return this._ThemeProvider.getNoiseLevel();
+		}
+		return 0;
+	}
+
+	/**
+	 * Get the active theme key.
+	 * @returns {string}
+	 */
+	getThemeKey()
+	{
+		if (this._ThemeProvider)
+		{
+			return this._ThemeProvider.getActiveThemeKey();
+		}
+		return 'default';
+	}
+
+	/**
+	 * Re-inject SVG marker definitions (arrowheads).
+	 * Called after a theme switch to update arrowhead colors.
+	 */
+	_reinjectMarkerDefs()
+	{
+		if (!this._ConnectorShapesProvider || !this._SVGElement) return;
+
+		let tmpViewIdentifier = this.options.ViewIdentifier;
+		let tmpDefs = this._SVGElement.querySelector('defs');
+		if (!tmpDefs) return;
+
+		// Remove existing marker elements
+		let tmpExistingMarkers = tmpDefs.querySelectorAll('marker');
+		for (let i = 0; i < tmpExistingMarkers.length; i++)
+		{
+			tmpExistingMarkers[i].remove();
+		}
+
+		// Re-generate and inject
+		let tmpMarkerMarkup = this._ConnectorShapesProvider.generateMarkerDefs(tmpViewIdentifier);
+		let tmpTempSVG = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+		tmpTempSVG.innerHTML = tmpMarkerMarkup;
+		while (tmpTempSVG.firstChild)
+		{
+			tmpDefs.appendChild(tmpTempSVG.firstChild);
+		}
 	}
 
 	/**

@@ -11,6 +11,7 @@ class PictProviderFlowConnectorShapes extends libFableServiceProviderBase
 		this._FlowView = (pOptions && pOptions.FlowView) ? pOptions.FlowView : null;
 
 		// Default shape configurations — each keyed by a shape identifier
+		// _OriginalShapes stores a deep copy for reset when switching themes.
 		this._DefaultShapes =
 		{
 			'port':
@@ -107,6 +108,44 @@ class PictProviderFlowConnectorShapes extends libFableServiceProviderBase
 				Fill: '#95a5a6'
 			}
 		};
+
+		// Store a deep copy for resetting when switching themes
+		this._OriginalShapes = JSON.parse(JSON.stringify(this._DefaultShapes));
+	}
+
+	// ── Theme Override Methods ─────────────────────────────────────────────
+
+	/**
+	 * Apply theme-specific shape overrides.
+	 * Merges the overrides into the active shape configs.
+	 * @param {Object} pOverrides - Map of shape key to partial config
+	 */
+	applyThemeOverrides(pOverrides)
+	{
+		if (!pOverrides || typeof pOverrides !== 'object')
+		{
+			return;
+		}
+		for (let tmpKey in pOverrides)
+		{
+			if (this._DefaultShapes.hasOwnProperty(tmpKey))
+			{
+				Object.assign(this._DefaultShapes[tmpKey], pOverrides[tmpKey]);
+			}
+			else
+			{
+				this._DefaultShapes[tmpKey] = pOverrides[tmpKey];
+			}
+		}
+	}
+
+	/**
+	 * Reset all shape configs to their original defaults.
+	 * Called before applying new theme overrides to prevent accumulation.
+	 */
+	resetToDefaults()
+	{
+		this._DefaultShapes = JSON.parse(JSON.stringify(this._OriginalShapes));
 	}
 
 	/**

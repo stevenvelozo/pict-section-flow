@@ -60,6 +60,9 @@ const _DefaultConfiguration =
 		</button>
 	</div>
 	<div class="pict-flow-toolbar-group pict-flow-toolbar-right">
+		<button class="pict-flow-toolbar-btn" data-flow-action="settings-popup" id="Flow-Toolbar-Settings-{~D:Record.FlowViewIdentifier~}" title="Theme Settings">
+			<span class="pict-flow-toolbar-btn-icon" id="Flow-Toolbar-Icon-settings-{~D:Record.FlowViewIdentifier~}"></span>
+		</button>
 		<button class="pict-flow-toolbar-btn" data-flow-action="fullscreen" id="Flow-Toolbar-Fullscreen-{~D:Record.FlowViewIdentifier~}" title="Toggle Fullscreen">
 			<span class="pict-flow-toolbar-btn-icon" id="Flow-Toolbar-Fullscreen-Icon-{~D:Record.FlowViewIdentifier~}"></span>
 		</button>
@@ -180,6 +183,7 @@ class PictViewFlowToolbar extends libPictView
 			'auto-layout': 'auto-layout',
 			'cards': 'cards',
 			'layout': 'layout',
+			'settings': 'settings',
 			'grip': 'grip',
 			'collapse': 'collapse',
 			'expand': 'expand'
@@ -255,6 +259,9 @@ class PictViewFlowToolbar extends libPictView
 				break;
 			case 'layout':
 				this._buildLayoutPopup(tmpPopup);
+				break;
+			case 'settings':
+				this._buildSettingsPopup(tmpPopup);
 				break;
 		}
 
@@ -340,6 +347,9 @@ class PictViewFlowToolbar extends libPictView
 				break;
 			case 'layout':
 				tmpTriggerSelector = `#Flow-Toolbar-Layout-${tmpFlowViewIdentifier}`;
+				break;
+			case 'settings':
+				tmpTriggerSelector = `#Flow-Toolbar-Settings-${tmpFlowViewIdentifier}`;
 				break;
 			default:
 				return;
@@ -813,6 +823,139 @@ class PictViewFlowToolbar extends libPictView
 		}
 	}
 
+	// ── Settings Popup ───────────────────────────────────────────────────
+
+	/**
+	 * Build the Settings popup content (theme dropdown + noise slider).
+	 * @param {HTMLElement} pContainer
+	 */
+	_buildSettingsPopup(pContainer)
+	{
+		if (!this._FlowView || !this._FlowView._ThemeProvider) return;
+
+		let tmpThemeProvider = this._FlowView._ThemeProvider;
+
+		// Theme selector section
+		let tmpThemeSection = document.createElement('div');
+		tmpThemeSection.className = 'pict-flow-popup-settings-section';
+
+		let tmpThemeLabel = document.createElement('label');
+		tmpThemeLabel.className = 'pict-flow-popup-settings-label';
+		tmpThemeLabel.textContent = 'Theme';
+		tmpThemeSection.appendChild(tmpThemeLabel);
+
+		let tmpThemeSelect = document.createElement('select');
+		tmpThemeSelect.className = 'pict-flow-popup-settings-select';
+
+		let tmpThemeKeys = tmpThemeProvider.getThemeKeys();
+		let tmpActiveKey = tmpThemeProvider.getActiveThemeKey();
+
+		for (let i = 0; i < tmpThemeKeys.length; i++)
+		{
+			let tmpOption = document.createElement('option');
+			tmpOption.value = tmpThemeKeys[i];
+
+			let tmpTheme = tmpThemeProvider._Themes[tmpThemeKeys[i]];
+			tmpOption.textContent = tmpTheme.Label || tmpThemeKeys[i];
+
+			if (tmpThemeKeys[i] === tmpActiveKey)
+			{
+				tmpOption.selected = true;
+			}
+			tmpThemeSelect.appendChild(tmpOption);
+		}
+
+		tmpThemeSelect.addEventListener('change', () =>
+		{
+			this._FlowView.setTheme(tmpThemeSelect.value);
+			// Refresh the noise slider visibility
+			this._refreshNoiseSlider(pContainer);
+		});
+
+		// Prevent popup close on select interaction
+		tmpThemeSelect.addEventListener('click', (pEvent) => { pEvent.stopPropagation(); });
+
+		tmpThemeSection.appendChild(tmpThemeSelect);
+		pContainer.appendChild(tmpThemeSection);
+
+		// Divider
+		let tmpDivider = document.createElement('div');
+		tmpDivider.className = 'pict-flow-popup-divider';
+		pContainer.appendChild(tmpDivider);
+
+		// Noise level section
+		let tmpNoiseSection = document.createElement('div');
+		tmpNoiseSection.className = 'pict-flow-popup-settings-section pict-flow-popup-settings-noise';
+		tmpNoiseSection.setAttribute('data-settings-type', 'noise');
+
+		let tmpNoiseLabel = document.createElement('label');
+		tmpNoiseLabel.className = 'pict-flow-popup-settings-label';
+		tmpNoiseLabel.textContent = 'Noise';
+		tmpNoiseSection.appendChild(tmpNoiseLabel);
+
+		let tmpNoiseRow = document.createElement('div');
+		tmpNoiseRow.className = 'pict-flow-popup-settings-slider-row';
+
+		let tmpNoiseSlider = document.createElement('input');
+		tmpNoiseSlider.type = 'range';
+		tmpNoiseSlider.className = 'pict-flow-popup-settings-slider';
+		tmpNoiseSlider.min = '0';
+		tmpNoiseSlider.max = '100';
+		tmpNoiseSlider.value = String(Math.round(tmpThemeProvider.getNoiseLevel() * 100));
+
+		let tmpNoiseValue = document.createElement('span');
+		tmpNoiseValue.className = 'pict-flow-popup-settings-slider-value';
+		tmpNoiseValue.textContent = tmpNoiseSlider.value + '%';
+
+		tmpNoiseSlider.addEventListener('input', () =>
+		{
+			let tmpLevel = parseInt(tmpNoiseSlider.value, 10) / 100;
+			tmpNoiseValue.textContent = tmpNoiseSlider.value + '%';
+			this._FlowView.setNoiseLevel(tmpLevel);
+		});
+
+		// Prevent popup close on slider interaction
+		tmpNoiseSlider.addEventListener('click', (pEvent) => { pEvent.stopPropagation(); });
+		tmpNoiseSlider.addEventListener('pointerdown', (pEvent) => { pEvent.stopPropagation(); });
+
+		tmpNoiseRow.appendChild(tmpNoiseSlider);
+		tmpNoiseRow.appendChild(tmpNoiseValue);
+		tmpNoiseSection.appendChild(tmpNoiseRow);
+		pContainer.appendChild(tmpNoiseSection);
+
+		// Show/hide noise slider based on active theme
+		this._refreshNoiseSlider(pContainer);
+	}
+
+	/**
+	 * Show or hide the noise slider based on whether the active theme supports noise.
+	 * @param {HTMLElement} pContainer - The settings popup container
+	 */
+	_refreshNoiseSlider(pContainer)
+	{
+		let tmpNoiseSection = pContainer.querySelector('[data-settings-type="noise"]');
+		if (!tmpNoiseSection) return;
+
+		let tmpTheme = this._FlowView._ThemeProvider.getActiveTheme();
+		if (tmpTheme && tmpTheme.NoiseConfig && tmpTheme.NoiseConfig.Enabled)
+		{
+			tmpNoiseSection.style.display = '';
+			// Update slider value to reflect theme default
+			let tmpSlider = tmpNoiseSection.querySelector('.pict-flow-popup-settings-slider');
+			let tmpValueLabel = tmpNoiseSection.querySelector('.pict-flow-popup-settings-slider-value');
+			if (tmpSlider)
+			{
+				let tmpLevel = Math.round(this._FlowView._ThemeProvider.getNoiseLevel() * 100);
+				tmpSlider.value = String(tmpLevel);
+				if (tmpValueLabel) tmpValueLabel.textContent = tmpLevel + '%';
+			}
+		}
+		else
+		{
+			tmpNoiseSection.style.display = 'none';
+		}
+	}
+
 	// ── Toolbar Mode Switching ────────────────────────────────────────────
 
 	/**
@@ -978,6 +1121,10 @@ class PictViewFlowToolbar extends libPictView
 
 			case 'layout-popup':
 				this._openPopup('layout');
+				break;
+
+			case 'settings-popup':
+				this._openPopup('settings');
 				break;
 
 			case 'toggle-floating':

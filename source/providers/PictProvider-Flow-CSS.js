@@ -150,14 +150,14 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 			fill: var(--pf-node-body-fill);
 			stroke: var(--pf-node-body-stroke);
 			stroke-width: var(--pf-node-body-stroke-width);
-			rx: 8;
-			ry: 8;
+			rx: var(--pf-node-body-radius);
+			ry: var(--pf-node-body-radius);
 			transition: stroke 0.2s, stroke-width 0.2s;
 		}
 		.pict-flow-node-title-bar {
 			fill: var(--pf-node-title-bar-color);
-			rx: 8;
-			ry: 8;
+			rx: var(--pf-node-body-radius);
+			ry: var(--pf-node-body-radius);
 		}
 		.pict-flow-node-title-bar-bottom {
 			fill: var(--pf-node-title-bar-color);
@@ -1066,6 +1066,71 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 		.pict-flow-popup-layout-delete:hover {
 			background-color: #fdedec;
 		}
+		.pict-flow-popup-settings-section {
+			padding: 0.5em 0.75em;
+		}
+		.pict-flow-popup-settings-label {
+			display: block;
+			font-size: 0.8em;
+			font-weight: 600;
+			color: #7f8c8d;
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+			margin-bottom: 0.35em;
+		}
+		.pict-flow-popup-settings-select {
+			width: 100%;
+			padding: 0.4em 0.5em;
+			border: 1px solid #d5d8dc;
+			border-radius: 4px;
+			font-size: 0.9em;
+			background: #fff;
+			color: #2c3e50;
+			cursor: pointer;
+			outline: none;
+			box-sizing: border-box;
+		}
+		.pict-flow-popup-settings-select:focus {
+			border-color: #3498db;
+		}
+		.pict-flow-popup-settings-slider-row {
+			display: flex;
+			align-items: center;
+			gap: 0.5em;
+		}
+		.pict-flow-popup-settings-slider {
+			flex: 1;
+			-webkit-appearance: none;
+			appearance: none;
+			height: 4px;
+			background: #d5d8dc;
+			border-radius: 2px;
+			outline: none;
+			cursor: pointer;
+		}
+		.pict-flow-popup-settings-slider::-webkit-slider-thumb {
+			-webkit-appearance: none;
+			appearance: none;
+			width: 14px;
+			height: 14px;
+			background: #3498db;
+			border-radius: 50%;
+			cursor: pointer;
+		}
+		.pict-flow-popup-settings-slider::-moz-range-thumb {
+			width: 14px;
+			height: 14px;
+			background: #3498db;
+			border-radius: 50%;
+			cursor: pointer;
+			border: none;
+		}
+		.pict-flow-popup-settings-slider-value {
+			font-size: 0.85em;
+			color: #7f8c8d;
+			min-width: 2.5em;
+			text-align: right;
+		}
 		`;
 	}
 
@@ -1237,15 +1302,72 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 		`;
 	}
 
+	// ── Bracket Node CSS ──────────────────────────────────────────────────
+	/**
+	 * CSS for bracket-style node bodies used by sketch/blueprint themes.
+	 *
+	 * The bracket fill rects share class `.pict-flow-node-body` for fill
+	 * inheritance, so these rules must use parent-qualified selectors
+	 * (specificity ≥ 0,2,0) to override the base, variant, hover, and
+	 * selected rules that set stroke and rx/ry on `.pict-flow-node-body`.
+	 *
+	 * @returns {string}
+	 */
+	getBracketNodeCSS()
+	{
+		return /*css*/`
+		/* Bracket outline path */
+		.pict-flow-node-bracket {
+			fill: none;
+			stroke: var(--pf-node-body-stroke);
+			stroke-width: 2;
+			stroke-linecap: round;
+			stroke-linejoin: round;
+		}
+		.pict-flow-node.selected .pict-flow-node-bracket {
+			stroke: var(--pf-node-selected-stroke);
+			stroke-width: 2;
+		}
+		.pict-flow-node:hover .pict-flow-node-bracket {
+			stroke: #b0b8c0;
+			stroke-width: 1.5;
+		}
+
+		/* Bracket fill rects: no stroke, no rounded corners.
+		   Uses parent-qualified selectors to beat variant rules
+		   (e.g. .pict-flow-node-start .pict-flow-node-body). */
+		.pict-flow-node .pict-flow-node-bracket-fill,
+		.pict-flow-node .pict-flow-node-bracket-title-fill {
+			stroke: none;
+			stroke-width: 0;
+			rx: 0;
+			ry: 0;
+		}
+		/* Beat hover rule: .pict-flow-node:hover .pict-flow-node-body */
+		.pict-flow-node:hover .pict-flow-node-bracket-fill,
+		.pict-flow-node:hover .pict-flow-node-bracket-title-fill {
+			stroke: none;
+			stroke-width: 0;
+		}
+		/* Beat selected rule: .pict-flow-node.selected .pict-flow-node-body */
+		.pict-flow-node.selected .pict-flow-node-bracket-fill,
+		.pict-flow-node.selected .pict-flow-node-bracket-title-fill {
+			stroke: none;
+			stroke-width: 0;
+		}
+		`;
+	}
+
 	// ── Aggregate Methods ──────────────────────────────────────────────────
 
 	/**
 	 * Concatenate all domain CSS getters into a single CSS string.
+	 * Includes theme overrides if a theme provider is active.
 	 * @returns {string}
 	 */
 	generateCSS()
 	{
-		return (
+		let tmpBaseCSS = (
 			this.getContainerCSS() +
 			this.getNodeCSS() +
 			this.getBodyContentCSS() +
@@ -1257,6 +1379,7 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 			this.getPanelCSS() +
 			this.getInfoPanelCSS() +
 			this.getNodePropsEditorCSS() +
+			this.getBracketNodeCSS() +
 			this.getFullscreenCSS() +
 			this.getToolbarCSS() +
 			this.getPaletteCSS() +
@@ -1265,17 +1388,45 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 			this.getFloatingToolbarCSS() +
 			this.getIconCSS()
 		);
+
+		// Apply theme overrides if a theme provider exists
+		if (this._FlowView && this._FlowView._ThemeProvider)
+		{
+			let tmpTheme = this._FlowView._ThemeProvider.getActiveTheme();
+			if (tmpTheme && tmpTheme.CSSVariables && Object.keys(tmpTheme.CSSVariables).length > 0)
+			{
+				let tmpOverrides = '.pict-flow-container {\n';
+				for (let tmpKey in tmpTheme.CSSVariables)
+				{
+					tmpOverrides += '\t' + tmpKey + ': ' + tmpTheme.CSSVariables[tmpKey] + ';\n';
+				}
+				tmpOverrides += '}\n';
+				tmpBaseCSS += tmpOverrides;
+			}
+			if (tmpTheme && tmpTheme.AdditionalCSS)
+			{
+				tmpBaseCSS += tmpTheme.AdditionalCSS;
+			}
+		}
+
+		return tmpBaseCSS;
 	}
 
 	/**
 	 * Register all flow CSS with pict's CSSMap service.
 	 * Uses correct parameter ordering: (hash, content, priority, provider).
+	 * Removes existing CSS first to allow theme re-registration,
+	 * then re-injects into the DOM.
 	 */
 	registerCSS()
 	{
 		if (this.fable && this.fable.CSSMap)
 		{
+			// Remove existing CSS first so we can re-register with updated theme overrides
+			this.fable.CSSMap.removeCSS('PictSectionFlow-CSS');
 			this.fable.CSSMap.addCSS('PictSectionFlow-CSS', this.generateCSS(), 500, 'PictProviderFlowCSS');
+			// Re-inject into the DOM to apply the updated CSS
+			this.fable.CSSMap.injectCSS();
 		}
 		else
 		{

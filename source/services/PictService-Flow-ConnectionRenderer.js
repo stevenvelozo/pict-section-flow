@@ -50,6 +50,23 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 			tmpPath = this._generateBezierPathWithHandle(tmpSourcePos, tmpTargetPos, tmpHandleX, tmpHandleY);
 		}
 
+		// Apply theme noise post-processing to the path
+		if (this._FlowView._ThemeProvider)
+		{
+			tmpPath = this._FlowView._ThemeProvider.processPathString(tmpPath, pConnection.Hash);
+		}
+
+		// Apply stroke-dasharray from theme's ConnectionConfig
+		let tmpStrokeDashArray = null;
+		if (this._FlowView._ThemeProvider)
+		{
+			let tmpActiveTheme = this._FlowView._ThemeProvider.getActiveTheme();
+			if (tmpActiveTheme && tmpActiveTheme.ConnectionConfig && tmpActiveTheme.ConnectionConfig.StrokeDashArray)
+			{
+				tmpStrokeDashArray = tmpActiveTheme.ConnectionConfig.StrokeDashArray;
+			}
+		}
+
 		let tmpViewIdentifier = this._FlowView.options.ViewIdentifier;
 
 		// Hit area (wider invisible path for easier selection)
@@ -61,6 +78,10 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 
 			let tmpPathElement = tmpShapeProvider.createConnectionPathElement(
 				tmpPath, pConnection.Hash, pIsSelected, tmpViewIdentifier);
+			if (tmpStrokeDashArray)
+			{
+				tmpPathElement.setAttribute('stroke-dasharray', tmpStrokeDashArray);
+			}
 			pConnectionsLayer.appendChild(tmpPathElement);
 		}
 		else
@@ -85,6 +106,11 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 			else
 			{
 				tmpPathElement.setAttribute('marker-end', `url(#flow-arrowhead-${tmpViewIdentifier})`);
+			}
+
+			if (tmpStrokeDashArray)
+			{
+				tmpPathElement.setAttribute('stroke-dasharray', tmpStrokeDashArray);
 			}
 
 			pConnectionsLayer.appendChild(tmpPathElement);
