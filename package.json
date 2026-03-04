@@ -1,6 +1,6 @@
 {
     "name": "pict-section-flow",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "description": "Pict Section Flow Diagram",
     "main": "source/Pict-Section-Flow.js",
     "scripts": {
@@ -16,7 +16,7 @@
         "fable-serviceproviderbase": "^3.0.19"
     },
     "devDependencies": {
-        "pict": "^1.0.354",
-        "quackage": "^1.0.59"
+        "pict": "^1.0.357",
+        "quackage": "^1.0.60"
     }
 }

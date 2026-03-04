@@ -67,7 +67,7 @@ class FlowCardPropertiesPanelTemplate extends libPictFlowCardPropertiesPanel
 		if (!tmpTemplateHash) return;
 
 		let tmpRecord = this._NodeData;
-		let tmpHTML = this.fable.parseTemplate(tmpTemplateHash, tmpRecord, null, [tmpRecord]);
+		let tmpHTML = this.fable.parseTemplateByHash(tmpTemplateHash, tmpRecord, null, [tmpRecord]);
 		this._ContentContainer.innerHTML = tmpHTML;
 	}
 }
