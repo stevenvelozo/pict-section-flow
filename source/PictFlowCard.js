@@ -105,6 +105,7 @@ class PictFlowCard extends libFableServiceProviderBase
 		this.cardPortLabelsOnHover = (typeof tmpOptions.PortLabelsOnHover === 'boolean') ? tmpOptions.PortLabelsOnHover : false;
 		this.cardPortLabelsVertical = (typeof tmpOptions.PortLabelsVertical === 'boolean') ? tmpOptions.PortLabelsVertical : false;
 		this.cardPortLabelPadding = (typeof tmpOptions.PortLabelPadding === 'boolean') ? tmpOptions.PortLabelPadding : false;
+		this.cardPortLabelsOutside = (typeof tmpOptions.PortLabelsOutside === 'boolean') ? tmpOptions.PortLabelsOutside : false;
 		this.cardLabelsInFront = (typeof tmpOptions.LabelsInFront === 'boolean') ? tmpOptions.LabelsInFront : true;
 	}
 
@@ -184,6 +185,7 @@ class PictFlowCard extends libFableServiceProviderBase
 		tmpResult.PortLabelsOnHover = this.cardPortLabelsOnHover;
 		tmpResult.PortLabelsVertical = this.cardPortLabelsVertical;
 		tmpResult.PortLabelPadding = this.cardPortLabelPadding;
+		tmpResult.PortLabelsOutside = this.cardPortLabelsOutside;
 		tmpResult.LabelsInFront = this.cardLabelsInFront;
 
 		// Include properties panel config if defined
@@ -251,5 +253,6 @@ module.exports.default_configuration =
 	PortLabelsOnHover: false,
 	PortLabelsVertical: false,
 	PortLabelPadding: false,
+	PortLabelsOutside: false,
 	LabelsInFront: true
 };

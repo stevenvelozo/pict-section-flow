@@ -292,22 +292,28 @@ class PictViewFlowNode extends libPictView
 
 		let tmpPortLabelsVertical = (pNodeTypeConfig && pNodeTypeConfig.PortLabelsVertical);
 		let tmpPortLabelPadding = (pNodeTypeConfig && pNodeTypeConfig.PortLabelPadding);
+		let tmpPortLabelsOutside = (pNodeTypeConfig && pNodeTypeConfig.PortLabelsOutside);
+		let tmpGeometryProvider = this._FlowView._GeometryProvider;
 
-		// Group ports by side and direction for positioning
-		let tmpPortsBySide = { left: [], right: [], top: [], bottom: [] };
+		// Group ports by their Side value (supports all 12 positions)
+		let tmpPortsBySide = {};
 		for (let i = 0; i < pNodeData.Ports.length; i++)
 		{
 			let tmpPort = pNodeData.Ports[i];
 			let tmpSide = tmpPort.Side || (tmpPort.Direction === 'input' ? 'left' : 'right');
-			if (tmpPortsBySide[tmpSide])
+			if (!tmpPortsBySide[tmpSide])
 			{
-				tmpPortsBySide[tmpSide].push(tmpPort);
+				tmpPortsBySide[tmpSide] = [];
 			}
+			tmpPortsBySide[tmpSide].push(tmpPort);
 		}
 
 		for (let tmpSide in tmpPortsBySide)
 		{
 			let tmpPorts = tmpPortsBySide[tmpSide];
+			// Determine the edge for label positioning
+			let tmpEdge = tmpGeometryProvider ? tmpGeometryProvider.getEdgeFromSide(tmpSide) : tmpSide;
+
 			for (let i = 0; i < tmpPorts.length; i++)
 			{
 				let tmpPort = tmpPorts[i];
@@ -334,7 +340,8 @@ class PictViewFlowNode extends libPictView
 				}
 				pGroup.appendChild(tmpCircle);
 
-				// Port label
+				// Port label — use the edge for alignment (all positions on the
+				// same edge share the same label direction)
 				if (tmpPort.Label)
 				{
 					let tmpLabel = this._FlowView._SVGHelperProvider.createSVGElement('text');
@@ -345,62 +352,64 @@ class PictViewFlowNode extends libPictView
 					let tmpLabelOffset = 12;
 					let tmpPaddingExtra = tmpPortLabelPadding ? 8 : 0;
 
-					if (tmpPortLabelsVertical)
+					// When PortLabelsOutside is true, labels render outside the node
+				// boundary (away from center) instead of inside (toward center).
+				// The direction multiplier flips the offset direction per edge.
+				let tmpOutsideFlip = tmpPortLabelsOutside ? -1 : 1;
+
+				if (tmpPortLabelsVertical)
 					{
-						// Vertical labels: rotated -90° and centered on the port position.
-						// After rotation, text-anchor controls vertical centering, so 'middle'
-						// ensures the label is centered next to its port circle.
-						switch (tmpSide)
+						switch (tmpEdge)
 						{
 							case 'left':
-								tmpLabel.setAttribute('x', String(tmpPosition.x + tmpLabelOffset + tmpPaddingExtra));
+								tmpLabel.setAttribute('x', String(tmpPosition.x + (tmpLabelOffset + tmpPaddingExtra) * tmpOutsideFlip));
 								tmpLabel.setAttribute('y', String(tmpPosition.y));
 								tmpLabel.setAttribute('text-anchor', 'middle');
-								tmpLabel.setAttribute('transform', `rotate(-90, ${tmpPosition.x + tmpLabelOffset + tmpPaddingExtra}, ${tmpPosition.y})`);
+								tmpLabel.setAttribute('transform', `rotate(-90, ${tmpPosition.x + (tmpLabelOffset + tmpPaddingExtra) * tmpOutsideFlip}, ${tmpPosition.y})`);
 								break;
 							case 'right':
-								tmpLabel.setAttribute('x', String(tmpPosition.x - tmpLabelOffset - tmpPaddingExtra));
+								tmpLabel.setAttribute('x', String(tmpPosition.x - (tmpLabelOffset + tmpPaddingExtra) * tmpOutsideFlip));
 								tmpLabel.setAttribute('y', String(tmpPosition.y));
 								tmpLabel.setAttribute('text-anchor', 'middle');
-								tmpLabel.setAttribute('transform', `rotate(-90, ${tmpPosition.x - tmpLabelOffset - tmpPaddingExtra}, ${tmpPosition.y})`);
+								tmpLabel.setAttribute('transform', `rotate(-90, ${tmpPosition.x - (tmpLabelOffset + tmpPaddingExtra) * tmpOutsideFlip}, ${tmpPosition.y})`);
 								break;
 							case 'top':
 								tmpLabel.setAttribute('x', String(tmpPosition.x));
-								tmpLabel.setAttribute('y', String(tmpPosition.y + tmpLabelOffset + tmpPaddingExtra));
+								tmpLabel.setAttribute('y', String(tmpPosition.y + (tmpLabelOffset + tmpPaddingExtra) * tmpOutsideFlip));
 								tmpLabel.setAttribute('text-anchor', 'middle');
-								tmpLabel.setAttribute('transform', `rotate(-90, ${tmpPosition.x}, ${tmpPosition.y + tmpLabelOffset + tmpPaddingExtra})`);
+								tmpLabel.setAttribute('transform', `rotate(-90, ${tmpPosition.x}, ${tmpPosition.y + (tmpLabelOffset + tmpPaddingExtra) * tmpOutsideFlip})`);
 								break;
 							case 'bottom':
 								tmpLabel.setAttribute('x', String(tmpPosition.x));
-								tmpLabel.setAttribute('y', String(tmpPosition.y - tmpLabelOffset - tmpPaddingExtra));
+								tmpLabel.setAttribute('y', String(tmpPosition.y - (tmpLabelOffset + tmpPaddingExtra) * tmpOutsideFlip));
 								tmpLabel.setAttribute('text-anchor', 'middle');
-								tmpLabel.setAttribute('transform', `rotate(-90, ${tmpPosition.x}, ${tmpPosition.y - tmpLabelOffset - tmpPaddingExtra})`);
+								tmpLabel.setAttribute('transform', `rotate(-90, ${tmpPosition.x}, ${tmpPosition.y - (tmpLabelOffset + tmpPaddingExtra) * tmpOutsideFlip})`);
 								break;
 						}
 					}
 					else
 					{
 						// Horizontal labels (default)
-						switch (tmpSide)
+						switch (tmpEdge)
 						{
 							case 'left':
-								tmpLabel.setAttribute('x', String(tmpPosition.x + tmpLabelOffset + tmpPaddingExtra));
+								tmpLabel.setAttribute('x', String(tmpPosition.x + (tmpLabelOffset + tmpPaddingExtra) * tmpOutsideFlip));
 								tmpLabel.setAttribute('y', String(tmpPosition.y));
-								tmpLabel.setAttribute('text-anchor', 'start');
+								tmpLabel.setAttribute('text-anchor', tmpPortLabelsOutside ? 'end' : 'start');
 								break;
 							case 'right':
-								tmpLabel.setAttribute('x', String(tmpPosition.x - tmpLabelOffset - tmpPaddingExtra));
+								tmpLabel.setAttribute('x', String(tmpPosition.x - (tmpLabelOffset + tmpPaddingExtra) * tmpOutsideFlip));
 								tmpLabel.setAttribute('y', String(tmpPosition.y));
-								tmpLabel.setAttribute('text-anchor', 'end');
+								tmpLabel.setAttribute('text-anchor', tmpPortLabelsOutside ? 'start' : 'end');
 								break;
 							case 'top':
 								tmpLabel.setAttribute('x', String(tmpPosition.x));
-								tmpLabel.setAttribute('y', String(tmpPosition.y + tmpLabelOffset + tmpPaddingExtra));
+								tmpLabel.setAttribute('y', String(tmpPosition.y + (tmpLabelOffset + tmpPaddingExtra) * tmpOutsideFlip));
 								tmpLabel.setAttribute('text-anchor', 'middle');
 								break;
 							case 'bottom':
 								tmpLabel.setAttribute('x', String(tmpPosition.x));
-								tmpLabel.setAttribute('y', String(tmpPosition.y - tmpLabelOffset - tmpPaddingExtra));
+								tmpLabel.setAttribute('y', String(tmpPosition.y - (tmpLabelOffset + tmpPaddingExtra) * tmpOutsideFlip));
 								tmpLabel.setAttribute('text-anchor', 'middle');
 								break;
 						}

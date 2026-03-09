@@ -1,6 +1,6 @@
 {
     "name": "pict-section-flow",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "description": "Pict Section Flow Diagram",
     "main": "source/Pict-Section-Flow.js",
     "scripts": {
@@ -11,12 +11,14 @@
     "author": "steven velozo <steven@velozo.com>",
     "license": "MIT",
     "dependencies": {
-        "pict-view": "^1.0.67",
+        "fable-serviceproviderbase": "^3.0.19",
         "pict-provider": "^1.0.12",
-        "fable-serviceproviderbase": "^3.0.19"
+        "pict-section-form": "^1.0.194",
+        "pict-view": "^1.0.67"
     },
     "devDependencies": {
         "pict": "^1.0.357",
-        "quackage": "^1.0.60"
+        "pict-router": "^1.0.6",
+        "quackage": "^1.0.64"
     }
 }
