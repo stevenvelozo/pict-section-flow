@@ -61,6 +61,18 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 			--pf-port-stroke: #ffffff;
 			--pf-port-stroke-width: 2;
 
+			/* Port Type Colors */
+			--pf-port-event-in-fill: #3498db;
+			--pf-port-event-out-fill: #2ecc71;
+			--pf-port-setting-fill: #e67e22;
+			--pf-port-value-fill: #9b59b6;
+			--pf-port-error-fill: #e74c3c;
+
+			/* Connection Type Colors */
+			--pf-connection-event-stroke: #95a5a6;
+			--pf-connection-data-stroke: #9b59b6;
+			--pf-connection-error-stroke: #e74c3c;
+
 			/* Panels */
 			--pf-panel-bg: #ffffff;
 			--pf-panel-border: #d0d4d8;
@@ -286,6 +298,22 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 			r: 7;
 			filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.20));
 		}
+		/* Port type color overrides */
+		.pict-flow-port.port-type-event-in {
+			fill: var(--pf-port-event-in-fill);
+		}
+		.pict-flow-port.port-type-event-out {
+			fill: var(--pf-port-event-out-fill);
+		}
+		.pict-flow-port.port-type-setting {
+			fill: var(--pf-port-setting-fill);
+		}
+		.pict-flow-port.port-type-value {
+			fill: var(--pf-port-value-fill);
+		}
+		.pict-flow-port.port-type-error {
+			fill: var(--pf-port-error-fill);
+		}
 		.pict-flow-port-label {
 			fill: #7f8c8d;
 			font-size: 9px;
@@ -325,6 +353,16 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 		.pict-flow-connection.selected {
 			stroke: var(--pf-connection-selected-stroke);
 			stroke-width: 3;
+		}
+		/* Connection type color overrides (based on source port type) */
+		.pict-flow-connection.conn-type-value {
+			stroke: var(--pf-connection-data-stroke);
+		}
+		.pict-flow-connection.conn-type-setting {
+			stroke: var(--pf-connection-data-stroke);
+		}
+		.pict-flow-connection.conn-type-error {
+			stroke: var(--pf-connection-error-stroke);
 		}
 		.pict-flow-connection-hitarea {
 			fill: none;
@@ -590,6 +628,22 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 		}
 		.pict-flow-info-panel-port.output {
 			border-left: 3px solid var(--pf-port-output-fill);
+		}
+		/* Info panel port type color overrides */
+		.pict-flow-info-panel-port.port-type-event-in {
+			border-left-color: var(--pf-port-event-in-fill);
+		}
+		.pict-flow-info-panel-port.port-type-event-out {
+			border-left-color: var(--pf-port-event-out-fill);
+		}
+		.pict-flow-info-panel-port.port-type-setting {
+			border-left-color: var(--pf-port-setting-fill);
+		}
+		.pict-flow-info-panel-port.port-type-value {
+			border-left-color: var(--pf-port-value-fill);
+		}
+		.pict-flow-info-panel-port.port-type-error {
+			border-left-color: var(--pf-port-error-fill);
 		}
 		.pict-flow-info-panel-port-constraint {
 			color: #8e99a4;

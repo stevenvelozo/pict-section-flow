@@ -133,6 +133,10 @@ class PictFlowCard extends libFableServiceProviderBase
 					MinimumInputCount: (typeof tmpInput.MinimumInputCount === 'number') ? tmpInput.MinimumInputCount : 0,
 					MaximumInputCount: (typeof tmpInput.MaximumInputCount === 'number') ? tmpInput.MaximumInputCount : -1
 				};
+			if (tmpInput.PortType)
+			{
+				tmpPort.PortType = tmpInput.PortType;
+			}
 			tmpPorts.push(tmpPort);
 		}
 
@@ -140,13 +144,18 @@ class PictFlowCard extends libFableServiceProviderBase
 		for (let i = 0; i < this.cardOutputs.length; i++)
 		{
 			let tmpOutput = this.cardOutputs[i];
-			tmpPorts.push(
+			let tmpOutPort =
 				{
 					Hash: null,
 					Direction: 'output',
 					Side: tmpOutput.Side || 'right',
 					Label: tmpOutput.Name || `Out ${i + 1}`
-				});
+				};
+			if (tmpOutput.PortType)
+			{
+				tmpOutPort.PortType = tmpOutput.PortType;
+			}
+			tmpPorts.push(tmpOutPort);
 		}
 
 		// If no ports were defined, provide sensible defaults

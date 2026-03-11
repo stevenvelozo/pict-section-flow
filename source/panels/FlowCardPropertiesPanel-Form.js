@@ -50,6 +50,11 @@ class FlowCardPropertiesPanelForm extends libPictFlowCardPropertiesPanel
 		let tmpContainerID = `pict-flow-panel-form-${pNodeData.Hash}`;
 		pContainer.innerHTML = `<div id="${tmpContainerID}"></div>`;
 
+		// Bind the node data to AppData.Record so the form descriptors
+		// (which use addresses like Record.Data.SearchString) resolve against
+		// the actual node object.
+		this.pict.AppData.Record = pNodeData;
+
 		try
 		{
 			// Look for an existing metacontroller or create one

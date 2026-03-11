@@ -195,7 +195,12 @@ class PictProviderFlowConnectorShapes extends libFableServiceProviderBase
 	{
 		let tmpConfig = this._DefaultShapes['port'];
 		let tmpElement = this._FlowView._SVGHelperProvider.createSVGElement(tmpConfig.ElementType);
-		tmpElement.setAttribute('class', tmpConfig.ClassName + ' ' + pPortData.Direction);
+		let tmpClassName = tmpConfig.ClassName + ' ' + pPortData.Direction;
+		if (pPortData.PortType)
+		{
+			tmpClassName += ' port-type-' + pPortData.PortType;
+		}
+		tmpElement.setAttribute('class', tmpClassName);
 		tmpElement.setAttribute('cx', String(pPosition.x));
 		tmpElement.setAttribute('cy', String(pPosition.y));
 		// Apply config attributes (r, etc.)
@@ -206,6 +211,10 @@ class PictProviderFlowConnectorShapes extends libFableServiceProviderBase
 		tmpElement.setAttribute('data-port-hash', pPortData.Hash);
 		tmpElement.setAttribute('data-node-hash', pNodeHash);
 		tmpElement.setAttribute('data-port-direction', pPortData.Direction);
+		if (pPortData.PortType)
+		{
+			tmpElement.setAttribute('data-port-type', pPortData.PortType);
+		}
 		tmpElement.setAttribute('data-element-type', 'port');
 		return tmpElement;
 	}

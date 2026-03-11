@@ -329,13 +329,22 @@ class PictViewFlowNode extends libPictView
 				else
 				{
 					tmpCircle = this._FlowView._SVGHelperProvider.createSVGElement('circle');
-					tmpCircle.setAttribute('class', `pict-flow-port ${tmpPort.Direction}`);
+					let tmpPortClass = `pict-flow-port ${tmpPort.Direction}`;
+					if (tmpPort.PortType)
+					{
+						tmpPortClass += ` port-type-${tmpPort.PortType}`;
+					}
+					tmpCircle.setAttribute('class', tmpPortClass);
 					tmpCircle.setAttribute('cx', String(tmpPosition.x));
 					tmpCircle.setAttribute('cy', String(tmpPosition.y));
 					tmpCircle.setAttribute('r', '5');
 					tmpCircle.setAttribute('data-port-hash', tmpPort.Hash);
 					tmpCircle.setAttribute('data-node-hash', pNodeData.Hash);
 					tmpCircle.setAttribute('data-port-direction', tmpPort.Direction);
+					if (tmpPort.PortType)
+					{
+						tmpCircle.setAttribute('data-port-type', tmpPort.PortType);
+					}
 					tmpCircle.setAttribute('data-element-type', 'port');
 				}
 				pGroup.appendChild(tmpCircle);

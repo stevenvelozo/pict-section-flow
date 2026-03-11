@@ -24,6 +24,21 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 		let tmpSourcePos = this._FlowView.getPortPosition(pConnection.SourceNodeHash, pConnection.SourcePortHash);
 		let tmpTargetPos = this._FlowView.getPortPosition(pConnection.TargetNodeHash, pConnection.TargetPortHash);
 
+		// Look up the source port's PortType for connection coloring
+		let tmpSourcePortType = null;
+		let tmpSourceNode = this._FlowView.getNode(pConnection.SourceNodeHash);
+		if (tmpSourceNode && tmpSourceNode.Ports)
+		{
+			for (let i = 0; i < tmpSourceNode.Ports.length; i++)
+			{
+				if (tmpSourceNode.Ports[i].Hash === pConnection.SourcePortHash)
+				{
+					tmpSourcePortType = tmpSourceNode.Ports[i].PortType || null;
+					break;
+				}
+			}
+		}
+
 		if (!tmpSourcePos || !tmpTargetPos) return;
 
 		let tmpData = pConnection.Data || {};
@@ -69,6 +84,9 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 
 		let tmpViewIdentifier = this._FlowView.options.ViewIdentifier;
 
+		// Build the port-type CSS class suffix for connection coloring
+		let tmpConnTypeClass = tmpSourcePortType ? (' conn-type-' + tmpSourcePortType) : '';
+
 		// Hit area (wider invisible path for easier selection)
 		let tmpShapeProvider = this._FlowView._ConnectorShapesProvider;
 		if (tmpShapeProvider)
@@ -78,6 +96,11 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 
 			let tmpPathElement = tmpShapeProvider.createConnectionPathElement(
 				tmpPath, pConnection.Hash, pIsSelected, tmpViewIdentifier);
+			if (tmpConnTypeClass)
+			{
+				tmpPathElement.setAttribute('class',
+					(tmpPathElement.getAttribute('class') || '') + tmpConnTypeClass);
+			}
 			if (tmpStrokeDashArray)
 			{
 				tmpPathElement.setAttribute('stroke-dasharray', tmpStrokeDashArray);
@@ -94,7 +117,7 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 			pConnectionsLayer.appendChild(tmpHitArea);
 
 			let tmpPathElement = this._FlowView._SVGHelperProvider.createSVGElement('path');
-			tmpPathElement.setAttribute('class', `pict-flow-connection ${pIsSelected ? 'selected' : ''}`);
+			tmpPathElement.setAttribute('class', `pict-flow-connection${tmpConnTypeClass} ${pIsSelected ? 'selected' : ''}`);
 			tmpPathElement.setAttribute('d', tmpPath);
 			tmpPathElement.setAttribute('data-connection-hash', pConnection.Hash);
 			tmpPathElement.setAttribute('data-element-type', 'connection');
