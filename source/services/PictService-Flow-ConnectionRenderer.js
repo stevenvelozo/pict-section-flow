@@ -87,6 +87,21 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 		// Build the port-type CSS class suffix for connection coloring
 		let tmpConnTypeClass = tmpSourcePortType ? (' conn-type-' + tmpSourcePortType) : '';
 
+		// Determine the arrowhead marker based on port type
+		let tmpArrowMarkerId;
+		if (pIsSelected)
+		{
+			tmpArrowMarkerId = 'flow-arrowhead-selected-' + tmpViewIdentifier;
+		}
+		else if (tmpSourcePortType)
+		{
+			tmpArrowMarkerId = 'flow-arrowhead-' + tmpSourcePortType + '-' + tmpViewIdentifier;
+		}
+		else
+		{
+			tmpArrowMarkerId = 'flow-arrowhead-' + tmpViewIdentifier;
+		}
+
 		// Hit area (wider invisible path for easier selection)
 		let tmpShapeProvider = this._FlowView._ConnectorShapesProvider;
 		if (tmpShapeProvider)
@@ -101,6 +116,8 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 				tmpPathElement.setAttribute('class',
 					(tmpPathElement.getAttribute('class') || '') + tmpConnTypeClass);
 			}
+			// Override the default arrowhead with the typed one
+			tmpPathElement.setAttribute('marker-end', 'url(#' + tmpArrowMarkerId + ')');
 			if (tmpStrokeDashArray)
 			{
 				tmpPathElement.setAttribute('stroke-dasharray', tmpStrokeDashArray);
@@ -121,15 +138,7 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 			tmpPathElement.setAttribute('d', tmpPath);
 			tmpPathElement.setAttribute('data-connection-hash', pConnection.Hash);
 			tmpPathElement.setAttribute('data-element-type', 'connection');
-
-			if (pIsSelected)
-			{
-				tmpPathElement.setAttribute('marker-end', `url(#flow-arrowhead-selected-${tmpViewIdentifier})`);
-			}
-			else
-			{
-				tmpPathElement.setAttribute('marker-end', `url(#flow-arrowhead-${tmpViewIdentifier})`);
-			}
+			tmpPathElement.setAttribute('marker-end', 'url(#' + tmpArrowMarkerId + ')');
 
 			if (tmpStrokeDashArray)
 			{

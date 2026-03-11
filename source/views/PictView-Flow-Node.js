@@ -49,6 +49,23 @@ class PictViewFlowNode extends libPictView
 		let tmpHeight = pNodeData.Height || 80;
 		let tmpTitleBarHeight = this.options.NodeTitleBarHeight;
 
+		// Ensure node is tall enough for all ports in their zones
+		let tmpGeomProvider = this._FlowView._GeometryProvider;
+		if (tmpGeomProvider && pNodeData.Ports && pNodeData.Ports.length > 0)
+		{
+			let tmpMinHeight = tmpGeomProvider.computeMinimumNodeHeight(pNodeData.Ports, tmpTitleBarHeight);
+			if (tmpMinHeight > tmpHeight)
+			{
+				tmpHeight = tmpMinHeight;
+			}
+		}
+
+		// Write the adjusted dimensions back to the node data so that
+		// connection rendering (which reads pNodeData.Width/Height to
+		// compute port positions) uses the same values we render with.
+		pNodeData.Width = tmpWidth;
+		pNodeData.Height = tmpHeight;
+
 		// Determine node body mode from theme (bracket vs rect)
 		let tmpNodeBodyMode = 'rect';
 		if (this._FlowView._ThemeProvider)
@@ -319,7 +336,140 @@ class PictViewFlowNode extends libPictView
 				let tmpPort = tmpPorts[i];
 				let tmpPosition = this._getPortLocalPosition(tmpSide, i, tmpPorts.length, pWidth, pHeight);
 
-				// Port circle
+				// Port label badge — flush against the node edge with no
+				// border on the edge side; rendered before the port circle
+				// so the circle visually sits on top of the badge
+				let tmpLabelElement = null;
+				if (tmpPort.Label)
+				{
+					let tmpPortTypeColorMap =
+					{
+						'event-in': '#3498db',
+						'event-out': '#2ecc71',
+						'setting': '#e67e22',
+						'value': '#f1c40f',
+						'error': '#e74c3c'
+					};
+					let tmpBorderColor = tmpPort.PortType ? (tmpPortTypeColorMap[tmpPort.PortType] || '#95a5a6') : '#95a5a6';
+
+					let tmpBadgeHeight = 12;
+					let tmpBadgePadH = 5;
+					let tmpBadgeBorderW = 2;
+					let tmpEdgePad = 1;
+					let tmpPortRadius = 5;
+
+					let tmpTextLen = tmpPort.Label.length * 5;
+					let tmpBadgeX, tmpBadgeY, tmpBadgeWidth;
+					let tmpTextX, tmpTextAnchor;
+					let tmpStripeX, tmpStripeY, tmpStripeW, tmpStripeH;
+					let tmpBorderPath;
+
+					if (tmpEdge === 'left')
+					{
+						tmpBadgeWidth = tmpPortRadius + tmpBadgePadH + tmpTextLen + tmpBadgePadH + tmpBadgeBorderW;
+						tmpBadgeX = tmpEdgePad;
+						tmpBadgeY = tmpPosition.y - tmpBadgeHeight / 2;
+						tmpTextX = tmpBadgeX + tmpPortRadius + tmpBadgePadH;
+						tmpTextAnchor = 'start';
+						tmpStripeX = tmpBadgeX + tmpBadgeWidth - tmpBadgeBorderW;
+						tmpStripeY = tmpBadgeY;
+						tmpStripeW = tmpBadgeBorderW;
+						tmpStripeH = tmpBadgeHeight;
+						tmpBorderPath = 'M ' + tmpBadgeX + ' ' + tmpBadgeY
+							+ ' L ' + (tmpBadgeX + tmpBadgeWidth) + ' ' + tmpBadgeY
+							+ ' L ' + (tmpBadgeX + tmpBadgeWidth) + ' ' + (tmpBadgeY + tmpBadgeHeight)
+							+ ' L ' + tmpBadgeX + ' ' + (tmpBadgeY + tmpBadgeHeight);
+					}
+					else if (tmpEdge === 'right')
+					{
+						tmpBadgeWidth = tmpBadgeBorderW + tmpBadgePadH + tmpTextLen + tmpBadgePadH + tmpPortRadius;
+						tmpBadgeX = pWidth - tmpBadgeWidth - tmpEdgePad;
+						tmpBadgeY = tmpPosition.y - tmpBadgeHeight / 2;
+						tmpTextX = tmpBadgeX + tmpBadgeBorderW + tmpBadgePadH;
+						tmpTextAnchor = 'start';
+						tmpStripeX = tmpBadgeX;
+						tmpStripeY = tmpBadgeY;
+						tmpStripeW = tmpBadgeBorderW;
+						tmpStripeH = tmpBadgeHeight;
+						tmpBorderPath = 'M ' + (tmpBadgeX + tmpBadgeWidth) + ' ' + tmpBadgeY
+							+ ' L ' + tmpBadgeX + ' ' + tmpBadgeY
+							+ ' L ' + tmpBadgeX + ' ' + (tmpBadgeY + tmpBadgeHeight)
+							+ ' L ' + (tmpBadgeX + tmpBadgeWidth) + ' ' + (tmpBadgeY + tmpBadgeHeight);
+					}
+					else if (tmpEdge === 'top')
+					{
+						tmpBadgeWidth = tmpTextLen + tmpBadgePadH * 2;
+						tmpBadgeX = tmpPosition.x - tmpBadgeWidth / 2;
+						tmpBadgeY = tmpEdgePad;
+						tmpTextX = tmpPosition.x;
+						tmpTextAnchor = 'middle';
+						tmpStripeX = tmpBadgeX;
+						tmpStripeY = tmpBadgeY + tmpBadgeHeight - tmpBadgeBorderW;
+						tmpStripeW = tmpBadgeWidth;
+						tmpStripeH = tmpBadgeBorderW;
+						tmpBorderPath = 'M ' + tmpBadgeX + ' ' + tmpBadgeY
+							+ ' L ' + tmpBadgeX + ' ' + (tmpBadgeY + tmpBadgeHeight)
+							+ ' L ' + (tmpBadgeX + tmpBadgeWidth) + ' ' + (tmpBadgeY + tmpBadgeHeight)
+							+ ' L ' + (tmpBadgeX + tmpBadgeWidth) + ' ' + tmpBadgeY;
+					}
+					else
+					{
+						tmpBadgeWidth = tmpTextLen + tmpBadgePadH * 2;
+						tmpBadgeX = tmpPosition.x - tmpBadgeWidth / 2;
+						tmpBadgeY = pHeight - tmpBadgeHeight - tmpEdgePad;
+						tmpTextX = tmpPosition.x;
+						tmpTextAnchor = 'middle';
+						tmpStripeX = tmpBadgeX;
+						tmpStripeY = tmpBadgeY;
+						tmpStripeW = tmpBadgeWidth;
+						tmpStripeH = tmpBadgeBorderW;
+						tmpBorderPath = 'M ' + tmpBadgeX + ' ' + (tmpBadgeY + tmpBadgeHeight)
+							+ ' L ' + tmpBadgeX + ' ' + tmpBadgeY
+							+ ' L ' + (tmpBadgeX + tmpBadgeWidth) + ' ' + tmpBadgeY
+							+ ' L ' + (tmpBadgeX + tmpBadgeWidth) + ' ' + (tmpBadgeY + tmpBadgeHeight);
+					}
+
+					// Background rect (cream, no stroke — border drawn separately)
+					let tmpBgRect = this._FlowView._SVGHelperProvider.createSVGElement('rect');
+					tmpBgRect.setAttribute('class', 'pict-flow-port-label-bg');
+					tmpBgRect.setAttribute('x', String(tmpBadgeX));
+					tmpBgRect.setAttribute('y', String(tmpBadgeY));
+					tmpBgRect.setAttribute('width', String(tmpBadgeWidth));
+					tmpBgRect.setAttribute('height', String(tmpBadgeHeight));
+					tmpBgRect.setAttribute('fill', 'rgba(255, 253, 240, 0.5)');
+					pGroup.appendChild(tmpBgRect);
+
+					// 3-sided border path (open on the edge-facing side)
+					let tmpBorderPathEl = this._FlowView._SVGHelperProvider.createSVGElement('path');
+					tmpBorderPathEl.setAttribute('class', 'pict-flow-port-label-bg');
+					tmpBorderPathEl.setAttribute('d', tmpBorderPath);
+					tmpBorderPathEl.setAttribute('fill', 'none');
+					tmpBorderPathEl.setAttribute('stroke', tmpBorderColor);
+					tmpBorderPathEl.setAttribute('stroke-width', '0.75');
+					pGroup.appendChild(tmpBorderPathEl);
+
+					// Colored stripe on the inner side
+					let tmpStripe = this._FlowView._SVGHelperProvider.createSVGElement('rect');
+					tmpStripe.setAttribute('class', 'pict-flow-port-label-bg');
+					tmpStripe.setAttribute('x', String(tmpStripeX));
+					tmpStripe.setAttribute('y', String(tmpStripeY));
+					tmpStripe.setAttribute('width', String(tmpStripeW));
+					tmpStripe.setAttribute('height', String(tmpStripeH));
+					tmpStripe.setAttribute('fill', tmpBorderColor);
+					pGroup.appendChild(tmpStripe);
+
+					// Text label — appended after circle for z-order
+					tmpLabelElement = this._FlowView._SVGHelperProvider.createSVGElement('text');
+					tmpLabelElement.setAttribute('class', 'pict-flow-port-label');
+					tmpLabelElement.setAttribute('fill', '#2c3e50');
+					tmpLabelElement.textContent = tmpPort.Label;
+					tmpLabelElement.setAttribute('x', String(tmpTextX));
+					tmpLabelElement.setAttribute('y', String(tmpBadgeY + tmpBadgeHeight / 2));
+					tmpLabelElement.setAttribute('text-anchor', tmpTextAnchor);
+					tmpLabelElement.setAttribute('dominant-baseline', 'central');
+				}
+
+				// Port circle (rendered on top of badge background)
 				let tmpShapeProvider = this._FlowView._ConnectorShapesProvider;
 				let tmpCircle;
 				if (tmpShapeProvider)
@@ -349,82 +499,10 @@ class PictViewFlowNode extends libPictView
 				}
 				pGroup.appendChild(tmpCircle);
 
-				// Port label — use the edge for alignment (all positions on the
-				// same edge share the same label direction)
-				if (tmpPort.Label)
+				// Port label text (on top of everything)
+				if (tmpLabelElement)
 				{
-					let tmpLabel = this._FlowView._SVGHelperProvider.createSVGElement('text');
-					tmpLabel.setAttribute('class', 'pict-flow-port-label');
-					tmpLabel.textContent = tmpPort.Label;
-
-					// Base offset from port center; PortLabelPadding adds extra space
-					let tmpLabelOffset = 12;
-					let tmpPaddingExtra = tmpPortLabelPadding ? 8 : 0;
-
-					// When PortLabelsOutside is true, labels render outside the node
-				// boundary (away from center) instead of inside (toward center).
-				// The direction multiplier flips the offset direction per edge.
-				let tmpOutsideFlip = tmpPortLabelsOutside ? -1 : 1;
-
-				if (tmpPortLabelsVertical)
-					{
-						switch (tmpEdge)
-						{
-							case 'left':
-								tmpLabel.setAttribute('x', String(tmpPosition.x + (tmpLabelOffset + tmpPaddingExtra) * tmpOutsideFlip));
-								tmpLabel.setAttribute('y', String(tmpPosition.y));
-								tmpLabel.setAttribute('text-anchor', 'middle');
-								tmpLabel.setAttribute('transform', `rotate(-90, ${tmpPosition.x + (tmpLabelOffset + tmpPaddingExtra) * tmpOutsideFlip}, ${tmpPosition.y})`);
-								break;
-							case 'right':
-								tmpLabel.setAttribute('x', String(tmpPosition.x - (tmpLabelOffset + tmpPaddingExtra) * tmpOutsideFlip));
-								tmpLabel.setAttribute('y', String(tmpPosition.y));
-								tmpLabel.setAttribute('text-anchor', 'middle');
-								tmpLabel.setAttribute('transform', `rotate(-90, ${tmpPosition.x - (tmpLabelOffset + tmpPaddingExtra) * tmpOutsideFlip}, ${tmpPosition.y})`);
-								break;
-							case 'top':
-								tmpLabel.setAttribute('x', String(tmpPosition.x));
-								tmpLabel.setAttribute('y', String(tmpPosition.y + (tmpLabelOffset + tmpPaddingExtra) * tmpOutsideFlip));
-								tmpLabel.setAttribute('text-anchor', 'middle');
-								tmpLabel.setAttribute('transform', `rotate(-90, ${tmpPosition.x}, ${tmpPosition.y + (tmpLabelOffset + tmpPaddingExtra) * tmpOutsideFlip})`);
-								break;
-							case 'bottom':
-								tmpLabel.setAttribute('x', String(tmpPosition.x));
-								tmpLabel.setAttribute('y', String(tmpPosition.y - (tmpLabelOffset + tmpPaddingExtra) * tmpOutsideFlip));
-								tmpLabel.setAttribute('text-anchor', 'middle');
-								tmpLabel.setAttribute('transform', `rotate(-90, ${tmpPosition.x}, ${tmpPosition.y - (tmpLabelOffset + tmpPaddingExtra) * tmpOutsideFlip})`);
-								break;
-						}
-					}
-					else
-					{
-						// Horizontal labels (default)
-						switch (tmpEdge)
-						{
-							case 'left':
-								tmpLabel.setAttribute('x', String(tmpPosition.x + (tmpLabelOffset + tmpPaddingExtra) * tmpOutsideFlip));
-								tmpLabel.setAttribute('y', String(tmpPosition.y));
-								tmpLabel.setAttribute('text-anchor', tmpPortLabelsOutside ? 'end' : 'start');
-								break;
-							case 'right':
-								tmpLabel.setAttribute('x', String(tmpPosition.x - (tmpLabelOffset + tmpPaddingExtra) * tmpOutsideFlip));
-								tmpLabel.setAttribute('y', String(tmpPosition.y));
-								tmpLabel.setAttribute('text-anchor', tmpPortLabelsOutside ? 'start' : 'end');
-								break;
-							case 'top':
-								tmpLabel.setAttribute('x', String(tmpPosition.x));
-								tmpLabel.setAttribute('y', String(tmpPosition.y + (tmpLabelOffset + tmpPaddingExtra) * tmpOutsideFlip));
-								tmpLabel.setAttribute('text-anchor', 'middle');
-								break;
-							case 'bottom':
-								tmpLabel.setAttribute('x', String(tmpPosition.x));
-								tmpLabel.setAttribute('y', String(tmpPosition.y - (tmpLabelOffset + tmpPaddingExtra) * tmpOutsideFlip));
-								tmpLabel.setAttribute('text-anchor', 'middle');
-								break;
-						}
-					}
-					tmpLabel.setAttribute('dominant-baseline', 'central');
-					pGroup.appendChild(tmpLabel);
+					pGroup.appendChild(tmpLabelElement);
 				}
 			}
 		}

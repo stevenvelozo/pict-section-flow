@@ -385,7 +385,7 @@ class PictProviderFlowConnectorShapes extends libFableServiceProviderBase
 
 		let tmpMarkup = '';
 
-		// Normal connection arrowhead
+		// Normal connection arrowhead (default gray)
 		tmpMarkup += '<marker id="flow-arrowhead-' + pViewIdentifier + '"'
 			+ ' markerWidth="' + tmpConnectionMarker.MarkerWidth + '"'
 			+ ' markerHeight="' + tmpConnectionMarker.MarkerHeight + '"'
@@ -394,6 +394,28 @@ class PictProviderFlowConnectorShapes extends libFableServiceProviderBase
 			+ ' orient="auto" markerUnits="strokeWidth">'
 			+ '<polygon points="' + tmpConnectionMarker.Points + '" fill="' + tmpConnectionMarker.Fill + '" />'
 			+ '</marker>';
+
+		// Per-port-type connection arrowheads
+		let tmpPortTypeColors =
+		{
+			'event-in': '#3498db',
+			'event-out': '#2ecc71',
+			'setting': '#e67e22',
+			'value': '#f1c40f',
+			'error': '#e74c3c'
+		};
+
+		for (let tmpType in tmpPortTypeColors)
+		{
+			tmpMarkup += '<marker id="flow-arrowhead-' + tmpType + '-' + pViewIdentifier + '"'
+				+ ' markerWidth="' + tmpConnectionMarker.MarkerWidth + '"'
+				+ ' markerHeight="' + tmpConnectionMarker.MarkerHeight + '"'
+				+ ' refX="' + tmpConnectionMarker.RefX + '"'
+				+ ' refY="' + tmpConnectionMarker.RefY + '"'
+				+ ' orient="auto" markerUnits="strokeWidth">'
+				+ '<polygon points="' + tmpConnectionMarker.Points + '" fill="' + tmpPortTypeColors[tmpType] + '" />'
+				+ '</marker>';
+		}
 
 		// Selected connection arrowhead
 		tmpMarkup += '<marker id="flow-arrowhead-selected-' + pViewIdentifier + '"'

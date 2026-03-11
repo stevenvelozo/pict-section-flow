@@ -65,12 +65,14 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 			--pf-port-event-in-fill: #3498db;
 			--pf-port-event-out-fill: #2ecc71;
 			--pf-port-setting-fill: #e67e22;
-			--pf-port-value-fill: #9b59b6;
+			--pf-port-value-fill: #f1c40f;
 			--pf-port-error-fill: #e74c3c;
 
-			/* Connection Type Colors */
-			--pf-connection-event-stroke: #95a5a6;
-			--pf-connection-data-stroke: #9b59b6;
+			/* Connection Type Colors (match source port) */
+			--pf-connection-event-in-stroke: #3498db;
+			--pf-connection-event-out-stroke: #2ecc71;
+			--pf-connection-setting-stroke: #e67e22;
+			--pf-connection-value-stroke: #f1c40f;
 			--pf-connection-error-stroke: #e74c3c;
 
 			/* Panels */
@@ -315,17 +317,23 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 			fill: var(--pf-port-error-fill);
 		}
 		.pict-flow-port-label {
-			fill: #7f8c8d;
-			font-size: 9px;
+			font-size: 8px;
+			font-weight: 600;
 			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 			pointer-events: none;
 		}
+		/* Port label badge background */
+		.pict-flow-port-label-bg {
+			pointer-events: none;
+		}
 		/* Port labels on hover: hidden by default, revealed on node hover */
-		.pict-flow-node-port-labels-hover .pict-flow-port-label {
+		.pict-flow-node-port-labels-hover .pict-flow-port-label,
+		.pict-flow-node-port-labels-hover .pict-flow-port-label-bg {
 			opacity: 0;
 			transition: opacity 0.2s;
 		}
-		.pict-flow-node-port-labels-hover:hover .pict-flow-port-label {
+		.pict-flow-node-port-labels-hover:hover .pict-flow-port-label,
+		.pict-flow-node-port-labels-hover:hover .pict-flow-port-label-bg {
 			opacity: 1;
 		}
 		`;
@@ -355,11 +363,17 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 			stroke-width: 3;
 		}
 		/* Connection type color overrides (based on source port type) */
-		.pict-flow-connection.conn-type-value {
-			stroke: var(--pf-connection-data-stroke);
+		.pict-flow-connection.conn-type-event-in {
+			stroke: var(--pf-connection-event-in-stroke);
+		}
+		.pict-flow-connection.conn-type-event-out {
+			stroke: var(--pf-connection-event-out-stroke);
 		}
 		.pict-flow-connection.conn-type-setting {
-			stroke: var(--pf-connection-data-stroke);
+			stroke: var(--pf-connection-setting-stroke);
+		}
+		.pict-flow-connection.conn-type-value {
+			stroke: var(--pf-connection-value-stroke);
 		}
 		.pict-flow-connection.conn-type-error {
 			stroke: var(--pf-connection-error-stroke);

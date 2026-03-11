@@ -134,13 +134,25 @@ class PictProviderFlowGeometry extends libFableServiceProviderBase
 		let tmpEdge = this.getEdgeFromSide(pSide);
 		let tmpZone = this._getZoneFromSide(pSide);
 
+		// Minimum spacing between port centers (px)
+		let tmpMinSpacing = 16;
+
+		// Reserve space at the bottom of the body so that port badges
+		// never overlap the panel-indicator icon (10×10 rect at bottom-right)
+		// and always leave a visible gap above the node bottom edge.
+		let tmpBottomPad = 16;
+
 		if (tmpEdge === 'left' || tmpEdge === 'right')
 		{
 			let tmpX = (tmpEdge === 'left') ? 0 : pWidth;
-			let tmpBodyHeight = pHeight - pTitleBarHeight;
+			let tmpBodyHeight = pHeight - pTitleBarHeight - tmpBottomPad;
 			let tmpZoneStart = pTitleBarHeight + tmpBodyHeight * tmpZone.start;
 			let tmpZoneHeight = tmpBodyHeight * (tmpZone.end - tmpZone.start);
 			let tmpSpacing = tmpZoneHeight / (pTotal + 1);
+			if (tmpSpacing < tmpMinSpacing)
+			{
+				tmpSpacing = tmpMinSpacing;
+			}
 			let tmpY = tmpZoneStart + tmpSpacing * (pIndex + 1);
 			return { x: tmpX, y: tmpY };
 		}
@@ -150,6 +162,10 @@ class PictProviderFlowGeometry extends libFableServiceProviderBase
 		let tmpZoneStart = pWidth * tmpZone.start;
 		let tmpZoneWidth = pWidth * (tmpZone.end - tmpZone.start);
 		let tmpSpacing = tmpZoneWidth / (pTotal + 1);
+		if (tmpSpacing < tmpMinSpacing)
+		{
+			tmpSpacing = tmpMinSpacing;
+		}
 		let tmpX = tmpZoneStart + tmpSpacing * (pIndex + 1);
 		return { x: tmpX, y: tmpY };
 	}
@@ -192,6 +208,72 @@ class PictProviderFlowGeometry extends libFableServiceProviderBase
 			// Fallback: full range (legacy behavior)
 			default:             return { start: 0.0,   end: 1.0 };
 		}
+	}
+	/**
+	 * Compute the minimum node height required so that all ports
+	 * (with their badges) fit within the node boundary.
+	 *
+	 * Uses the same zone system and minimum spacing as getPortLocalPosition.
+	 * For each left/right zone, calculates where the last port would land
+	 * and ensures the node is tall enough to contain it plus badge clearance.
+	 *
+	 * @param {Array} pPorts - Array of port objects with Side, Direction
+	 * @param {number} pTitleBarHeight - Height of the title bar
+	 * @returns {number} Minimum node height in pixels (0 if no ports)
+	 */
+	computeMinimumNodeHeight(pPorts, pTitleBarHeight)
+	{
+		if (!pPorts || !Array.isArray(pPorts) || pPorts.length === 0)
+		{
+			return 0;
+		}
+
+		let tmpMinSpacing = 16;
+		let tmpBadgeHalfHeight = 6;
+		let tmpBottomPad = 16;
+
+		// Count ports per Side value
+		let tmpCountBySide = {};
+		for (let i = 0; i < pPorts.length; i++)
+		{
+			let tmpSide = pPorts[i].Side || (pPorts[i].Direction === 'input' ? 'left' : 'right');
+			if (!tmpCountBySide[tmpSide])
+			{
+				tmpCountBySide[tmpSide] = 0;
+			}
+			tmpCountBySide[tmpSide]++;
+		}
+
+		let tmpMinHeight = 0;
+
+		for (let tmpSide in tmpCountBySide)
+		{
+			let tmpCount = tmpCountBySide[tmpSide];
+			let tmpEdge = this.getEdgeFromSide(tmpSide);
+
+			// Only left/right edge zones affect required height
+			if (tmpEdge !== 'left' && tmpEdge !== 'right')
+			{
+				continue;
+			}
+
+			let tmpZone = this._getZoneFromSide(tmpSide);
+
+			// With bottomPad reserving space at the bottom:
+			//   bodyHeight = H - titleBar - bottomPad
+			//   lastPortY = titleBar + bodyHeight * zone.start + minSpacing * count
+			//   Need: lastPortY + badgeHalfHeight <= H - bottomPad
+			// Solving for H:
+			//   H >= titleBar + bottomPad + (minSpacing * count + badgeHalfHeight) / (1 - zone.start)
+			let tmpRequired = pTitleBarHeight + tmpBottomPad + (tmpMinSpacing * tmpCount + tmpBadgeHalfHeight) / (1 - tmpZone.start);
+
+			if (tmpRequired > tmpMinHeight)
+			{
+				tmpMinHeight = tmpRequired;
+			}
+		}
+
+		return Math.ceil(tmpMinHeight);
 	}
 }
 

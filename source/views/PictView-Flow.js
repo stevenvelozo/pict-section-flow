@@ -1328,7 +1328,20 @@ class PictViewFlow extends libPictView
 
 		let tmpTitleBarHeight = (this._NodeView && this._NodeView.options.NodeTitleBarHeight) || 28;
 
-		let tmpLocal = this._GeometryProvider.getPortLocalPosition(tmpPort.Side, tmpPortIndex, tmpPortCount, tmpNode.Width, tmpNode.Height, tmpTitleBarHeight);
+		// Use the adjusted node height that accounts for minimum port
+		// spacing.  Connections render before nodes, so the node renderer
+		// may not have written back its adjusted height yet.
+		let tmpHeight = tmpNode.Height || 80;
+		if (this._GeometryProvider && tmpNode.Ports && tmpNode.Ports.length > 0)
+		{
+			let tmpMinHeight = this._GeometryProvider.computeMinimumNodeHeight(tmpNode.Ports, tmpTitleBarHeight);
+			if (tmpMinHeight > tmpHeight)
+			{
+				tmpHeight = tmpMinHeight;
+			}
+		}
+
+		let tmpLocal = this._GeometryProvider.getPortLocalPosition(tmpPort.Side, tmpPortIndex, tmpPortCount, tmpNode.Width, tmpHeight, tmpTitleBarHeight);
 
 		return { x: tmpNode.X + tmpLocal.x, y: tmpNode.Y + tmpLocal.y, side: tmpPort.Side || 'right' };
 	}
@@ -1380,6 +1393,34 @@ class PictViewFlow extends libPictView
 			let tmpNode = this._FlowData.Nodes[i];
 			let tmpIsSelected = (this._FlowData.ViewState.SelectedNodeHash === tmpNode.Hash);
 			let tmpNodeTypeConfig = this._NodeTypeProvider.getNodeType(tmpNode.Type);
+
+			// Enrich saved port data with metadata from the node type's DefaultPorts.
+			// Saved flow data may not include PortType or may have stale Side values,
+			// so we match each port to its DefaultPort counterpart by Label and Direction,
+			// then copy over PortType and Side from the authoritative node type definition.
+			if (tmpNodeTypeConfig && tmpNodeTypeConfig.DefaultPorts && tmpNode.Ports)
+			{
+				for (let p = 0; p < tmpNode.Ports.length; p++)
+				{
+					let tmpPort = tmpNode.Ports[p];
+					for (let d = 0; d < tmpNodeTypeConfig.DefaultPorts.length; d++)
+					{
+						let tmpDefault = tmpNodeTypeConfig.DefaultPorts[d];
+						if (tmpDefault.Label === tmpPort.Label && tmpDefault.Direction === tmpPort.Direction)
+						{
+							if (tmpDefault.PortType)
+							{
+								tmpPort.PortType = tmpDefault.PortType;
+							}
+							if (tmpDefault.Side)
+							{
+								tmpPort.Side = tmpDefault.Side;
+							}
+							break;
+						}
+					}
+				}
+			}
 
 			this._NodeView.renderNode(tmpNode, this._NodesLayer, tmpIsSelected, tmpNodeTypeConfig);
 		}
