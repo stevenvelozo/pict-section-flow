@@ -57,6 +57,22 @@ const _DefaultConfiguration =
 			Template: ' <span class="pict-flow-info-panel-port-constraint">{~D:Record.ConstraintText~}</span>'
 		},
 		{
+			Hash: 'Flow-InfoPanel-Section-Generic',
+			Template: '<div class="pict-flow-info-panel-section"><div class="pict-flow-info-panel-section-title">{~D:Record.SectionTitle~}</div>{~D:Record.PortsContent~}</div>'
+		},
+		{
+			Hash: 'Flow-InfoPanel-Port-Event',
+			Template: '<div class="pict-flow-info-panel-port event">{~D:Record.Label~}</div>'
+		},
+		{
+			Hash: 'Flow-InfoPanel-Port-Value',
+			Template: '<div class="pict-flow-info-panel-port value">{~D:Record.Label~}{~D:Record.DataType~}</div>'
+		},
+		{
+			Hash: 'Flow-InfoPanel-Port-DataType',
+			Template: ' <span class="pict-flow-info-panel-port-constraint">{~D:Record.DataTypeText~}</span>'
+		},
+		{
 			Hash: 'Flow-NodeProps-Editor',
 			Template: '<div class="pict-flow-node-props-fields"><div class="pict-flow-node-props-field"><label class="pict-flow-node-props-label">Title</label><input type="text" class="pict-flow-node-props-input" data-prop="Title" value="{~D:Record.Title~}" /></div><div class="pict-flow-node-props-field"><label class="pict-flow-node-props-label">Width</label><input type="number" class="pict-flow-node-props-input" data-prop="Width" value="{~D:Record.Width~}" min="60" step="10" /></div><div class="pict-flow-node-props-field"><label class="pict-flow-node-props-label">Height</label><input type="number" class="pict-flow-node-props-input" data-prop="Height" value="{~D:Record.Height~}" min="40" step="10" /></div><div class="pict-flow-node-props-field"><label class="pict-flow-node-props-label">Body Fill</label><input type="color" class="pict-flow-node-props-input pict-flow-node-props-color" data-prop="Style.BodyFill" value="{~D:Record.BodyFillValue~}" /></div><div class="pict-flow-node-props-field"><label class="pict-flow-node-props-label">Body Stroke</label><input type="color" class="pict-flow-node-props-input pict-flow-node-props-color" data-prop="Style.BodyStroke" value="{~D:Record.BodyStrokeValue~}" /></div><div class="pict-flow-node-props-field"><label class="pict-flow-node-props-label">Stroke Width</label><input type="number" class="pict-flow-node-props-input" data-prop="Style.BodyStrokeWidth" value="{~D:Record.BodyStrokeWidthValue~}" min="0" max="10" step="0.5" /></div><div class="pict-flow-node-props-field"><label class="pict-flow-node-props-label">Title Bar</label><input type="color" class="pict-flow-node-props-input pict-flow-node-props-color" data-prop="Style.TitleBarColor" value="{~D:Record.TitleBarColorValue~}" /></div></div>'
 		}
@@ -262,6 +278,11 @@ class PictViewFlowPropertiesPanel extends libPictView
 		{
 			tmpInstance.render(pBodyContainer, tmpNodeData);
 		}
+
+		// After the form renders, append port summary sections showing
+		// event inputs, event outputs, and state outputs.
+		// SettingsInputs are already visible as form fields above.
+		this._renderPortSummary(pBodyContainer, tmpNodeTypeConfig);
 	}
 
 	/**
@@ -360,6 +381,107 @@ class PictViewFlowPropertiesPanel extends libPictView
 		}
 
 		pContainer.innerHTML = this.pict.parseTemplateByHash('Flow-InfoPanel-Wrapper', { PanelContent: tmpContentParts.join('') });
+	}
+
+	/**
+	 * Render port summary sections below the form panel content.
+	 * Shows event inputs, event outputs, and state outputs — the ports
+	 * that the form does not cover (since the form only shows SettingsInputs).
+	 *
+	 * @param {HTMLDivElement} pContainer
+	 * @param {Object} pNodeTypeConfig
+	 */
+	_renderPortSummary(pContainer, pNodeTypeConfig)
+	{
+		let tmpPorts = pNodeTypeConfig.DefaultPorts || [];
+		if (tmpPorts.length === 0) return;
+
+		// Categorize ports by type (settings are already shown as form fields)
+		let tmpEventInputs = [];
+		let tmpEventOutputs = [];
+		let tmpStateOutputs = [];
+
+		for (let i = 0; i < tmpPorts.length; i++)
+		{
+			let tmpPort = tmpPorts[i];
+			let tmpPortType = tmpPort.PortType || '';
+
+			if (tmpPortType === 'event-in')
+			{
+				tmpEventInputs.push(tmpPort);
+			}
+			else if (tmpPortType === 'event-out' || tmpPortType === 'error')
+			{
+				tmpEventOutputs.push(tmpPort);
+			}
+			else if (tmpPortType === 'value')
+			{
+				tmpStateOutputs.push(tmpPort);
+			}
+		}
+
+		// Only render if there are non-settings ports to show
+		if (tmpEventInputs.length === 0 && tmpEventOutputs.length === 0 && tmpStateOutputs.length === 0)
+		{
+			return;
+		}
+
+		let tmpSummaryParts = [];
+
+		// Event Inputs
+		if (tmpEventInputs.length > 0)
+		{
+			let tmpPortsContent = '';
+			for (let i = 0; i < tmpEventInputs.length; i++)
+			{
+				tmpPortsContent += this.pict.parseTemplateByHash('Flow-InfoPanel-Port-Event', { Label: tmpEventInputs[i].Label || tmpEventInputs[i].Name || 'Event In' });
+			}
+			tmpSummaryParts.push(this.pict.parseTemplateByHash('Flow-InfoPanel-Section-Generic', { SectionTitle: 'Event Inputs', PortsContent: tmpPortsContent }));
+		}
+
+		// Event Outputs
+		if (tmpEventOutputs.length > 0)
+		{
+			let tmpPortsContent = '';
+			for (let i = 0; i < tmpEventOutputs.length; i++)
+			{
+				let tmpPort = tmpEventOutputs[i];
+				let tmpLabel = tmpPort.Label || tmpPort.Name || 'Event Out';
+				if (tmpPort.PortType === 'error')
+				{
+					tmpLabel += ' ⚠';
+				}
+				tmpPortsContent += this.pict.parseTemplateByHash('Flow-InfoPanel-Port-Event', { Label: tmpLabel });
+			}
+			tmpSummaryParts.push(this.pict.parseTemplateByHash('Flow-InfoPanel-Section-Generic', { SectionTitle: 'Event Outputs', PortsContent: tmpPortsContent }));
+		}
+
+		// State Outputs
+		if (tmpStateOutputs.length > 0)
+		{
+			let tmpPortsContent = '';
+			for (let i = 0; i < tmpStateOutputs.length; i++)
+			{
+				let tmpPort = tmpStateOutputs[i];
+				let tmpLabel = tmpPort.Label || tmpPort.Name || 'Output';
+				let tmpDataType = '';
+				if (tmpPort.DataType)
+				{
+					tmpDataType = this.pict.parseTemplateByHash('Flow-InfoPanel-Port-DataType', { DataTypeText: tmpPort.DataType });
+				}
+				tmpPortsContent += this.pict.parseTemplateByHash('Flow-InfoPanel-Port-Value', { Label: tmpLabel, DataType: tmpDataType });
+			}
+			tmpSummaryParts.push(this.pict.parseTemplateByHash('Flow-InfoPanel-Section-Generic', { SectionTitle: 'State Outputs', PortsContent: tmpPortsContent }));
+		}
+
+		if (tmpSummaryParts.length > 0)
+		{
+			// Create a wrapper div for the port summary and append it to the container
+			let tmpSummaryDiv = document.createElement('div');
+			tmpSummaryDiv.className = 'pict-flow-info-panel pict-flow-port-summary';
+			tmpSummaryDiv.innerHTML = tmpSummaryParts.join('');
+			pContainer.appendChild(tmpSummaryDiv);
+		}
 	}
 
 	/**

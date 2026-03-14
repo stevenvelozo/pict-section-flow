@@ -53,7 +53,7 @@ class FlowCardPropertiesPanelForm extends libPictFlowCardPropertiesPanel
 		// Bind the node data to AppData.Record so the form descriptors
 		// (which use addresses like Record.Data.SearchString) resolve against
 		// the actual node object.
-		this.pict.AppData.Record = pNodeData;
+		this.fable.AppData.Record = pNodeData;
 
 		try
 		{

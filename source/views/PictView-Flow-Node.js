@@ -436,7 +436,7 @@ class PictViewFlowNode extends libPictView
 					tmpBgRect.setAttribute('y', String(tmpBadgeY));
 					tmpBgRect.setAttribute('width', String(tmpBadgeWidth));
 					tmpBgRect.setAttribute('height', String(tmpBadgeHeight));
-					tmpBgRect.setAttribute('fill', 'rgba(255, 253, 240, 0.5)');
+					tmpBgRect.setAttribute('fill', 'var(--pf-port-label-bg, rgba(255, 253, 240, 0.5))');
 					pGroup.appendChild(tmpBgRect);
 
 					// 3-sided border path (open on the edge-facing side)
@@ -461,7 +461,7 @@ class PictViewFlowNode extends libPictView
 					// Text label — appended after circle for z-order
 					tmpLabelElement = this._FlowView._SVGHelperProvider.createSVGElement('text');
 					tmpLabelElement.setAttribute('class', 'pict-flow-port-label');
-					tmpLabelElement.setAttribute('fill', '#2c3e50');
+					tmpLabelElement.setAttribute('fill', 'var(--pf-port-label-text, #2c3e50)');
 					tmpLabelElement.textContent = tmpPort.Label;
 					tmpLabelElement.setAttribute('x', String(tmpTextX));
 					tmpLabelElement.setAttribute('y', String(tmpBadgeY + tmpBadgeHeight / 2));

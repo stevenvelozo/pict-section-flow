@@ -60,6 +60,8 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 			--pf-port-output-fill: #2ecc71;
 			--pf-port-stroke: #ffffff;
 			--pf-port-stroke-width: 2;
+			--pf-port-label-bg: rgba(255, 253, 240, 0.5);
+			--pf-port-label-text: #2c3e50;
 
 			/* Port Type Colors */
 			--pf-port-event-in-fill: #3498db;
@@ -662,6 +664,18 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 		.pict-flow-info-panel-port-constraint {
 			color: #8e99a4;
 			font-size: 10px;
+		}
+		/* Port summary section appended below form panels */
+		.pict-flow-port-summary {
+			margin-top: 12px;
+			padding-top: 8px;
+			border-top: 1px solid #e8eaed;
+		}
+		.pict-flow-info-panel-port.event {
+			border-left: 3px solid var(--pf-port-event-in-fill);
+		}
+		.pict-flow-info-panel-port.value {
+			border-left: 3px solid var(--pf-port-value-fill);
 		}
 		`;
 	}

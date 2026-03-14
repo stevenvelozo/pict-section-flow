@@ -137,6 +137,10 @@ class PictFlowCard extends libFableServiceProviderBase
 			{
 				tmpPort.PortType = tmpInput.PortType;
 			}
+			if (tmpInput.DataType)
+			{
+				tmpPort.DataType = tmpInput.DataType;
+			}
 			tmpPorts.push(tmpPort);
 		}
 
@@ -154,6 +158,10 @@ class PictFlowCard extends libFableServiceProviderBase
 			if (tmpOutput.PortType)
 			{
 				tmpOutPort.PortType = tmpOutput.PortType;
+			}
+			if (tmpOutput.DataType)
+			{
+				tmpOutPort.DataType = tmpOutput.DataType;
 			}
 			tmpPorts.push(tmpOutPort);
 		}
