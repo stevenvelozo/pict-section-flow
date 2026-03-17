@@ -1,10 +1,10 @@
 {
     "name": "pict-section-flow",
-    "version": "0.0.10",
+    "version": "0.0.11",
     "description": "Pict Section Flow Diagram",
     "main": "source/Pict-Section-Flow.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 0",
+        "test": "npx mocha -u tdd -R spec --exit test/*_tests.js",
         "start": "node source/Pict-Section-Flow.js",
         "build": "npx quack build"
     },
@@ -13,12 +13,14 @@
     "dependencies": {
         "fable-serviceproviderbase": "^3.0.19",
         "pict-provider": "^1.0.12",
-        "pict-section-form": "^1.0.194",
+        "pict-section-form": "^1.0.195",
         "pict-view": "^1.0.67"
     },
     "devDependencies": {
-        "pict": "^1.0.357",
-        "pict-router": "^1.0.6",
-        "quackage": "^1.0.64"
+        "chai": "^6.2.2",
+        "mocha": "^11.7.5",
+        "pict": "^1.0.359",
+        "pict-router": "^1.0.9",
+        "quackage": "^1.0.65"
     }
 }

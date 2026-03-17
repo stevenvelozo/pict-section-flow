@@ -321,6 +321,30 @@ class PictProviderFlowConnectorShapes extends libFableServiceProviderBase
 	}
 
 	/**
+	 * Create a complete drag handle element with all data attributes set and
+	 * append it to the given layer.  Unifies the handle-creation logic that
+	 * was previously duplicated in ConnectionRenderer and TetherService.
+	 *
+	 * @param {SVGGElement} pLayer - The SVG group to append the handle to
+	 * @param {string} pOwnerHash - Connection hash or panel hash
+	 * @param {string} pHandleType - e.g. 'ortho-corner1', 'bezier-midpoint'
+	 * @param {number} pX
+	 * @param {number} pY
+	 * @param {string} pShapeKey - Shape config key ('connection-handle', 'tether-handle-midpoint', etc.)
+	 * @param {string} pElementType - data-element-type value ('connection-handle' or 'tether-handle')
+	 * @param {string} pOwnerAttrName - data attribute name for the owner ('data-connection-hash' or 'data-panel-hash')
+	 * @returns {SVGElement}
+	 */
+	createFullHandle(pLayer, pOwnerHash, pHandleType, pX, pY, pShapeKey, pElementType, pOwnerAttrName)
+	{
+		let tmpHandle = this.createHandleElement(pOwnerHash, pHandleType, pX, pY, pShapeKey);
+		tmpHandle.setAttribute('data-element-type', pElementType);
+		tmpHandle.setAttribute(pOwnerAttrName, pOwnerHash);
+		pLayer.appendChild(tmpHandle);
+		return tmpHandle;
+	}
+
+	/**
 	 * Create a temporary drag connection path element.
 	 * @param {string} pPath - The SVG path d-string
 	 * @returns {SVGPathElement}

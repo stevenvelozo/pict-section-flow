@@ -224,27 +224,7 @@ class PictServiceFlowTether extends libFableServiceProviderBase
 	 */
 	getAutoMidpoint(pFrom, pTo)
 	{
-		let tmpDepartDist = 20;
-		let tmpFromDir = this._FlowView._GeometryProvider.sideDirection(pFrom.side);
-		let tmpToDir = this._FlowView._GeometryProvider.sideDirection(pTo.side);
-
-		let tmpDepartX = pFrom.x + tmpFromDir.dx * tmpDepartDist;
-		let tmpDepartY = pFrom.y + tmpFromDir.dy * tmpDepartDist;
-		let tmpApproachX = pTo.x + tmpToDir.dx * tmpDepartDist;
-		let tmpApproachY = pTo.y + tmpToDir.dy * tmpDepartDist;
-
-		let tmpSpanX = Math.abs(tmpApproachX - tmpDepartX);
-		let tmpSpanY = Math.abs(tmpApproachY - tmpDepartY);
-		let tmpSpan = Math.max(tmpSpanX, tmpSpanY, 40);
-		let tmpCPDist = tmpSpan * 0.4;
-
-		let tmpP0 = { x: tmpDepartX, y: tmpDepartY };
-		let tmpP1 = { x: tmpDepartX + tmpFromDir.dx * tmpCPDist, y: tmpDepartY + tmpFromDir.dy * tmpCPDist };
-		let tmpP2 = { x: tmpApproachX + tmpToDir.dx * tmpCPDist, y: tmpApproachY + tmpToDir.dy * tmpCPDist };
-		let tmpP3 = { x: tmpApproachX, y: tmpApproachY };
-
-		// Evaluate cubic bezier at t=0.5
-		return this._FlowView._PathGenerator.evaluateCubicBezier(tmpP0, tmpP1, tmpP2, tmpP3, 0.5);
+		return this._FlowView._PathGenerator.getAutoMidpointSimple(pFrom, pTo, 20);
 	}
 
 	/**
@@ -541,30 +521,14 @@ class PictServiceFlowTether extends libFableServiceProviderBase
 	 */
 	_createHandle(pLayer, pPanelHash, pHandleType, pX, pY, pClassName)
 	{
-		let tmpShapeProvider = this._FlowView._ConnectorShapesProvider;
+		if (!this._FlowView._ConnectorShapesProvider) return;
+
 		let tmpShapeKey = (pClassName === 'pict-flow-tether-handle-midpoint')
 			? 'tether-handle-midpoint' : 'tether-handle';
 
-		if (tmpShapeProvider)
-		{
-			let tmpHandle = tmpShapeProvider.createHandleElement(
-				pPanelHash, pHandleType, pX, pY, tmpShapeKey);
-			tmpHandle.setAttribute('data-element-type', 'tether-handle');
-			tmpHandle.setAttribute('data-panel-hash', pPanelHash);
-			pLayer.appendChild(tmpHandle);
-		}
-		else
-		{
-			let tmpCircle = this._FlowView._SVGHelperProvider.createSVGElement('circle');
-			tmpCircle.setAttribute('class', pClassName);
-			tmpCircle.setAttribute('cx', String(pX));
-			tmpCircle.setAttribute('cy', String(pY));
-			tmpCircle.setAttribute('r', '6');
-			tmpCircle.setAttribute('data-element-type', 'tether-handle');
-			tmpCircle.setAttribute('data-panel-hash', pPanelHash);
-			tmpCircle.setAttribute('data-handle-type', pHandleType);
-			pLayer.appendChild(tmpCircle);
-		}
+		this._FlowView._ConnectorShapesProvider.createFullHandle(
+			pLayer, pPanelHash, pHandleType, pX, pY,
+			tmpShapeKey, 'tether-handle', 'data-panel-hash');
 	}
 }
 

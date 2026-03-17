@@ -558,10 +558,15 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 			color: #e74c3c;
 			background-color: rgba(231, 76, 60, 0.08);
 		}
-		.pict-flow-panel-body {
+		.pict-flow-panel-content {
 			flex: 1;
-			overflow: auto;
+			overflow-y: auto;
+			min-height: 0;
+			padding: 0;
+		}
+		.pict-flow-panel-tab-pane {
 			padding: 10px 12px;
+			box-sizing: border-box;
 		}
 		`;
 	}
@@ -682,51 +687,12 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 
 	// ── Node Properties Editor ────────────────────────────────────────────
 	/**
-	 * CSS for the collapsible node properties editor at the bottom of panels.
+	 * CSS for the node properties editor fields used in the Appearance tab.
 	 * @returns {string}
 	 */
 	getNodePropsEditorCSS()
 	{
 		return /*css*/`
-		.pict-flow-panel-node-props {
-			border-top: 1px solid var(--pf-panel-titlebar-border);
-			flex-shrink: 0;
-		}
-		.pict-flow-panel-node-props-header {
-			display: flex;
-			align-items: center;
-			gap: 6px;
-			padding: 6px 12px;
-			cursor: pointer;
-			user-select: none;
-			-webkit-user-select: none;
-			background: var(--pf-panel-titlebar-bg);
-			transition: background-color 0.15s;
-		}
-		.pict-flow-panel-node-props-header:hover {
-			background: #eef0f2;
-		}
-		.pict-flow-panel-node-props-chevron {
-			font-size: 8px;
-			color: #95a5a6;
-			transition: transform 0.2s;
-			display: inline-block;
-		}
-		.pict-flow-panel-node-props-chevron.expanded {
-			transform: rotate(90deg);
-		}
-		.pict-flow-panel-node-props-title {
-			font-size: 10px;
-			font-weight: 600;
-			text-transform: uppercase;
-			letter-spacing: 0.5px;
-			color: #8e99a4;
-		}
-		.pict-flow-panel-node-props-body {
-			padding: 8px 12px;
-			max-height: 240px;
-			overflow-y: auto;
-		}
 		.pict-flow-node-props-fields {
 			display: flex;
 			flex-direction: column;
@@ -762,6 +728,61 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 			padding: 1px;
 			cursor: pointer;
 			flex: 0 0 28px;
+		}
+		`;
+	}
+
+	// ── Panel Tabs & Resize ───────────────────────────────────────────────
+	/**
+	 * CSS for the tab bar, tab panes, resize handle, and help content.
+	 * @returns {string}
+	 */
+	getPanelTabsCSS()
+	{
+		return /*css*/`
+		.pict-flow-panel-resize-handle {
+			height: 4px;
+			cursor: ns-resize;
+			background: transparent;
+			flex-shrink: 0;
+			transition: background-color 0.15s;
+		}
+		.pict-flow-panel-resize-handle:hover {
+			background: #e0e3e6;
+		}
+		.pict-flow-panel-tabbar {
+			display: flex;
+			flex-shrink: 0;
+			border-top: 1px solid var(--pf-panel-titlebar-border);
+			background: var(--pf-panel-titlebar-bg);
+		}
+		.pict-flow-panel-tab {
+			flex: 1;
+			padding: 5px 8px;
+			font-size: 11px;
+			text-align: center;
+			cursor: pointer;
+			color: #8e99a4;
+			border-top: 2px solid transparent;
+			transition: color 0.15s, border-top-color 0.15s;
+			user-select: none;
+			-webkit-user-select: none;
+		}
+		.pict-flow-panel-tab:hover {
+			color: #5a6a7a;
+		}
+		.pict-flow-panel-tab.active {
+			border-top-color: var(--pf-node-selected-stroke);
+			color: var(--pf-panel-title-color);
+			font-weight: 600;
+		}
+		.pict-flow-panel-help-content {
+			font-size: 12px;
+			line-height: 1.5;
+			color: #2c3e50;
+		}
+		.pict-flow-panel-help-content p {
+			margin: 0 0 8px 0;
 		}
 		`;
 	}
@@ -1461,6 +1482,7 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 			this.getPanelCSS() +
 			this.getInfoPanelCSS() +
 			this.getNodePropsEditorCSS() +
+			this.getPanelTabsCSS() +
 			this.getBracketNodeCSS() +
 			this.getFullscreenCSS() +
 			this.getToolbarCSS() +

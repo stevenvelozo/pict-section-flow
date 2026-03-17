@@ -73,6 +73,7 @@ class PictFlowCard extends libFableServiceProviderBase
 		this.cardPreviewImage = (tmpOptions.PreviewImage) ? tmpOptions.PreviewImage : false;
 		this.cardDocumentation = (tmpOptions.Documentation) ? tmpOptions.Documentation : false;
 		this.cardTooltip = (tmpOptions.Tooltip) ? tmpOptions.Tooltip : false;
+		this.cardHelp = (tmpOptions.Help) ? tmpOptions.Help : false;
 
 		// --- Card enabled state ---
 		this.cardEnabled = (typeof tmpOptions.Enabled === 'boolean') ? tmpOptions.Enabled : true;
@@ -193,7 +194,8 @@ class PictFlowCard extends libFableServiceProviderBase
 				Documentation: this.cardDocumentation,
 				Tooltip: this.cardTooltip,
 				Enabled: this.cardEnabled,
-				Category: this.cardCategory
+				Category: this.cardCategory,
+				Help: this.cardHelp
 			}
 		};
 

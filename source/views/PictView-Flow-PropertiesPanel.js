@@ -207,17 +207,21 @@ class PictViewFlowPropertiesPanel extends libPictView
 
 		let tmpBody = tmpPanelChromeProvider.createPanelForeignObject(pPanelData, pPanelsLayer);
 
-		// Render the panel content via the panel type implementation
+		// Render the panel content into the Properties tab pane
 		if (tmpBody)
 		{
 			this._renderPanelContent(pPanelData, tmpBody);
 		}
 
-		// Render the collapsible node properties editor at the bottom of the panel
 		let tmpFO = pPanelsLayer.querySelector(`[data-panel-hash="${pPanelData.Hash}"]`);
 		if (tmpFO)
 		{
-			this._renderNodePropsEditor(pPanelData, tmpFO);
+			// Render appearance and help tabs
+			this._renderAppearanceTab(pPanelData, tmpFO);
+			this._renderHelpTab(pPanelData, tmpFO);
+
+			// Wire up tab switching
+			this._wireTabSwitching(tmpFO);
 		}
 	}
 
@@ -516,20 +520,18 @@ class PictViewFlowPropertiesPanel extends libPictView
 	}
 
 	/**
-	 * Render the collapsible node properties editor into a panel's foreignObject.
-	 * Populates the editor fields with current node values and wires up live
-	 * change handlers for immediate visual feedback.
+	 * Render the Appearance tab content with node property editor fields.
 	 *
 	 * @param {Object} pPanelData - Panel data from OpenPanels
 	 * @param {Element} pForeignObject - The panel's SVG foreignObject element
 	 */
-	_renderNodePropsEditor(pPanelData, pForeignObject)
+	_renderAppearanceTab(pPanelData, pForeignObject)
 	{
 		let tmpNodeData = this._FlowView.getNode(pPanelData.NodeHash);
 		if (!tmpNodeData) return;
 
-		let tmpPropsBody = pForeignObject.querySelector('.pict-flow-panel-node-props-body');
-		if (!tmpPropsBody) return;
+		let tmpAppearancePane = pForeignObject.querySelector('.pict-flow-panel-tab-pane[data-tab="appearance"]');
+		if (!tmpAppearancePane) return;
 
 		// Build the template record with safe defaults for Style values
 		let tmpStyle = tmpNodeData.Style || {};
@@ -560,43 +562,10 @@ class PictViewFlowPropertiesPanel extends libPictView
 			TitleBarColorValue: tmpStyle.TitleBarColor || tmpDefaultTitleBarColor
 		};
 
-		tmpPropsBody.innerHTML = this.pict.parseTemplateByHash('Flow-NodeProps-Editor', tmpRecord);
-
-		// Wire up the expand/collapse toggle with dynamic panel height adjustment
-		let tmpHeader = pForeignObject.querySelector('.pict-flow-panel-node-props-header');
-		if (tmpHeader)
-		{
-			// Store the original panel height before the section was expanded
-			let tmpOriginalHeight = parseInt(pForeignObject.getAttribute('height'), 10) || 200;
-
-			tmpHeader.addEventListener('click', (pEvent) =>
-			{
-				pEvent.stopPropagation();
-				let tmpIsExpanded = tmpPropsBody.style.display !== 'none';
-				tmpPropsBody.style.display = tmpIsExpanded ? 'none' : 'block';
-				let tmpChevron = tmpHeader.querySelector('.pict-flow-panel-node-props-chevron');
-				if (tmpChevron)
-				{
-					tmpChevron.classList.toggle('expanded', !tmpIsExpanded);
-				}
-
-				// Resize the foreignObject to accommodate the expanded/collapsed section
-				let tmpEditorHeight = tmpIsExpanded ? 0 : tmpPropsBody.scrollHeight;
-				let tmpNewHeight = tmpOriginalHeight + tmpEditorHeight;
-				pForeignObject.setAttribute('height', String(tmpNewHeight));
-
-				// Update the panel data so tethers and position tracking stay in sync
-				let tmpPanelDataEntry = this._FlowView._FlowData.OpenPanels.find(
-					(pPanel) => pPanel.Hash === pPanelData.Hash);
-				if (tmpPanelDataEntry)
-				{
-					tmpPanelDataEntry.Height = tmpNewHeight;
-				}
-			});
-		}
+		tmpAppearancePane.innerHTML = this.pict.parseTemplateByHash('Flow-NodeProps-Editor', tmpRecord);
 
 		// Wire up live change handlers on all input fields
-		let tmpInputs = tmpPropsBody.querySelectorAll('.pict-flow-node-props-input');
+		let tmpInputs = tmpAppearancePane.querySelectorAll('.pict-flow-node-props-input');
 		for (let i = 0; i < tmpInputs.length; i++)
 		{
 			let tmpInput = tmpInputs[i];
@@ -610,6 +579,82 @@ class PictViewFlowPropertiesPanel extends libPictView
 
 			// Prevent pointer events from propagating to SVG drag handler
 			tmpInput.addEventListener('pointerdown', (pEvent) => { pEvent.stopPropagation(); });
+		}
+	}
+
+	/**
+	 * Render the Help tab content if help text is defined on the node type.
+	 * Shows the Help tab button only when help content is available.
+	 *
+	 * @param {Object} pPanelData - Panel data from OpenPanels
+	 * @param {Element} pForeignObject - The panel's SVG foreignObject element
+	 */
+	_renderHelpTab(pPanelData, pForeignObject)
+	{
+		let tmpNodeData = this._FlowView.getNode(pPanelData.NodeHash);
+		if (!tmpNodeData) return;
+
+		let tmpNodeTypeConfig = this._FlowView._NodeTypeProvider.getNodeType(tmpNodeData.Type);
+		if (!tmpNodeTypeConfig) return;
+
+		let tmpHelpText = (tmpNodeTypeConfig.CardMetadata && tmpNodeTypeConfig.CardMetadata.Help)
+			? tmpNodeTypeConfig.CardMetadata.Help
+			: null;
+
+		if (!tmpHelpText) return;
+
+		// Show the Help tab button
+		let tmpHelpTabButton = pForeignObject.querySelector('.pict-flow-panel-tab[data-tab-target="help"]');
+		if (tmpHelpTabButton)
+		{
+			tmpHelpTabButton.style.display = '';
+		}
+
+		// Render help content into the help pane
+		let tmpHelpPane = pForeignObject.querySelector('.pict-flow-panel-tab-pane[data-tab="help"]');
+		if (tmpHelpPane)
+		{
+			tmpHelpPane.innerHTML = '<div class="pict-flow-panel-help-content">' + tmpHelpText + '</div>';
+		}
+	}
+
+	/**
+	 * Wire up tab switching on all tab buttons within a panel foreignObject.
+	 *
+	 * @param {Element} pForeignObject - The panel's SVG foreignObject element
+	 */
+	_wireTabSwitching(pForeignObject)
+	{
+		let tmpTabs = pForeignObject.querySelectorAll('.pict-flow-panel-tab');
+		let tmpPanes = pForeignObject.querySelectorAll('.pict-flow-panel-tab-pane');
+
+		for (let i = 0; i < tmpTabs.length; i++)
+		{
+			tmpTabs[i].addEventListener('click', (pEvent) =>
+			{
+				pEvent.stopPropagation();
+				let tmpTarget = pEvent.currentTarget.getAttribute('data-tab-target');
+
+				// Deactivate all tabs and panes
+				for (let j = 0; j < tmpTabs.length; j++)
+				{
+					tmpTabs[j].classList.remove('active');
+				}
+				for (let j = 0; j < tmpPanes.length; j++)
+				{
+					tmpPanes[j].classList.remove('active');
+					tmpPanes[j].style.display = 'none';
+				}
+
+				// Activate the selected tab and pane
+				pEvent.currentTarget.classList.add('active');
+				let tmpTargetPane = pForeignObject.querySelector('.pict-flow-panel-tab-pane[data-tab="' + tmpTarget + '"]');
+				if (tmpTargetPane)
+				{
+					tmpTargetPane.classList.add('active');
+					tmpTargetPane.style.display = 'block';
+				}
+			});
 		}
 	}
 

@@ -65,26 +65,28 @@ class PictProviderFlowPanelChrome extends libFableServiceProviderBase
 			tmpCloseIcon.textContent = '\u2715';
 		}
 
-		// Attach event isolation to the panel body so pointer/wheel events
-		// inside the panel content do not trigger SVG interactions
-		let tmpBody = tmpFO.querySelector('.pict-flow-panel-body');
-		if (tmpBody)
+		// Attach event isolation to the scrollable content area so
+		// pointer/wheel events inside the panel do not trigger SVG interactions
+		let tmpContent = tmpFO.querySelector('.pict-flow-panel-content');
+		if (tmpContent)
 		{
-			tmpBody.addEventListener('pointerdown', (pEvent) => { pEvent.stopPropagation(); });
-			tmpBody.addEventListener('wheel', (pEvent) => { pEvent.stopPropagation(); });
+			tmpContent.addEventListener('pointerdown', (pEvent) => { pEvent.stopPropagation(); });
+			tmpContent.addEventListener('wheel', (pEvent) => { pEvent.stopPropagation(); });
 		}
 
-		// Isolate events on the collapsible node properties editor section
-		let tmpNodeProps = tmpFO.querySelector('.pict-flow-panel-node-props');
-		if (tmpNodeProps)
+		// Isolate events on the tab bar
+		let tmpTabbar = tmpFO.querySelector('.pict-flow-panel-tabbar');
+		if (tmpTabbar)
 		{
-			tmpNodeProps.addEventListener('pointerdown', (pEvent) => { pEvent.stopPropagation(); });
-			tmpNodeProps.addEventListener('wheel', (pEvent) => { pEvent.stopPropagation(); });
+			tmpTabbar.addEventListener('pointerdown', (pEvent) => { pEvent.stopPropagation(); });
+			tmpTabbar.addEventListener('wheel', (pEvent) => { pEvent.stopPropagation(); });
 		}
 
 		pPanelsLayer.appendChild(tmpFO);
 
-		return tmpBody;
+		// Return the properties tab pane as the body container for content rendering
+		let tmpPropertiesPane = tmpFO.querySelector('.pict-flow-panel-tab-pane[data-tab="properties"]');
+		return tmpPropertiesPane;
 	}
 }
 

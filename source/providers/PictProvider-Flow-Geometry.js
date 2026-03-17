@@ -114,9 +114,12 @@ class PictProviderFlowGeometry extends libFableServiceProviderBase
 	 * Calculate a port's local position relative to node origin.
 	 *
 	 * Supports 12 positions (3 zones per edge).  For left/right edges,
-	 * the body area below the title bar is divided into three vertical zones
-	 * (start/middle/end).  For top/bottom edges, the full width is divided
-	 * into three horizontal zones.
+	 * the body area below the title bar is divided into vertical zones.
+	 * For top/bottom edges, the full width is divided into horizontal zones.
+	 *
+	 * When pPortCountsBySide is provided, zone fractions are computed
+	 * proportionally based on actual port counts (adaptive zones).
+	 * Otherwise, fixed 1/3 zones are used for backward compatibility.
 	 *
 	 * Multiple ports sharing the same Side value distribute evenly within
 	 * their zone.
@@ -127,12 +130,21 @@ class PictProviderFlowGeometry extends libFableServiceProviderBase
 	 * @param {number} pWidth - Node width
 	 * @param {number} pHeight - Node height
 	 * @param {number} pTitleBarHeight - Height of the node title bar
+	 * @param {Object} [pPortCountsBySide] - Optional map of Side → port count
+	 *        for all ports on the node.  Enables adaptive zone sizing.
 	 * @returns {{x: number, y: number}}
 	 */
-	getPortLocalPosition(pSide, pIndex, pTotal, pWidth, pHeight, pTitleBarHeight)
+	getPortLocalPosition(pSide, pIndex, pTotal, pWidth, pHeight, pTitleBarHeight, pPortCountsBySide)
 	{
 		let tmpEdge = this.getEdgeFromSide(pSide);
-		let tmpZone = this._getZoneFromSide(pSide);
+		let tmpZone = pPortCountsBySide
+			? this._computeAdaptiveZone(pSide, pPortCountsBySide)
+			: this._getZoneFromSide(pSide);
+
+		// Use the fixed zone to decide alignment intent (start/center/end)
+		// because adaptive zones shift boundaries when neighbouring zones
+		// are empty, which would break alignment decisions.
+		let tmpFixedZone = this._getZoneFromSide(pSide);
 
 		// Minimum spacing between port centers (px)
 		let tmpMinSpacing = 16;
@@ -142,18 +154,49 @@ class PictProviderFlowGeometry extends libFableServiceProviderBase
 		// and always leave a visible gap above the node bottom edge.
 		let tmpBottomPad = 16;
 
+		// Determine alignment from the fixed zone position:
+		//   start zone  (0.000 – 0.333) → start-align (offset 0)
+		//   middle zone (0.333 – 0.667) → center
+		//   end zone    (0.667 – 1.000) → end-align
+		let tmpAlignment = 'start';
+		if (tmpFixedZone.start >= 0.5)
+		{
+			tmpAlignment = 'end';
+		}
+		else if (tmpFixedZone.start >= 0.17)
+		{
+			tmpAlignment = 'center';
+		}
+
 		if (tmpEdge === 'left' || tmpEdge === 'right')
 		{
 			let tmpX = (tmpEdge === 'left') ? 0 : pWidth;
 			let tmpBodyHeight = pHeight - pTitleBarHeight - tmpBottomPad;
 			let tmpZoneStart = pTitleBarHeight + tmpBodyHeight * tmpZone.start;
 			let tmpZoneHeight = tmpBodyHeight * (tmpZone.end - tmpZone.start);
-			let tmpSpacing = tmpZoneHeight / (pTotal + 1);
-			if (tmpSpacing < tmpMinSpacing)
+
+			// Use fixed spacing so port gaps stay consistent across cards
+			// even when one edge drives the card height beyond what the
+			// other needs.
+			let tmpSpacing = tmpMinSpacing;
+			let tmpGroupHeight = tmpSpacing * (pTotal + 1);
+			let tmpSlack = tmpZoneHeight - tmpGroupHeight;
+			if (tmpSlack < 0)
 			{
-				tmpSpacing = tmpMinSpacing;
+				tmpSlack = 0;
 			}
-			let tmpY = tmpZoneStart + tmpSpacing * (pIndex + 1);
+
+			let tmpAlignOffset = 0;
+			if (tmpAlignment === 'end')
+			{
+				tmpAlignOffset = tmpSlack;
+			}
+			else if (tmpAlignment === 'center')
+			{
+				tmpAlignOffset = tmpSlack / 2;
+			}
+
+			let tmpY = tmpZoneStart + tmpAlignOffset + tmpSpacing * (pIndex + 1);
 			return { x: tmpX, y: tmpY };
 		}
 
@@ -161,12 +204,26 @@ class PictProviderFlowGeometry extends libFableServiceProviderBase
 		let tmpY = (tmpEdge === 'top') ? 0 : pHeight;
 		let tmpZoneStart = pWidth * tmpZone.start;
 		let tmpZoneWidth = pWidth * (tmpZone.end - tmpZone.start);
-		let tmpSpacing = tmpZoneWidth / (pTotal + 1);
-		if (tmpSpacing < tmpMinSpacing)
+
+		let tmpSpacing = tmpMinSpacing;
+		let tmpGroupWidth = tmpSpacing * (pTotal + 1);
+		let tmpSlack = tmpZoneWidth - tmpGroupWidth;
+		if (tmpSlack < 0)
 		{
-			tmpSpacing = tmpMinSpacing;
+			tmpSlack = 0;
 		}
-		let tmpX = tmpZoneStart + tmpSpacing * (pIndex + 1);
+
+		let tmpAlignOffset = 0;
+		if (tmpAlignment === 'end')
+		{
+			tmpAlignOffset = tmpSlack;
+		}
+		else if (tmpAlignment === 'center')
+		{
+			tmpAlignOffset = tmpSlack / 2;
+		}
+
+		let tmpX = tmpZoneStart + tmpAlignOffset + tmpSpacing * (pIndex + 1);
 		return { x: tmpX, y: tmpY };
 	}
 
@@ -177,6 +234,8 @@ class PictProviderFlowGeometry extends libFableServiceProviderBase
 	 *   start:  0.0 — 0.333
 	 *   middle: 0.333 — 0.667
 	 *   end:    0.667 — 1.0
+	 *
+	 * Used as fallback when adaptive zones are not available.
 	 *
 	 * @param {string} pSide
 	 * @returns {{start: number, end: number}}
@@ -209,13 +268,116 @@ class PictProviderFlowGeometry extends libFableServiceProviderBase
 			default:             return { start: 0.0,   end: 1.0 };
 		}
 	}
+
+	/**
+	 * Get the three zone Side keys for a given edge, in order.
+	 *
+	 * @param {string} pEdge - 'left', 'right', 'top', or 'bottom'
+	 * @returns {Array<string>} Three Side keys in start-to-end order
+	 */
+	_getZoneKeysForEdge(pEdge)
+	{
+		switch (pEdge)
+		{
+			case 'left':   return ['left-top', 'left', 'left-bottom'];
+			case 'right':  return ['right-top', 'right', 'right-bottom'];
+			case 'top':    return ['top-left', 'top', 'top-right'];
+			case 'bottom': return ['bottom-left', 'bottom', 'bottom-right'];
+			default:       return ['right-top', 'right', 'right-bottom'];
+		}
+	}
+
+	/**
+	 * Compute an adaptive zone fraction for a Side value based on the
+	 * actual port distribution across all zones on the same edge.
+	 *
+	 * Instead of fixed 1/3 splits, zones are sized proportionally to the
+	 * space each zone needs (minSpacing * (portCount + 1)).  Zones with
+	 * zero ports collapse to zero, giving occupied zones more room.
+	 *
+	 * @param {string} pSide - The Side value to compute a zone for
+	 * @param {Object} pPortCountsBySide - Map of Side → number of ports
+	 * @returns {{start: number, end: number}}
+	 */
+	_computeAdaptiveZone(pSide, pPortCountsBySide)
+	{
+		let tmpEdge = this.getEdgeFromSide(pSide);
+		let tmpZoneKeys = this._getZoneKeysForEdge(tmpEdge);
+
+		let tmpMinSpacing = 16;
+
+		// Compute the space each zone needs: minSpacing * (count + 1)
+		// The +1 provides padding at both ends of the zone.
+		let tmpTotalSpace = 0;
+		let tmpSpaceByZone = {};
+		for (let i = 0; i < tmpZoneKeys.length; i++)
+		{
+			let tmpKey = tmpZoneKeys[i];
+			let tmpCount = pPortCountsBySide[tmpKey] || 0;
+			let tmpSpace = (tmpCount > 0) ? (tmpMinSpacing * (tmpCount + 1)) : 0;
+			tmpSpaceByZone[tmpKey] = tmpSpace;
+			tmpTotalSpace += tmpSpace;
+		}
+
+		// If no ports on this edge at all, fall back to fixed zones
+		if (tmpTotalSpace === 0)
+		{
+			return this._getZoneFromSide(pSide);
+		}
+
+		// Compute proportional start/end for the requested zone
+		let tmpCumulativeStart = 0;
+		for (let i = 0; i < tmpZoneKeys.length; i++)
+		{
+			let tmpKey = tmpZoneKeys[i];
+			let tmpFraction = tmpSpaceByZone[tmpKey] / tmpTotalSpace;
+			if (tmpKey === pSide)
+			{
+				return { start: tmpCumulativeStart, end: tmpCumulativeStart + tmpFraction };
+			}
+			tmpCumulativeStart += tmpFraction;
+		}
+
+		// Should not reach here; fall back to fixed zones
+		return this._getZoneFromSide(pSide);
+	}
+
+	/**
+	 * Build a map of Side → port count from an array of port objects.
+	 *
+	 * Convenience method for callers that need to pass port counts
+	 * to getPortLocalPosition or computeMinimumNodeHeight.
+	 *
+	 * @param {Array} pPorts - Array of port objects with Side, Direction
+	 * @returns {Object} Map of Side value → count
+	 */
+	buildPortCountsBySide(pPorts)
+	{
+		let tmpCounts = {};
+		if (!pPorts || !Array.isArray(pPorts))
+		{
+			return tmpCounts;
+		}
+		for (let i = 0; i < pPorts.length; i++)
+		{
+			let tmpSide = pPorts[i].Side || (pPorts[i].Direction === 'input' ? 'left' : 'right');
+			if (!tmpCounts[tmpSide])
+			{
+				tmpCounts[tmpSide] = 0;
+			}
+			tmpCounts[tmpSide]++;
+		}
+		return tmpCounts;
+	}
+
 	/**
 	 * Compute the minimum node height required so that all ports
 	 * (with their badges) fit within the node boundary.
 	 *
-	 * Uses the same zone system and minimum spacing as getPortLocalPosition.
-	 * For each left/right zone, calculates where the last port would land
-	 * and ensures the node is tall enough to contain it plus badge clearance.
+	 * Uses adaptive zone sizing: instead of assuming each zone gets
+	 * a fixed 1/3 of the body, sums the space needed by all occupied
+	 * zones on each left/right edge.  This produces compact cards
+	 * whose height scales linearly with total port count.
 	 *
 	 * @param {Array} pPorts - Array of port objects with Side, Direction
 	 * @param {number} pTitleBarHeight - Height of the title bar
@@ -229,26 +391,16 @@ class PictProviderFlowGeometry extends libFableServiceProviderBase
 		}
 
 		let tmpMinSpacing = 16;
-		let tmpBadgeHalfHeight = 6;
 		let tmpBottomPad = 16;
 
 		// Count ports per Side value
-		let tmpCountBySide = {};
-		for (let i = 0; i < pPorts.length; i++)
-		{
-			let tmpSide = pPorts[i].Side || (pPorts[i].Direction === 'input' ? 'left' : 'right');
-			if (!tmpCountBySide[tmpSide])
-			{
-				tmpCountBySide[tmpSide] = 0;
-			}
-			tmpCountBySide[tmpSide]++;
-		}
+		let tmpCountBySide = this.buildPortCountsBySide(pPorts);
 
-		let tmpMinHeight = 0;
-
+		// Sum the space needed per edge (left, right) across all zones.
+		// Each zone needs minSpacing * (count + 1) pixels.
+		let tmpSpacePerEdge = {};
 		for (let tmpSide in tmpCountBySide)
 		{
-			let tmpCount = tmpCountBySide[tmpSide];
 			let tmpEdge = this.getEdgeFromSide(tmpSide);
 
 			// Only left/right edge zones affect required height
@@ -257,16 +409,21 @@ class PictProviderFlowGeometry extends libFableServiceProviderBase
 				continue;
 			}
 
-			let tmpZone = this._getZoneFromSide(tmpSide);
+			let tmpCount = tmpCountBySide[tmpSide];
+			let tmpZoneSpace = tmpMinSpacing * (tmpCount + 1);
 
-			// With bottomPad reserving space at the bottom:
-			//   bodyHeight = H - titleBar - bottomPad
-			//   lastPortY = titleBar + bodyHeight * zone.start + minSpacing * count
-			//   Need: lastPortY + badgeHalfHeight <= H - bottomPad
-			// Solving for H:
-			//   H >= titleBar + bottomPad + (minSpacing * count + badgeHalfHeight) / (1 - zone.start)
-			let tmpRequired = pTitleBarHeight + tmpBottomPad + (tmpMinSpacing * tmpCount + tmpBadgeHalfHeight) / (tmpZone.end - tmpZone.start);
+			if (!tmpSpacePerEdge[tmpEdge])
+			{
+				tmpSpacePerEdge[tmpEdge] = 0;
+			}
+			tmpSpacePerEdge[tmpEdge] += tmpZoneSpace;
+		}
 
+		// The minimum height is titleBar + bottomPad + max edge space
+		let tmpMinHeight = 0;
+		for (let tmpEdge in tmpSpacePerEdge)
+		{
+			let tmpRequired = pTitleBarHeight + tmpBottomPad + tmpSpacePerEdge[tmpEdge];
 			if (tmpRequired > tmpMinHeight)
 			{
 				tmpMinHeight = tmpRequired;

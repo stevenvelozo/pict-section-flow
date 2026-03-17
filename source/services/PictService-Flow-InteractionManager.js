@@ -10,7 +10,8 @@ const INTERACTION_STATES =
 	DRAGGING_PANEL: 'dragging-panel',
 	DRAGGING_HANDLE: 'dragging-handle',
 	CONNECTING: 'connecting',
-	PANNING: 'panning'
+	PANNING: 'panning',
+	RESIZING_PANEL: 'resizing-panel'
 };
 
 class PictServiceFlowInteractionManager extends libFableServiceProviderBase
@@ -65,6 +66,15 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		this._LastClickNodeHash = null;
 		this._DoubleClickThreshold = 400;
 
+		// Panel resize state
+		this._ResizePanelHash = null;
+		this._ResizeStartY = 0;
+		this._ResizePanelStartHeight = 0;
+
+		// Double-click detection for connections
+		this._LastConnectionClickTime = 0;
+		this._LastConnectionClickHash = null;
+
 		// Double-click detection for handles
 		this._LastHandleClickTime = 0;
 		this._LastHandleClickHash = null;
@@ -100,10 +110,25 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		// Keyboard events for delete
 		document.addEventListener('keydown', this._boundOnKeyDown);
 
-		// Prevent context menu on right-click
+		// Handle right-click: add/remove bezier handles on connections
 		this._SVGElement.addEventListener('contextmenu', (pEvent) =>
 		{
 			pEvent.preventDefault();
+
+			let tmpTarget = pEvent.target;
+			let tmpElementType = this._getElementType(tmpTarget);
+
+			switch (tmpElementType)
+			{
+				case 'connection':
+				case 'connection-hitarea':
+					this._addBezierHandle(tmpTarget, pEvent);
+					break;
+
+				case 'connection-handle':
+					this._removeBezierHandle(tmpTarget);
+					break;
+			}
 		});
 	}
 
@@ -135,14 +160,18 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		let tmpTarget = pEvent.target;
 		let tmpElementType = this._getElementType(tmpTarget);
 
-		// Check if click is inside a panel body — let HTML handle its own events
-		if (tmpTarget.closest && tmpTarget.closest('.pict-flow-panel-body'))
+		// Check if click is inside a panel content area — let HTML handle its own events
+		if (tmpTarget.closest && tmpTarget.closest('.pict-flow-panel-content'))
 		{
 			return;
 		}
 
-		// Capture pointer for smooth dragging
-		this._SVGElement.setPointerCapture(pEvent.pointerId);
+		// Capture pointer for smooth dragging (left-click only — right-click
+		// needs the real target for contextmenu handle add/remove)
+		if (pEvent.button === 0)
+		{
+			this._SVGElement.setPointerCapture(pEvent.pointerId);
+		}
 
 		switch (tmpElementType)
 		{
@@ -178,6 +207,10 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 
 			case 'panel-titlebar':
 				this._startPanelDrag(pEvent, tmpTarget);
+				break;
+
+			case 'panel-resize':
+				this._startPanelResize(pEvent, tmpTarget);
 				break;
 
 			case 'panel-close':
@@ -251,8 +284,26 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 
 			case 'connection':
 			case 'connection-hitarea':
-				this._selectConnection(tmpTarget);
+			{
+				let tmpConnectionHash = this._getConnectionHash(tmpTarget);
+				let tmpNow = Date.now();
+
+				// Check for double-click on same connection to add a handle
+				if (tmpConnectionHash && tmpConnectionHash === this._LastConnectionClickHash
+					&& (tmpNow - this._LastConnectionClickTime) < this._DoubleClickThreshold)
+				{
+					this._LastConnectionClickTime = 0;
+					this._LastConnectionClickHash = null;
+					this._addBezierHandle(tmpTarget, pEvent);
+				}
+				else
+				{
+					this._LastConnectionClickTime = tmpNow;
+					this._LastConnectionClickHash = tmpConnectionHash;
+					this._selectConnection(tmpTarget);
+				}
 				break;
+			}
 
 			default:
 				// Click on background - start panning or deselect
@@ -290,6 +341,10 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 				this._onConnectionDrag(pEvent);
 				break;
 
+			case INTERACTION_STATES.RESIZING_PANEL:
+				this._onPanelResize(pEvent);
+				break;
+
 			case INTERACTION_STATES.PANNING:
 				this._onPan(pEvent);
 				break;
@@ -322,6 +377,10 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 
 			case INTERACTION_STATES.DRAGGING_HANDLE:
 				this._endHandleDrag(pEvent);
+				break;
+
+			case INTERACTION_STATES.RESIZING_PANEL:
+				this._endPanelResize(pEvent);
 				break;
 
 			case INTERACTION_STATES.CONNECTING:
@@ -527,6 +586,67 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		this._DragPanelHash = null;
 	}
 
+	// ---- Panel Resizing ----
+
+	_startPanelResize(pEvent, pTarget)
+	{
+		let tmpPanelHash = this._getPanelHash(pTarget);
+		if (!tmpPanelHash) return;
+
+		let tmpPanel = this._FlowView._FlowData.OpenPanels.find((pPanel) => pPanel.Hash === tmpPanelHash);
+		if (!tmpPanel) return;
+
+		this._State = INTERACTION_STATES.RESIZING_PANEL;
+		this._ResizePanelHash = tmpPanelHash;
+		this._ResizeStartY = pEvent.clientY;
+		this._ResizePanelStartHeight = tmpPanel.Height;
+
+		this._SVGElement.classList.add('panning');
+	}
+
+	_onPanelResize(pEvent)
+	{
+		if (!this._ResizePanelHash) return;
+
+		let tmpVS = this._FlowView.viewState;
+		let tmpDY = (pEvent.clientY - this._ResizeStartY) / tmpVS.Zoom;
+		let tmpNewHeight = Math.max(120, this._ResizePanelStartHeight + tmpDY);
+
+		// Update the panel data
+		let tmpPanel = this._FlowView._FlowData.OpenPanels.find((pPanel) => pPanel.Hash === this._ResizePanelHash);
+		if (tmpPanel)
+		{
+			tmpPanel.Height = tmpNewHeight;
+		}
+
+		// Update the foreignObject height directly for smooth resizing
+		if (this._FlowView._PanelsLayer)
+		{
+			let tmpFO = this._FlowView._PanelsLayer.querySelector('[data-panel-hash="' + this._ResizePanelHash + '"]');
+			if (tmpFO)
+			{
+				tmpFO.setAttribute('height', String(tmpNewHeight));
+			}
+		}
+	}
+
+	_endPanelResize(pEvent)
+	{
+		this._SVGElement.classList.remove('panning');
+
+		// Re-render to sync tethers
+		this._FlowView.renderFlow();
+		this._FlowView.marshalFromView();
+
+		if (this._FlowView._EventHandlerProvider)
+		{
+			this._FlowView._EventHandlerProvider.fireEvent('onFlowChanged', this._FlowView.flowData);
+		}
+
+		this._State = INTERACTION_STATES.IDLE;
+		this._ResizePanelHash = null;
+	}
+
 	// ---- Handle Dragging ----
 
 	_startHandleDrag(pEvent, pConnectionHash, pPanelHash, pHandleType, pIsTether)
@@ -601,6 +721,43 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		this._DragHandleIsTether = false;
 	}
 
+	// ---- Right-Click Handle Add/Remove ----
+
+	/**
+	 * Add a bezier handle to a connection at the right-click position.
+	 * @param {Element} pTarget - The SVG element that was right-clicked
+	 * @param {MouseEvent} pEvent - The contextmenu event
+	 */
+	_addBezierHandle(pTarget, pEvent)
+	{
+		let tmpConnectionHash = this._getConnectionHash(pTarget);
+		if (!tmpConnectionHash) return;
+
+		// Select the connection so handle circles are rendered after the re-render
+		this._FlowView.selectConnection(tmpConnectionHash);
+
+		let tmpCoords = this._FlowView.screenToSVGCoords(pEvent.clientX, pEvent.clientY);
+		this._FlowView.addConnectionHandle(tmpConnectionHash, tmpCoords.x, tmpCoords.y);
+	}
+
+	/**
+	 * Remove a bezier handle from a connection.
+	 * @param {Element} pTarget - The handle SVG element that was right-clicked
+	 */
+	_removeBezierHandle(pTarget)
+	{
+		let tmpConnectionHash = this._getConnectionHash(pTarget);
+		if (!tmpConnectionHash) return;
+
+		let tmpHandleType = pTarget.getAttribute('data-handle-type');
+		if (!tmpHandleType || !tmpHandleType.startsWith('bezier-handle-')) return;
+
+		let tmpIndex = parseInt(tmpHandleType.replace('bezier-handle-', ''), 10);
+		if (isNaN(tmpIndex)) return;
+
+		this._FlowView.removeConnectionHandle(tmpConnectionHash, tmpIndex);
+	}
+
 	// ---- Line Mode Toggling ----
 
 	_toggleConnectionLineMode(pConnectionHash)
@@ -615,6 +772,7 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 
 		// Reset handle positions when switching modes
 		tmpConnection.Data.HandleCustomized = false;
+		tmpConnection.Data.BezierHandles = [];
 		tmpConnection.Data.BezierHandleX = null;
 		tmpConnection.Data.BezierHandleY = null;
 		tmpConnection.Data.OrthoCorner1X = null;
