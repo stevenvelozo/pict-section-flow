@@ -77,6 +77,25 @@ class IfThenElseCard extends libPictFlowCard
 }
 ```
 
+### Card Help from Markdown
+
+Store help documentation as markdown files in `docs/card-help/` named by card code (e.g. `ITE.md`, `SET.md`). The build script converts them to HTML and generates a JavaScript module:
+
+```bash
+npm run generate-help
+```
+
+Reference the generated content in your card constructor:
+
+```javascript
+const libCardHelp = require('./card-help-content');
+
+// In the constructor options object:
+Help: libCardHelp['ITE'] || false,
+```
+
+The `|| false` fallback ensures the build never fails if a markdown file is missing.
+
 ## Configuration Options
 
 | Option | Type | Default | Description |

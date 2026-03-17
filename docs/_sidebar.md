@@ -1,13 +1,18 @@
 - Getting Started
 
-  - [Introduction](/)
-  - [Getting Started](Getting_Started.md)
-  - [Architecture](Architecture.md)
+  - [Overview](/)
+  - [Quick Start](Getting_Started.md)
+  - [Custom Styling](Custom-Styling.md)
+
+- Architecture
+
+  - [Design Overview](Architecture.md)
+  - [Data Model](Data_Model.md)
+  - [Event System](Event_System.md)
 
 - Reference
 
   - [Implementation Reference](Implementation_Reference.md)
-  - [Custom Styling](Custom-Styling.md)
   - [Layout Persistence](Layout_Persistence.md)
 
 - API — Data Management

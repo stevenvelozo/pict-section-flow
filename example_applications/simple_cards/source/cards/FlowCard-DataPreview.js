@@ -1,4 +1,5 @@
 const libPictFlowCard = require('pict-section-flow').PictFlowCard;
+const libCardHelp = require('../card-help-content');
 
 class FlowCardDataPreview extends libPictFlowCard
 {
@@ -8,6 +9,7 @@ class FlowCardDataPreview extends libPictFlowCard
 			{},
 			{
 				Title: 'Data Preview',
+				Help: libCardHelp['PREV'] || false,
 				Name: 'Inspect Data',
 				Code: 'PREV',
 				Description: 'Displays a preview of the data flowing through this node.',

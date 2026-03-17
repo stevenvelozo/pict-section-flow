@@ -6,7 +6,9 @@
     "scripts": {
         "test": "npx mocha -u tdd -R spec --exit test/*_tests.js",
         "start": "node source/Pict-Section-Flow.js",
-        "build": "npx quack build"
+        "generate-help": "node scripts/generate-card-help.js",
+        "build": "node scripts/generate-card-help.js && npx quack build && cd example_applications/simple_cards && npx quack build && npx quack copy",
+        "docs": "npx quack prepare-docs ./docs"
     },
     "author": "steven velozo <steven@velozo.com>",
     "license": "MIT",

@@ -1,4 +1,5 @@
 const libPictFlowCard = require('pict-section-flow').PictFlowCard;
+const libCardHelp = require('../card-help-content');
 
 class FlowCardLogValues extends libPictFlowCard
 {
@@ -8,6 +9,7 @@ class FlowCardLogValues extends libPictFlowCard
 			{},
 			{
 				Title: 'Log Values',
+				Help: libCardHelp['LOG'] || false,
 				Name: 'Log to Console',
 				Code: 'LOG',
 				Description: 'Logs input values to the console or log output.',

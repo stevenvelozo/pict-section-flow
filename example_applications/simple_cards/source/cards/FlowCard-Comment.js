@@ -1,4 +1,5 @@
 const libPictFlowCard = require('pict-section-flow').PictFlowCard;
+const libCardHelp = require('../card-help-content');
 
 class FlowCardComment extends libPictFlowCard
 {
@@ -8,6 +9,7 @@ class FlowCardComment extends libPictFlowCard
 			{},
 			{
 				Title: 'Comment',
+				Help: libCardHelp['NOTE'] || false,
 				Name: 'Annotation',
 				Code: 'NOTE',
 				Description: 'A floating annotation or comment node for documenting flow logic.',

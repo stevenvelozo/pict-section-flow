@@ -1,4 +1,5 @@
 const libPictFlowCard = require('pict-section-flow').PictFlowCard;
+const libCardHelp = require('../card-help-content');
 
 class FlowCardIfThenElse extends libPictFlowCard
 {
@@ -11,7 +12,7 @@ class FlowCardIfThenElse extends libPictFlowCard
 				Name: 'Conditional Branch',
 				Code: 'ITE',
 				Description: 'Evaluates a condition and routes to the Then or Else branch.',
-				Help: 'The <b>If-Then-Else</b> node evaluates a boolean condition expression and routes the flow to one of two outputs.<br><br><b>Inputs:</b> A single trigger input that starts the evaluation.<br><br><b>Outputs:</b><ul><li><b>Then</b> &mdash; activated when the condition is true</li><li><b>Else</b> &mdash; activated when the condition is false</li></ul><br>Set the condition expression in the node&apos;s data properties.',
+				Help: libCardHelp['ITE'] || false,
 				Icon: 'ITE',
 				Tooltip: 'If-Then-Else: Routes flow based on a boolean condition',
 				Category: 'Control Flow',

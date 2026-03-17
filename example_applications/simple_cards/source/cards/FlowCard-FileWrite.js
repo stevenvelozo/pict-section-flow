@@ -1,4 +1,5 @@
 const libPictFlowCard = require('pict-section-flow').PictFlowCard;
+const libCardHelp = require('../card-help-content');
 
 class FlowCardFileWrite extends libPictFlowCard
 {
@@ -8,6 +9,7 @@ class FlowCardFileWrite extends libPictFlowCard
 			{},
 			{
 				Title: 'File Write',
+				Help: libCardHelp['FWRITE'] || false,
 				Name: 'Write File',
 				Code: 'FWRITE',
 				Description: 'Writes data to a file on the filesystem.',

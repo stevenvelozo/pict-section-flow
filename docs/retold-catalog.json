@@ -1,5 +1,5 @@
 {
-	"Generated": "2026-03-17T21:45:13.261Z",
+	"Generated": "2026-03-17T22:19:31.420Z",
 	"GitHubOrg": "stevenvelozo",
 	"DefaultBranch": "master",
 	"Groups": [
@@ -52,6 +52,29 @@
 						"api/setTheme.md",
 						"api/setZoom.md",
 						"api/toggleFullscreen.md"
+					]
+				},
+				{
+					"Name": "card-help",
+					"Repo": "card-help",
+					"Group": "docs",
+					"Branch": "master",
+					"HasDocs": true,
+					"HasCover": false,
+					"Sidebar": [],
+					"DocFiles": [
+						"card-help/EACH.md",
+						"card-help/FREAD.md",
+						"card-help/FWRITE.md",
+						"card-help/GET.md",
+						"card-help/ITE.md",
+						"card-help/LOG.md",
+						"card-help/NOTE.md",
+						"card-help/PREV.md",
+						"card-help/SET.md",
+						"card-help/SPKL.md",
+						"card-help/STAT.md",
+						"card-help/SW.md"
 					]
 				},
 				{

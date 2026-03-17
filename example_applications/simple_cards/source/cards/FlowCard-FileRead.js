@@ -1,4 +1,5 @@
 const libPictFlowCard = require('pict-section-flow').PictFlowCard;
+const libCardHelp = require('../card-help-content');
 
 class FlowCardFileRead extends libPictFlowCard
 {
@@ -8,6 +9,7 @@ class FlowCardFileRead extends libPictFlowCard
 			{},
 			{
 				Title: 'File Read',
+				Help: libCardHelp['FREAD'] || false,
 				Name: 'Read File',
 				Code: 'FREAD',
 				Description: 'Reads the contents of a file from the filesystem.',

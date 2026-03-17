@@ -1,4 +1,5 @@
 const libPictFlowCard = require('pict-section-flow').PictFlowCard;
+const libCardHelp = require('../card-help-content');
 
 class FlowCardEach extends libPictFlowCard
 {
@@ -8,6 +9,7 @@ class FlowCardEach extends libPictFlowCard
 			{},
 			{
 				Title: 'Each',
+				Help: libCardHelp['EACH'] || false,
 				Name: 'Loop Iterator',
 				Code: 'EACH',
 				Description: 'Iterates over a collection, executing the body for each item.',

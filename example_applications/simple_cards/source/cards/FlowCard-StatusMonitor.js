@@ -1,4 +1,5 @@
 const libPictFlowCard = require('pict-section-flow').PictFlowCard;
+const libCardHelp = require('../card-help-content');
 
 class FlowCardStatusMonitor extends libPictFlowCard
 {
@@ -8,6 +9,7 @@ class FlowCardStatusMonitor extends libPictFlowCard
 			{},
 			{
 				Title: 'Status Monitor',
+				Help: libCardHelp['STAT'] || false,
 				Name: 'Health Check',
 				Code: 'STAT',
 				Description: 'Monitors the health status of upstream services and reports availability.',

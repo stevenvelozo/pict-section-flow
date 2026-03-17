@@ -1,4 +1,5 @@
 const libPictFlowCard = require('pict-section-flow').PictFlowCard;
+const libCardHelp = require('../card-help-content');
 
 class FlowCardSetValue extends libPictFlowCard
 {
@@ -11,7 +12,7 @@ class FlowCardSetValue extends libPictFlowCard
 				Name: 'Assign Value',
 				Code: 'SET',
 				Description: 'Sets a named value in the flow context.',
-				Help: 'The <b>Set Value</b> node assigns a value to a named variable in the flow context.<br><br><b>Variable Name:</b> The key under which the value will be stored.<br><b>Value Expression:</b> The expression to evaluate and assign.<br><br>Downstream nodes can read this value using a <b>Get Value</b> node with the same variable name.',
+				Help: libCardHelp['SET'] || false,
 				Icon: 'SET',
 				Tooltip: 'Set Value: Assign a value in the context',
 				Category: 'Data',

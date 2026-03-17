@@ -1,4 +1,5 @@
 const libPictFlowCard = require('pict-section-flow').PictFlowCard;
+const libCardHelp = require('../card-help-content');
 
 class FlowCardSparkline extends libPictFlowCard
 {
@@ -8,6 +9,7 @@ class FlowCardSparkline extends libPictFlowCard
 			{},
 			{
 				Title: 'Sparkline',
+				Help: libCardHelp['SPKL'] || false,
 				Name: 'Metric Chart',
 				Code: 'SPKL',
 				Description: 'Renders a live sparkline visualization of numeric throughput data.',

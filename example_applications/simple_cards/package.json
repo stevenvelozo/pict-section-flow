@@ -5,6 +5,7 @@
 	"main": "source/Pict-Application-FlowExample.js",
 	"scripts": {
 		"start": "node source/Pict-Application-FlowExample.js",
+		"prebuild": "node ../../scripts/generate-card-help.js",
 		"build": "npx quack build && npx quack copy",
 		"test": "echo \"Error: no test specified\" && exit 0"
 	},

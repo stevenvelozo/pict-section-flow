@@ -1,4 +1,5 @@
 const libPictFlowCard = require('pict-section-flow').PictFlowCard;
+const libCardHelp = require('../card-help-content');
 
 class FlowCardSwitch extends libPictFlowCard
 {
@@ -8,6 +9,7 @@ class FlowCardSwitch extends libPictFlowCard
 			{},
 			{
 				Title: 'Switch',
+				Help: libCardHelp['SW'] || false,
 				Name: 'Multi-way Branch',
 				Code: 'SW',
 				Description: 'Routes flow to one of multiple cases based on a value.',

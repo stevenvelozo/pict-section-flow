@@ -805,14 +805,12 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 			flex-shrink: 0;
 			transition: background-color 0.15s;
 			border-top: 1px solid var(--pf-panel-titlebar-border);
-			position: relative;
+			display: flex;
+			align-items: center;
+			justify-content: center;
 		}
 		.pict-flow-panel-resize-handle::after {
 			content: '';
-			position: absolute;
-			left: 50%;
-			top: 50%;
-			transform: translate(-50%, -50%);
 			width: 24px;
 			height: 2px;
 			border-radius: 1px;

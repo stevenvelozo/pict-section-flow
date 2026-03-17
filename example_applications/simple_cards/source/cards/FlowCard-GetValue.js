@@ -1,4 +1,5 @@
 const libPictFlowCard = require('pict-section-flow').PictFlowCard;
+const libCardHelp = require('../card-help-content');
 
 class FlowCardGetValue extends libPictFlowCard
 {
@@ -8,6 +9,7 @@ class FlowCardGetValue extends libPictFlowCard
 			{},
 			{
 				Title: 'Get Value',
+				Help: libCardHelp['GET'] || false,
 				Name: 'Read Value',
 				Code: 'GET',
 				Description: 'Retrieves a named value from the flow context.',
