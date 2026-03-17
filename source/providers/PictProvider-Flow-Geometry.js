@@ -265,7 +265,7 @@ class PictProviderFlowGeometry extends libFableServiceProviderBase
 			//   Need: lastPortY + badgeHalfHeight <= H - bottomPad
 			// Solving for H:
 			//   H >= titleBar + bottomPad + (minSpacing * count + badgeHalfHeight) / (1 - zone.start)
-			let tmpRequired = pTitleBarHeight + tmpBottomPad + (tmpMinSpacing * tmpCount + tmpBadgeHalfHeight) / (1 - tmpZone.start);
+			let tmpRequired = pTitleBarHeight + tmpBottomPad + (tmpMinSpacing * tmpCount + tmpBadgeHalfHeight) / (tmpZone.end - tmpZone.start);
 
 			if (tmpRequired > tmpMinHeight)
 			{
