@@ -690,6 +690,54 @@ class PictViewFlow extends libPictView
 	_resetHandlesForPanel(pPanelHash) { return this._ConnectionHandleManager.resetHandlesForPanel(pPanelHash); }
 
 	/**
+	 * Add a bezier handle to a tether at the specified SVG position.
+	 * @param {string} pPanelHash
+	 * @param {number} pX
+	 * @param {number} pY
+	 */
+	addTetherHandle(pPanelHash, pX, pY)
+	{
+		let tmpPanel = this._FlowData.OpenPanels.find((pPanel) => pPanel.Hash === pPanelHash);
+		if (!tmpPanel || !this._TetherService) return;
+
+		let tmpNode = this.getNode(tmpPanel.NodeHash);
+		if (!tmpNode) return;
+
+		let tmpAnchors = this._TetherService.getSmartAnchors(tmpPanel, tmpNode);
+
+		this._TetherService.addHandle(tmpPanel, pX, pY, tmpAnchors.panelAnchor, tmpAnchors.nodeAnchor);
+
+		this.renderFlow();
+		this.marshalFromView();
+
+		if (this._EventHandlerProvider)
+		{
+			this._EventHandlerProvider.fireEvent('onFlowChanged', this._FlowData);
+		}
+	}
+
+	/**
+	 * Remove a bezier handle from a tether by index.
+	 * @param {string} pPanelHash
+	 * @param {number} pIndex
+	 */
+	removeTetherHandle(pPanelHash, pIndex)
+	{
+		let tmpPanel = this._FlowData.OpenPanels.find((pPanel) => pPanel.Hash === pPanelHash);
+		if (!tmpPanel || !this._TetherService) return;
+
+		this._TetherService.removeHandle(tmpPanel, pIndex);
+
+		this.renderFlow();
+		this.marshalFromView();
+
+		if (this._EventHandlerProvider)
+		{
+			this._EventHandlerProvider.fireEvent('onFlowChanged', this._FlowData);
+		}
+	}
+
+	/**
 	 * Update a tether handle position during drag (for real-time feedback).
 	 * Delegates state update to the TetherService.
 	 * @param {string} pPanelHash

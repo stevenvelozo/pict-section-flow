@@ -75,6 +75,10 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		this._LastConnectionClickTime = 0;
 		this._LastConnectionClickHash = null;
 
+		// Double-click detection for tethers
+		this._LastTetherClickTime = 0;
+		this._LastTetherClickHash = null;
+
 		// Double-click detection for handles
 		this._LastHandleClickTime = 0;
 		this._LastHandleClickHash = null;
@@ -127,6 +131,15 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 
 				case 'connection-handle':
 					this._removeBezierHandle(tmpTarget);
+					break;
+
+				case 'tether':
+				case 'tether-hitarea':
+					this._addTetherBezierHandle(tmpTarget, pEvent);
+					break;
+
+				case 'tether-handle':
+					this._removeTetherBezierHandle(tmpTarget);
 					break;
 			}
 		});
@@ -252,8 +265,26 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 
 			case 'tether':
 			case 'tether-hitarea':
-				this._selectTether(tmpTarget);
+			{
+				let tmpPanelHash = this._getPanelHash(tmpTarget);
+				let tmpNow = Date.now();
+
+				// Check for double-click on same tether to add a handle
+				if (tmpPanelHash && tmpPanelHash === this._LastTetherClickHash
+					&& (tmpNow - this._LastTetherClickTime) < this._DoubleClickThreshold)
+				{
+					this._LastTetherClickTime = 0;
+					this._LastTetherClickHash = null;
+					this._addTetherBezierHandle(tmpTarget, pEvent);
+				}
+				else
+				{
+					this._LastTetherClickTime = tmpNow;
+					this._LastTetherClickHash = tmpPanelHash;
+					this._selectTether(tmpTarget);
+				}
 				break;
+			}
 
 			case 'tether-handle':
 			{
@@ -756,6 +787,41 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 		if (isNaN(tmpIndex)) return;
 
 		this._FlowView.removeConnectionHandle(tmpConnectionHash, tmpIndex);
+	}
+
+	/**
+	 * Add a bezier handle to a tether.
+	 * @param {Element} pTarget - The tether SVG element that was right-clicked or double-clicked
+	 * @param {Event} pEvent - The mouse event (for coordinate extraction)
+	 */
+	_addTetherBezierHandle(pTarget, pEvent)
+	{
+		let tmpPanelHash = this._getPanelHash(pTarget);
+		if (!tmpPanelHash) return;
+
+		// Select the tether so handles render after re-render
+		this._FlowView.selectTether(tmpPanelHash);
+
+		let tmpCoords = this._FlowView.screenToSVGCoords(pEvent.clientX, pEvent.clientY);
+		this._FlowView.addTetherHandle(tmpPanelHash, tmpCoords.x, tmpCoords.y);
+	}
+
+	/**
+	 * Remove a bezier handle from a tether.
+	 * @param {Element} pTarget - The tether handle SVG element that was right-clicked
+	 */
+	_removeTetherBezierHandle(pTarget)
+	{
+		let tmpPanelHash = this._getPanelHash(pTarget);
+		if (!tmpPanelHash) return;
+
+		let tmpHandleType = pTarget.getAttribute('data-handle-type');
+		if (!tmpHandleType || !tmpHandleType.startsWith('bezier-handle-')) return;
+
+		let tmpIndex = parseInt(tmpHandleType.replace('bezier-handle-', ''), 10);
+		if (isNaN(tmpIndex)) return;
+
+		this._FlowView.removeTetherHandle(tmpPanelHash, tmpIndex);
 	}
 
 	// ---- Line Mode Toggling ----

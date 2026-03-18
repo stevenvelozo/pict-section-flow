@@ -223,6 +223,9 @@ class PictServiceFlowConnectionHandleManager extends libFableServiceProviderBase
 				if (tmpConn.Data && tmpConn.Data.HandleCustomized)
 				{
 					tmpConn.Data.HandleCustomized = false;
+					// Clear multi-handle array (current format)
+					tmpConn.Data.BezierHandles = [];
+					// Clear legacy single-handle fields
 					tmpConn.Data.BezierHandleX = null;
 					tmpConn.Data.BezierHandleY = null;
 					tmpConn.Data.OrthoCorner1X = null;

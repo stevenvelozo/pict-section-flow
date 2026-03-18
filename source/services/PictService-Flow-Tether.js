@@ -298,10 +298,72 @@ class PictServiceFlowTether extends libFableServiceProviderBase
 		}
 		else
 		{
+			// Check for multi-handle array first
+			let tmpHandles = this._getTetherBezierHandles(pPanelData);
+			if (tmpHandles.length > 0)
+			{
+				return this.generateMultiBezierPath(pFrom, pTo, tmpHandles);
+			}
+
+			// Single-handle legacy path
 			let tmpHandleX = (pPanelData.TetherHandleCustomized && pPanelData.TetherBezierHandleX != null) ? pPanelData.TetherBezierHandleX : null;
 			let tmpHandleY = (pPanelData.TetherHandleCustomized && pPanelData.TetherBezierHandleY != null) ? pPanelData.TetherBezierHandleY : null;
 			return this.generateBezierPath(pFrom, pTo, tmpHandleX, tmpHandleY);
 		}
+	}
+
+	/**
+	 * Get the bezier handles array for a tether, respecting the customized flag.
+	 * @param {Object} pPanelData
+	 * @returns {Array<{x: number, y: number}>}
+	 */
+	_getTetherBezierHandles(pPanelData)
+	{
+		if (!pPanelData || !pPanelData.TetherHandleCustomized)
+		{
+			return [];
+		}
+
+		// Multi-handle format
+		if (Array.isArray(pPanelData.TetherBezierHandles) && pPanelData.TetherBezierHandles.length > 0)
+		{
+			return pPanelData.TetherBezierHandles;
+		}
+
+		// Legacy single-handle format
+		if (pPanelData.TetherBezierHandleX != null && pPanelData.TetherBezierHandleY != null)
+		{
+			return [{ x: pPanelData.TetherBezierHandleX, y: pPanelData.TetherBezierHandleY }];
+		}
+
+		return [];
+	}
+
+	/**
+	 * Generate a multi-handle bezier path for a tether.
+	 * Delegates to PathGenerator.buildMultiBezierPathString.
+	 * @param {Object} pFrom - {x, y, side}
+	 * @param {Object} pTo - {x, y, side}
+	 * @param {Array<{x: number, y: number}>} pHandles
+	 * @returns {string} SVG path d attribute
+	 */
+	generateMultiBezierPath(pFrom, pTo, pHandles)
+	{
+		let tmpDepartDist = 20;
+		let tmpFromDir = this._FlowView._GeometryProvider.sideDirection(pFrom.side);
+		let tmpToDir = this._FlowView._GeometryProvider.sideDirection(pTo.side);
+
+		let tmpDepart = {
+			x: pFrom.x + tmpFromDir.dx * tmpDepartDist,
+			y: pFrom.y + tmpFromDir.dy * tmpDepartDist
+		};
+		let tmpApproach = {
+			x: pTo.x + tmpToDir.dx * tmpDepartDist,
+			y: pTo.y + tmpToDir.dy * tmpDepartDist
+		};
+
+		return this._FlowView._PathGenerator.buildMultiBezierPathString(
+			pFrom, tmpDepart, pFrom.side, tmpApproach, pTo.side, pTo, pHandles);
 	}
 
 	// ---- Handle State Management ----
@@ -317,9 +379,34 @@ class PictServiceFlowTether extends libFableServiceProviderBase
 	{
 		pPanelData.TetherHandleCustomized = true;
 
+		// Multi-handle bezier: handle type is 'bezier-handle-N'
+		if (pHandleType && pHandleType.startsWith('bezier-handle-'))
+		{
+			let tmpIndex = parseInt(pHandleType.replace('bezier-handle-', ''), 10);
+			if (!isNaN(tmpIndex) && Array.isArray(pPanelData.TetherBezierHandles)
+				&& tmpIndex < pPanelData.TetherBezierHandles.length)
+			{
+				pPanelData.TetherBezierHandles[tmpIndex].x = pX;
+				pPanelData.TetherBezierHandles[tmpIndex].y = pY;
+			}
+			return;
+		}
+
 		switch (pHandleType)
 		{
 			case 'bezier-midpoint':
+				// Migrate to multi-handle array
+				if (!Array.isArray(pPanelData.TetherBezierHandles)
+					|| pPanelData.TetherBezierHandles.length === 0)
+				{
+					pPanelData.TetherBezierHandles = [{ x: pX, y: pY }];
+				}
+				else
+				{
+					pPanelData.TetherBezierHandles[0].x = pX;
+					pPanelData.TetherBezierHandles[0].y = pY;
+				}
+				// Keep legacy fields in sync
 				pPanelData.TetherBezierHandleX = pX;
 				pPanelData.TetherBezierHandleY = pY;
 				break;
@@ -353,6 +440,7 @@ class PictServiceFlowTether extends libFableServiceProviderBase
 		if (pPanelData.TetherHandleCustomized)
 		{
 			pPanelData.TetherHandleCustomized = false;
+			pPanelData.TetherBezierHandles = [];
 			pPanelData.TetherBezierHandleX = null;
 			pPanelData.TetherBezierHandleY = null;
 			pPanelData.TetherOrthoCorner1X = null;
@@ -382,6 +470,68 @@ class PictServiceFlowTether extends libFableServiceProviderBase
 	}
 
 	/**
+	 * Add a bezier handle to a tether at the specified position.
+	 * @param {Object} pPanelData - Panel data
+	 * @param {number} pX
+	 * @param {number} pY
+	 * @param {Object} pFrom - Panel anchor {x, y, side}
+	 * @param {Object} pTo - Node anchor {x, y, side}
+	 */
+	addHandle(pPanelData, pX, pY, pFrom, pTo)
+	{
+		// Ensure bezier mode and multi-handle array
+		pPanelData.TetherLineMode = 'bezier';
+
+		if (!Array.isArray(pPanelData.TetherBezierHandles))
+		{
+			pPanelData.TetherBezierHandles = [];
+			// Migrate legacy single-handle if present
+			if (pPanelData.TetherBezierHandleX != null && pPanelData.TetherBezierHandleY != null)
+			{
+				pPanelData.TetherBezierHandles.push({
+					x: pPanelData.TetherBezierHandleX,
+					y: pPanelData.TetherBezierHandleY
+				});
+			}
+		}
+
+		// Compute insertion index
+		let tmpInsertIndex = 0;
+		if (this._FlowView._ConnectionRenderer && pFrom && pTo)
+		{
+			tmpInsertIndex = this._FlowView._ConnectionRenderer.computeInsertionIndex(
+				pPanelData.TetherBezierHandles,
+				{ x: pX, y: pY },
+				pFrom,
+				pTo
+			);
+		}
+
+		pPanelData.TetherBezierHandles.splice(tmpInsertIndex, 0, { x: pX, y: pY });
+		pPanelData.TetherHandleCustomized = true;
+	}
+
+	/**
+	 * Remove a bezier handle from a tether by index.
+	 * @param {Object} pPanelData - Panel data
+	 * @param {number} pIndex - Index in TetherBezierHandles array
+	 */
+	removeHandle(pPanelData, pIndex)
+	{
+		if (!Array.isArray(pPanelData.TetherBezierHandles)) return;
+		if (pIndex < 0 || pIndex >= pPanelData.TetherBezierHandles.length) return;
+
+		pPanelData.TetherBezierHandles.splice(pIndex, 1);
+
+		if (pPanelData.TetherBezierHandles.length === 0)
+		{
+			pPanelData.TetherHandleCustomized = false;
+			pPanelData.TetherBezierHandleX = null;
+			pPanelData.TetherBezierHandleY = null;
+		}
+	}
+
+	/**
 	 * Toggle tether line mode between bezier and orthogonal.
 	 * Resets handle positions on toggle.
 	 * @param {Object} pPanelData - Panel data to toggle
@@ -393,6 +543,7 @@ class PictServiceFlowTether extends libFableServiceProviderBase
 		pPanelData.TetherLineMode = (tmpCurrentMode === 'bezier') ? 'orthogonal' : 'bezier';
 
 		pPanelData.TetherHandleCustomized = false;
+		pPanelData.TetherBezierHandles = [];
 		pPanelData.TetherBezierHandleX = null;
 		pPanelData.TetherBezierHandleY = null;
 		pPanelData.TetherOrthoCorner1X = null;
@@ -491,22 +642,25 @@ class PictServiceFlowTether extends libFableServiceProviderBase
 		}
 		else
 		{
-			// Bezier: single midpoint handle
-			let tmpMidX, tmpMidY;
-			if (pPanelData.TetherHandleCustomized && pPanelData.TetherBezierHandleX != null)
+			// Bezier handles
+			let tmpHandles = this._getTetherBezierHandles(pPanelData);
+
+			if (tmpHandles.length > 0)
 			{
-				tmpMidX = pPanelData.TetherBezierHandleX;
-				tmpMidY = pPanelData.TetherBezierHandleY;
+				// Multi-handle: render each handle as a draggable circle
+				for (let i = 0; i < tmpHandles.length; i++)
+				{
+					this._createHandle(pTethersLayer, pPanelData.Hash, 'bezier-handle-' + i,
+						tmpHandles[i].x, tmpHandles[i].y, 'pict-flow-tether-handle');
+				}
 			}
 			else
 			{
+				// No custom handles: show auto-computed midpoint
 				let tmpMid = this.getAutoMidpoint(pFrom, pTo);
-				tmpMidX = tmpMid.x;
-				tmpMidY = tmpMid.y;
+				this._createHandle(pTethersLayer, pPanelData.Hash, 'bezier-midpoint',
+					tmpMid.x, tmpMid.y, 'pict-flow-tether-handle-midpoint');
 			}
-
-			this._createHandle(pTethersLayer, pPanelData.Hash, 'bezier-midpoint',
-				tmpMidX, tmpMidY, 'pict-flow-tether-handle-midpoint');
 		}
 	}
 
