@@ -934,13 +934,6 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 		.pict-flow-toolbar-btn:active {
 			background-color: var(--pf-button-active-bg);
 		}
-		.pict-flow-toolbar-btn.danger {
-			color: var(--pf-button-danger-text);
-			border-color: var(--pf-button-danger-text);
-		}
-		.pict-flow-toolbar-btn.danger:hover {
-			background-color: var(--pf-button-danger-hover-bg);
-		}
 		.pict-flow-toolbar-btn-icon {
 			display: inline-flex;
 			align-items: center;
@@ -1396,9 +1389,6 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 		}
 		.pict-flow-floating-btn:hover {
 			background-color: var(--pf-button-hover-bg);
-		}
-		.pict-flow-floating-btn.danger:hover {
-			background-color: var(--pf-button-danger-hover-bg);
 		}
 		.pict-flow-floating-separator {
 			height: 1px;

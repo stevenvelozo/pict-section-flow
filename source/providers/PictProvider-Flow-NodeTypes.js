@@ -104,8 +104,15 @@ class PictProviderFlowNodeTypes extends libPictProvider
 
 		this._FlowView = (pOptions && pOptions.FlowView) ? pOptions.FlowView : null;
 
-		// Initialize with default node types
-		this._NodeTypes = JSON.parse(JSON.stringify(_DefaultNodeTypes));
+		// Initialize with default node types unless explicitly disabled
+		if (pOptions && pOptions.IncludeDefaultNodeTypes === false)
+		{
+			this._NodeTypes = {};
+		}
+		else
+		{
+			this._NodeTypes = JSON.parse(JSON.stringify(_DefaultNodeTypes));
+		}
 
 		// Merge any additional node types passed in via options
 		if (pOptions && pOptions.AdditionalNodeTypes && typeof pOptions.AdditionalNodeTypes === 'object')

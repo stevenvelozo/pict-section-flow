@@ -50,6 +50,9 @@ const _DefaultConfiguration =
 	TargetElementAddress: '#Flow-SVG-Container',
 
 	EnableToolbar: true,
+	EnableAddNode: true,
+	EnableCardPalette: true,
+	IncludeDefaultNodeTypes: true,
 	EnablePanning: true,
 	EnableZooming: true,
 	EnableNodeDragging: true,
@@ -145,7 +148,7 @@ class PictViewFlow extends libPictView
 			{ ServiceType: 'PictProviderFlowIcons',         Library: libPictProviderFlowIcons,         Property: '_IconProvider',         PostInit: 'registerIconTemplates' },
 			{ ServiceType: 'PictProviderFlowConnectorShapes', Library: libPictProviderFlowConnectorShapes, Property: '_ConnectorShapesProvider' },
 			{ ServiceType: 'PictProviderFlowPanelChrome',   Library: libPictProviderFlowPanelChrome,   Property: '_PanelChromeProvider' },
-			{ ServiceType: 'PictProviderFlowNodeTypes',     Library: libPictProviderFlowNodeTypes,     Property: '_NodeTypeProvider',   ExtraOptions: () => ({ AdditionalNodeTypes: this.options.NodeTypes }) },
+			{ ServiceType: 'PictProviderFlowNodeTypes',     Library: libPictProviderFlowNodeTypes,     Property: '_NodeTypeProvider',   ExtraOptions: () => ({ AdditionalNodeTypes: this.options.NodeTypes, IncludeDefaultNodeTypes: this.options.IncludeDefaultNodeTypes }) },
 			{ ServiceType: 'PictProviderFlowEventHandler',  Library: libPictProviderFlowEventHandler,  Property: '_EventHandlerProvider' },
 			{ ServiceType: 'PictProviderFlowLayouts',       Library: libPictProviderFlowLayouts,       Property: '_LayoutProvider',       PostInit: 'loadPersistedLayouts' },
 
@@ -410,7 +413,9 @@ class PictViewFlow extends libPictView
 					{
 						ViewIdentifier: `Flow-Toolbar-${tmpViewIdentifier}`,
 						DefaultDestinationAddress: `#Flow-Toolbar-${tmpViewIdentifier}`,
-						FlowViewIdentifier: tmpViewIdentifier
+						FlowViewIdentifier: tmpViewIdentifier,
+						EnableAddNode: this.options.EnableAddNode,
+						EnableCardPalette: this.options.EnableCardPalette
 					}
 				));
 			// Use the toolbar's render method after it's set up

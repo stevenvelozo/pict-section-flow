@@ -12,6 +12,8 @@ const _DefaultConfiguration =
 	FlowViewIdentifier: 'Pict-Flow',
 
 	EnablePalette: true,
+	EnableAddNode: true,
+	EnableCardPalette: true,
 
 	CSS: false,
 
@@ -26,15 +28,13 @@ const _DefaultConfiguration =
 			<span class="pict-flow-toolbar-btn-icon" id="Flow-Toolbar-Icon-plus-{~D:Record.FlowViewIdentifier~}"></span>
 			<span class="pict-flow-toolbar-btn-text">Node</span>
 		</button>
-		<button class="pict-flow-toolbar-btn danger" data-flow-action="delete-selected" title="Delete Node">
-			<span class="pict-flow-toolbar-btn-icon" id="Flow-Toolbar-Icon-trash-{~D:Record.FlowViewIdentifier~}"></span>
-		</button>
-	</div>
-	<div class="pict-flow-toolbar-group">
 		<button class="pict-flow-toolbar-btn" data-flow-action="cards-popup" id="Flow-Toolbar-Cards-{~D:Record.FlowViewIdentifier~}" title="Card Palette">
 			<span class="pict-flow-toolbar-btn-icon" id="Flow-Toolbar-Icon-cards-{~D:Record.FlowViewIdentifier~}"></span>
 			<span class="pict-flow-toolbar-btn-text">Cards</span>
 			<span class="pict-flow-toolbar-btn-chevron" id="Flow-Toolbar-CardsChevron-{~D:Record.FlowViewIdentifier~}"></span>
+		</button>
+		<button class="pict-flow-toolbar-btn" data-flow-action="delete-selected" title="Delete Node">
+			<span class="pict-flow-toolbar-btn-icon" id="Flow-Toolbar-Icon-trash-{~D:Record.FlowViewIdentifier~}"></span>
 		</button>
 	</div>
 	<div class="pict-flow-toolbar-group">
@@ -156,6 +156,24 @@ class PictViewFlowToolbar extends libPictView
 
 		// Populate SVG icons for toolbar buttons
 		this._populateToolbarIcons();
+
+		// Hide buttons based on options
+		if (this.options.EnableAddNode === false)
+		{
+			let tmpAddNodeBtn = this.pict.ContentAssignment.getElement(`#Flow-Toolbar-AddNode-${tmpFlowViewIdentifier}`);
+			if (tmpAddNodeBtn.length > 0)
+			{
+				tmpAddNodeBtn[0].style.display = 'none';
+			}
+		}
+		if (this.options.EnableCardPalette === false)
+		{
+			let tmpCardsBtn = this.pict.ContentAssignment.getElement(`#Flow-Toolbar-Cards-${tmpFlowViewIdentifier}`);
+			if (tmpCardsBtn.length > 0)
+			{
+				tmpCardsBtn[0].style.display = 'none';
+			}
+		}
 
 		return super.onAfterRender(pRenderable, pRenderDestinationAddress, pRecord, pContent);
 	}
@@ -508,38 +526,100 @@ class PictViewFlowToolbar extends libPictView
 	// ── Cards Popup ───────────────────────────────────────────────────────
 
 	/**
-	 * Build the Cards popup content (reuses palette rendering).
+	 * Build the Cards popup content with search and categorized palette.
 	 * @param {HTMLElement} pContainer
 	 */
 	_buildCardsPopup(pContainer)
 	{
-		this._renderPalette(pContainer);
+		// Search wrapper
+		let tmpSearchWrapper = document.createElement('div');
+		tmpSearchWrapper.className = 'pict-flow-popup-search-wrapper';
+
+		let tmpSearchIcon = document.createElement('span');
+		tmpSearchIcon.className = 'pict-flow-popup-search-icon';
+		let tmpIconProvider = this._FlowView ? this._FlowView._IconProvider : null;
+		if (tmpIconProvider)
+		{
+			tmpSearchIcon.innerHTML = tmpIconProvider.getIconSVGMarkup('search', 12);
+		}
+		tmpSearchWrapper.appendChild(tmpSearchIcon);
+
+		let tmpSearchInput = document.createElement('input');
+		tmpSearchInput.className = 'pict-flow-popup-search';
+		tmpSearchInput.setAttribute('type', 'text');
+		tmpSearchInput.setAttribute('placeholder', 'Search cards...');
+		tmpSearchWrapper.appendChild(tmpSearchInput);
+		pContainer.appendChild(tmpSearchWrapper);
+
+		// Palette list container
+		let tmpListDiv = document.createElement('div');
+		tmpListDiv.className = 'pict-flow-popup-node-list';
+		pContainer.appendChild(tmpListDiv);
+
+		// Initial population
+		this._renderPalette(tmpListDiv, '');
+
+		// Filter on input
+		tmpSearchInput.addEventListener('input', () =>
+		{
+			this._renderPalette(tmpListDiv, tmpSearchInput.value);
+		});
+
+		// Focus search input
+		setTimeout(() => { tmpSearchInput.focus(); }, 50);
 	}
 
 	/**
 	 * Render the card palette with categories and card chips into a container.
 	 * @param {HTMLElement} pContainer - The target container element
+	 * @param {string} [pFilter] - Optional search filter text
 	 */
-	_renderPalette(pContainer)
+	_renderPalette(pContainer, pFilter)
 	{
 		if (!this._FlowView || !this._FlowView._NodeTypeProvider) return;
 
+		// Clear existing content
+		while (pContainer.firstChild)
+		{
+			pContainer.removeChild(pContainer.firstChild);
+		}
+
 		let tmpCategories = this._FlowView._NodeTypeProvider.getCardsByCategory();
 		let tmpCategoryKeys = Object.keys(tmpCategories);
-
-		if (tmpCategoryKeys.length === 0)
-		{
-			let tmpEmpty = document.createElement('div');
-			tmpEmpty.className = 'pict-flow-popup-list-empty';
-			tmpEmpty.textContent = 'No card types available';
-			pContainer.appendChild(tmpEmpty);
-			return;
-		}
+		let tmpFilter = (pFilter || '').toLowerCase().trim();
+		let tmpTotalMatchCount = 0;
 
 		for (let i = 0; i < tmpCategoryKeys.length; i++)
 		{
 			let tmpCategoryName = tmpCategoryKeys[i];
 			let tmpCards = tmpCategories[tmpCategoryName];
+			let tmpMatchingCards = [];
+
+			// Filter cards within this category
+			for (let j = 0; j < tmpCards.length; j++)
+			{
+				let tmpCardConfig = tmpCards[j];
+				let tmpMeta = tmpCardConfig.CardMetadata || {};
+
+				if (tmpFilter)
+				{
+					let tmpLabel = (tmpCardConfig.Label || '').toLowerCase();
+					let tmpCode = (tmpMeta.Code || '').toLowerCase();
+					let tmpCategory = tmpCategoryName.toLowerCase();
+					if (tmpLabel.indexOf(tmpFilter) < 0 &&
+						tmpCode.indexOf(tmpFilter) < 0 &&
+						tmpCategory.indexOf(tmpFilter) < 0)
+					{
+						continue;
+					}
+				}
+
+				tmpMatchingCards.push(tmpCardConfig);
+			}
+
+			if (tmpMatchingCards.length === 0) continue;
+
+			tmpTotalMatchCount += tmpMatchingCards.length;
 
 			let tmpCategoryDiv = document.createElement('div');
 			tmpCategoryDiv.className = 'pict-flow-palette-category';
@@ -553,9 +633,9 @@ class PictViewFlowToolbar extends libPictView
 			let tmpCardsDiv = document.createElement('div');
 			tmpCardsDiv.className = 'pict-flow-palette-cards';
 
-			for (let j = 0; j < tmpCards.length; j++)
+			for (let j = 0; j < tmpMatchingCards.length; j++)
 			{
-				let tmpCardConfig = tmpCards[j];
+				let tmpCardConfig = tmpMatchingCards[j];
 				let tmpMeta = tmpCardConfig.CardMetadata || {};
 
 				let tmpCardEl = document.createElement('div');
@@ -634,6 +714,14 @@ class PictViewFlowToolbar extends libPictView
 
 			tmpCategoryDiv.appendChild(tmpCardsDiv);
 			pContainer.appendChild(tmpCategoryDiv);
+		}
+
+		if (tmpTotalMatchCount === 0)
+		{
+			let tmpEmpty = document.createElement('div');
+			tmpEmpty.className = 'pict-flow-popup-list-empty';
+			tmpEmpty.textContent = tmpFilter ? 'No matching cards' : 'No card types available';
+			pContainer.appendChild(tmpEmpty);
 		}
 	}
 
@@ -1018,7 +1106,9 @@ class PictViewFlowToolbar extends libPictView
 				'PictViewFlowFloatingToolbar',
 				{
 					FlowViewIdentifier: tmpFlowViewIdentifier,
-					DefaultDestinationAddress: `#Flow-FloatingToolbar-Container-${tmpFlowViewIdentifier}`
+					DefaultDestinationAddress: `#Flow-FloatingToolbar-Container-${tmpFlowViewIdentifier}`,
+					EnableAddNode: this.options.EnableAddNode,
+					EnableCardPalette: this.options.EnableCardPalette
 				}
 			);
 			this._FloatingToolbarView._ToolbarView = this;

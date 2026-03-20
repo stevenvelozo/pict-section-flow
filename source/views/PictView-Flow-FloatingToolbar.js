@@ -25,7 +25,10 @@ const _DefaultConfiguration =
 	<button class="pict-flow-floating-btn" data-flow-action="add-node" title="Add Node">
 		<span id="Flow-FloatingIcon-plus-{~D:Record.FlowViewIdentifier~}"></span>
 	</button>
-	<button class="pict-flow-floating-btn danger" data-flow-action="delete-selected" title="Delete Selected">
+	<button class="pict-flow-floating-btn" data-flow-action="cards-popup" title="Cards">
+		<span id="Flow-FloatingIcon-cards-{~D:Record.FlowViewIdentifier~}"></span>
+	</button>
+	<button class="pict-flow-floating-btn" data-flow-action="delete-selected" title="Delete Selected">
 		<span id="Flow-FloatingIcon-trash-{~D:Record.FlowViewIdentifier~}"></span>
 	</button>
 	<div class="pict-flow-floating-separator"></div>
@@ -41,9 +44,6 @@ const _DefaultConfiguration =
 	<div class="pict-flow-floating-separator"></div>
 	<button class="pict-flow-floating-btn" data-flow-action="auto-layout" title="Auto Layout">
 		<span id="Flow-FloatingIcon-auto-layout-{~D:Record.FlowViewIdentifier~}"></span>
-	</button>
-	<button class="pict-flow-floating-btn" data-flow-action="cards-popup" title="Cards">
-		<span id="Flow-FloatingIcon-cards-{~D:Record.FlowViewIdentifier~}"></span>
 	</button>
 	<button class="pict-flow-floating-btn" data-flow-action="layout-popup" title="Layout">
 		<span id="Flow-FloatingIcon-layout-{~D:Record.FlowViewIdentifier~}"></span>
@@ -154,6 +154,27 @@ class PictViewFlowFloatingToolbar extends libPictView
 
 		// Populate icons
 		this._populateIcons();
+
+		// Hide buttons based on options
+		if (tmpFloatingToolbar.length > 0)
+		{
+			if (this.options.EnableAddNode === false)
+			{
+				let tmpAddNodeBtn = tmpFloatingToolbar[0].querySelector('[data-flow-action="add-node"]');
+				if (tmpAddNodeBtn)
+				{
+					tmpAddNodeBtn.style.display = 'none';
+				}
+			}
+			if (this.options.EnableCardPalette === false)
+			{
+				let tmpCardsBtn = tmpFloatingToolbar[0].querySelector('[data-flow-action="cards-popup"]');
+				if (tmpCardsBtn)
+				{
+					tmpCardsBtn.style.display = 'none';
+				}
+			}
+		}
 
 		return super.onAfterRender(pRenderable, pRenderDestinationAddress, pRecord, pContent);
 	}
