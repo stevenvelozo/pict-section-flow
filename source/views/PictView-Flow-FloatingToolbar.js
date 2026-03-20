@@ -155,7 +155,7 @@ class PictViewFlowFloatingToolbar extends libPictView
 		// Populate icons
 		this._populateIcons();
 
-		// Hide buttons based on options
+		// Remove buttons from DOM based on options
 		if (tmpFloatingToolbar.length > 0)
 		{
 			if (this.options.EnableAddNode === false)
@@ -163,7 +163,7 @@ class PictViewFlowFloatingToolbar extends libPictView
 				let tmpAddNodeBtn = tmpFloatingToolbar[0].querySelector('[data-flow-action="add-node"]');
 				if (tmpAddNodeBtn)
 				{
-					tmpAddNodeBtn.style.display = 'none';
+					tmpAddNodeBtn.remove();
 				}
 			}
 			if (this.options.EnableCardPalette === false)
@@ -171,7 +171,7 @@ class PictViewFlowFloatingToolbar extends libPictView
 				let tmpCardsBtn = tmpFloatingToolbar[0].querySelector('[data-flow-action="cards-popup"]');
 				if (tmpCardsBtn)
 				{
-					tmpCardsBtn.style.display = 'none';
+					tmpCardsBtn.remove();
 				}
 			}
 		}

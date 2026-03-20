@@ -927,6 +927,9 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 			user-select: none;
 			-webkit-user-select: none;
 		}
+		.pict-flow-toolbar-btn:focus {
+			outline: none;
+		}
 		.pict-flow-toolbar-btn:hover {
 			background-color: var(--pf-button-hover-bg);
 			border-color: var(--pf-button-hover-border);
@@ -1386,6 +1389,9 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 			align-items: center;
 			justify-content: center;
 			transition: background-color 0.15s;
+		}
+		.pict-flow-floating-btn:focus {
+			outline: none;
 		}
 		.pict-flow-floating-btn:hover {
 			background-color: var(--pf-button-hover-bg);

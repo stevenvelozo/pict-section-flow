@@ -157,13 +157,13 @@ class PictViewFlowToolbar extends libPictView
 		// Populate SVG icons for toolbar buttons
 		this._populateToolbarIcons();
 
-		// Hide buttons based on options
+		// Remove buttons from DOM based on options
 		if (this.options.EnableAddNode === false)
 		{
 			let tmpAddNodeBtn = this.pict.ContentAssignment.getElement(`#Flow-Toolbar-AddNode-${tmpFlowViewIdentifier}`);
 			if (tmpAddNodeBtn.length > 0)
 			{
-				tmpAddNodeBtn[0].style.display = 'none';
+				tmpAddNodeBtn[0].remove();
 			}
 		}
 		if (this.options.EnableCardPalette === false)
@@ -171,7 +171,7 @@ class PictViewFlowToolbar extends libPictView
 			let tmpCardsBtn = this.pict.ContentAssignment.getElement(`#Flow-Toolbar-Cards-${tmpFlowViewIdentifier}`);
 			if (tmpCardsBtn.length > 0)
 			{
-				tmpCardsBtn[0].style.display = 'none';
+				tmpCardsBtn[0].remove();
 			}
 		}
 
