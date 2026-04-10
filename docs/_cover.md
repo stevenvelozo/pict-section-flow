@@ -1,4 +1,4 @@
-# Pict-Section-Flow <small>0</small>
+# Pict-Section-Flow
 
 > Interactive flow diagram section view for the Pict application framework
 
