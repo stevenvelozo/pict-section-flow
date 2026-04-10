@@ -16,13 +16,13 @@ flowView.removeNode(pNodeHash)
 
 ## Returns
 
-`boolean` — `true` if the node was found and removed, `false` otherwise.
+`boolean` -- `true` if the node was found and removed, `false` otherwise.
 
 ## Events Fired
 
-- `onNodeRemoved` — with the removed node object
-- `onConnectionRemoved` — for each connection that was cascaded
-- `onFlowChanged` — with the updated flow data
+- `onNodeRemoved` -- with the removed node object
+- `onConnectionRemoved` -- for each connection that was cascaded
+- `onFlowChanged` -- with the updated flow data
 
 ## Examples
 
@@ -76,5 +76,5 @@ tmpFlowData.Nodes.forEach((pNode) =>
 
 ## See Also
 
-- [addNode](addNode.md) — Create a node
-- [deleteSelected](selectNode.md) — Delete the currently selected element
+- [addNode](addNode.md) -- Create a node
+- [deleteSelected](selectNode.md) -- Delete the currently selected element

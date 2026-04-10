@@ -8,7 +8,7 @@ Drop a Comment node anywhere on the canvas to add context, explain design decisi
 
 ## Properties
 
-- **NoteText** — the annotation content displayed in the node body
+- **NoteText** -- the annotation content displayed in the node body
 
 ## Tips
 

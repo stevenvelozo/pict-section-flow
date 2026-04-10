@@ -1,6 +1,6 @@
 # Architecture
 
-Pict-Section-Flow follows the standard Pict layered architecture — Views for rendering, Services for business logic, and Providers for configuration and stateless utilities. All components register with a Fable instance through the service provider pattern.
+Pict-Section-Flow follows the standard Pict layered architecture -- Views for rendering, Services for business logic, and Providers for configuration and stateless utilities. All components register with a Fable instance through the service provider pattern.
 
 ## High-Level Design
 

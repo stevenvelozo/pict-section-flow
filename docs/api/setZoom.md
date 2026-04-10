@@ -92,6 +92,6 @@ Zoom bounds are set in the view configuration:
 
 ## See Also
 
-- [screenToSVGCoords](screenToSVGCoords.md) — Coordinate conversion
-- [toggleFullscreen](toggleFullscreen.md) — Fullscreen mode
-- [autoLayout](autoLayout.md) — Automatic node arrangement
+- [screenToSVGCoords](screenToSVGCoords.md) -- Coordinate conversion
+- [toggleFullscreen](toggleFullscreen.md) -- Fullscreen mode
+- [autoLayout](autoLayout.md) -- Automatic node arrangement

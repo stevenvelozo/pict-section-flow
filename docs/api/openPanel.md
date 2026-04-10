@@ -124,5 +124,5 @@ flowView._EventHandlerProvider.registerHandler('onPanelClosed',
 
 ## See Also
 
-- [PictFlowCard](PictFlowCard.md) — Define PropertiesPanel configuration on card types
-- [PictFlowCardPropertiesPanel](PictFlowCardPropertiesPanel.md) — Custom panel base class
+- [PictFlowCard](PictFlowCard.md) -- Define PropertiesPanel configuration on card types
+- [PictFlowCardPropertiesPanel](PictFlowCardPropertiesPanel.md) -- Custom panel base class

@@ -106,8 +106,8 @@ A connection links an output port on one node to an input port on another.
 
 Connections support two path modes:
 
-- **Bezier** (default) — Smooth curves with one or more control handles. Right-click a connection to add a handle; drag handles to reshape the curve.
-- **Orthogonal** — Right-angle paths with two corner points. Double-click a connection handle to toggle between bezier and orthogonal modes.
+- **Bezier** (default) -- Smooth curves with one or more control handles. Right-click a connection to add a handle; drag handles to reshape the curve.
+- **Orthogonal** -- Right-angle paths with two corner points. Double-click a connection handle to toggle between bezier and orthogonal modes.
 
 ## Panel
 

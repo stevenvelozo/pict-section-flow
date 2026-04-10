@@ -46,8 +46,8 @@ The newly created node object:
 
 ## Events Fired
 
-- `onNodeAdded` — with the new node object
-- `onFlowChanged` — with the complete flow data
+- `onNodeAdded` -- with the new node object
+- `onFlowChanged` -- with the complete flow data
 
 ## Examples
 
@@ -131,7 +131,7 @@ buildPipeline(flowView,
 
 ## See Also
 
-- [removeNode](removeNode.md) — Delete a node
-- [getFlowData](getFlowData.md) — Retrieve the full flow state
-- [PictFlowCard](PictFlowCard.md) — Define custom node types
-- [registerNodeType](registerNodeType.md) — Register node types directly
+- [removeNode](removeNode.md) -- Delete a node
+- [getFlowData](getFlowData.md) -- Retrieve the full flow state
+- [PictFlowCard](PictFlowCard.md) -- Define custom node types
+- [registerNodeType](registerNodeType.md) -- Register node types directly

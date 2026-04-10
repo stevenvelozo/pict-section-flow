@@ -4,14 +4,14 @@ The **File Read** node reads the contents of a file from the filesystem and outp
 
 ## Ports
 
-- **Path** (input) — the filesystem path to read
-- **Data** (output) — the file contents on success
-- **Error** (output) — fires if the read operation fails
+- **Path** (input) -- the filesystem path to read
+- **Data** (output) -- the file contents on success
+- **Error** (output) -- fires if the read operation fails
 
 ## Properties
 
-- **FilePath** — the path to the file to read
-- **Encoding** — character encoding for text files (e.g. `utf8`, `ascii`)
+- **FilePath** -- the path to the file to read
+- **Encoding** -- character encoding for text files (e.g. `utf8`, `ascii`)
 
 ## Behavior
 

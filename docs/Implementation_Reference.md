@@ -2,7 +2,7 @@
 
 Complete API reference for Pict-Section-Flow. This document covers every public method on the main `PictViewFlow` class and the key internal services and providers developers interact with.
 
-## PictViewFlow — Main View API
+## PictViewFlow -- Main View API
 
 The primary class exported by `pict-section-flow`. Extends `pict-view`.
 
@@ -84,7 +84,7 @@ Delete a node and all its connections.
 |-----------|------|-------------|
 | `pNodeHash` | string | Hash of the node to remove |
 
-**Returns:** `boolean` — `true` if the node was found and removed.
+**Returns:** `boolean` -- `true` if the node was found and removed.
 
 ### addConnection(pSourceNode, pSourcePort, pTargetNode, pTargetPort, pData)
 
@@ -108,7 +108,7 @@ Delete a connection.
 |-----------|------|-------------|
 | `pConnectionHash` | string | Hash of the connection to remove |
 
-**Returns:** `boolean` — `true` if the connection was found and removed.
+**Returns:** `boolean` -- `true` if the connection was found and removed.
 
 ### getFlowData()
 
@@ -168,7 +168,7 @@ Clear all selections (node, connection, and tether).
 
 Delete the currently selected node or connection.
 
-**Returns:** `boolean` — `true` if something was deleted.
+**Returns:** `boolean` -- `true` if something was deleted.
 
 ---
 
@@ -196,7 +196,7 @@ Apply the current pan/zoom state to the SVG viewport group. Called automatically
 
 Toggle fullscreen overlay mode.
 
-**Returns:** `boolean` — the new fullscreen state.
+**Returns:** `boolean` -- the new fullscreen state.
 
 ### exitFullscreen()
 
@@ -466,7 +466,7 @@ Register a named theme.
 
 Activate a registered theme and re-render.
 
-**Returns:** `boolean` — `true` if the theme was found and activated.
+**Returns:** `boolean` -- `true` if the theme was found and activated.
 
 ### getActiveTheme()
 

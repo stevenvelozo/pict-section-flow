@@ -164,5 +164,5 @@ flowView._ThemeProvider.registerTheme('corporate',
 
 ## See Also
 
-- [Custom Styling](../Custom-Styling.md) — Full CSS custom properties reference
-- [registerHandler](registerHandler.md) — Listen for `onThemeChanged` events
+- [Custom Styling](../Custom-Styling.md) -- Full CSS custom properties reference
+- [registerHandler](registerHandler.md) -- Listen for `onThemeChanged` events

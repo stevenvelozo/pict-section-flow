@@ -1,6 +1,6 @@
 # Getting Started
 
-This guide walks you through creating a flow diagram from scratch — installing the package, registering a view, adding nodes and connections, and wiring up custom card types.
+This guide walks you through creating a flow diagram from scratch -- installing the package, registering a view, adding nodes and connections, and wiring up custom card types.
 
 ## Prerequisites
 
@@ -231,7 +231,7 @@ This produces a browser bundle in `dist/` that includes pict-section-flow and al
 
 ## Next Steps
 
-- **[Architecture](Architecture.md)** — Understand the service/provider design
-- **[Implementation Reference](Implementation_Reference.md)** — Full API for every method
-- **[Custom Styling](Custom-Styling.md)** — CSS variables and theme configuration
-- **[Layout Persistence](Layout_Persistence.md)** — Save layouts to localStorage or a REST API
+- **[Architecture](Architecture.md)** -- Understand the service/provider design
+- **[Implementation Reference](Implementation_Reference.md)** -- Full API for every method
+- **[Custom Styling](Custom-Styling.md)** -- CSS variables and theme configuration
+- **[Layout Persistence](Layout_Persistence.md)** -- Save layouts to localStorage or a REST API

@@ -169,6 +169,6 @@ flowView._EventHandlerProvider.registerHandler('onNodeAdded',
 
 ## See Also
 
-- [addNode](addNode.md) — Triggers `onNodeAdded` and `onFlowChanged`
-- [selectNode](selectNode.md) — Triggers `onNodeSelected`
-- [setTheme](setTheme.md) — Triggers `onThemeChanged`
+- [addNode](addNode.md) -- Triggers `onNodeAdded` and `onFlowChanged`
+- [selectNode](selectNode.md) -- Triggers `onNodeSelected`
+- [setTheme](setTheme.md) -- Triggers `onThemeChanged`

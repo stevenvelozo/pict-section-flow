@@ -50,7 +50,7 @@ Clear all selection state (node, connection, and tether).
 
 Delete the currently selected node or connection. If a node is selected, its connections are also removed.
 
-**Returns:** `boolean` — `true` if something was deleted.
+**Returns:** `boolean` -- `true` if something was deleted.
 
 ## Examples
 
@@ -112,5 +112,5 @@ function handleDelete()
 
 ## See Also
 
-- [addNode](addNode.md) / [removeNode](removeNode.md) — Node CRUD
-- [registerHandler](registerHandler.md) — Event hooks
+- [addNode](addNode.md) / [removeNode](removeNode.md) -- Node CRUD
+- [registerHandler](registerHandler.md) -- Event hooks

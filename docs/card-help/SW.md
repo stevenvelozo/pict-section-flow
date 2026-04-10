@@ -4,10 +4,10 @@ The **Switch** node routes execution to one of multiple outputs based on a match
 
 ## Ports
 
-- **In** (input) — the value to match against cases
-- **Case A** (output) — fires when the input matches case A
-- **Case B** (output) — fires when the input matches case B
-- **Default** (output) — fires when the input does not match any defined case
+- **In** (input) -- the value to match against cases
+- **Case A** (output) -- fires when the input matches case A
+- **Case B** (output) -- fires when the input matches case B
+- **Default** (output) -- fires when the input does not match any defined case
 
 ## Behavior
 

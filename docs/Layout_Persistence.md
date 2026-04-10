@@ -4,7 +4,7 @@ Pict-Section-Flow can save and restore spatial arrangements of nodes and panels 
 
 ## How It Works
 
-A **layout** captures the position, size, and viewport state of a flow diagram at a point in time. It does not store the flow's logical content (nodes, connections, data) — only where things are on screen.
+A **layout** captures the position, size, and viewport state of a flow diagram at a point in time. It does not store the flow's logical content (nodes, connections, data) -- only where things are on screen.
 
 Each saved layout contains:
 
@@ -79,8 +79,8 @@ layoutProvider.loadPersistedLayouts();
 
 ## Configuration Options
 
-- **`StorageKey`** (string) — Override the localStorage key. Passed via options when instantiating the provider.
-- **`StorageKey: false`** — Disable localStorage persistence entirely (useful when using only a remote backend).
+- **`StorageKey`** (string) -- Override the localStorage key. Passed via options when instantiating the provider.
+- **`StorageKey: false`** -- Disable localStorage persistence entirely (useful when using only a remote backend).
 
 ## Events
 

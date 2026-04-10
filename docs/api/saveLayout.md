@@ -148,5 +148,5 @@ tmpLayoutProvider.loadPersistedLayouts();
 
 ## See Also
 
-- [Layout Persistence](../Layout_Persistence.md) — Detailed guide on storage backends
-- [autoLayout](autoLayout.md) — Automatic topological layout
+- [Layout Persistence](../Layout_Persistence.md) -- Detailed guide on storage backends
+- [autoLayout](autoLayout.md) -- Automatic topological layout

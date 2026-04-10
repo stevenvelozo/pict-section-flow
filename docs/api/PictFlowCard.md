@@ -60,8 +60,8 @@ Each port object:
 | `Side` | string | `'left'`/`'right'` | Port side: `'left'`, `'right'`, `'top'`, `'bottom'` |
 | `MinimumInputCount` | number | `0` | Minimum required connections (inputs only) |
 | `MaximumInputCount` | number | `-1` | Maximum allowed connections (-1 = unlimited, inputs only) |
-| `PortType` | string | — | Type for styling: `'event'`, `'setting'`, `'value'`, `'error'` |
-| `DataType` | string | — | Semantic data type (for validation/display) |
+| `PortType` | string | -- | Type for styling: `'event'`, `'setting'`, `'value'`, `'error'` |
+| `DataType` | string | -- | Semantic data type (for validation/display) |
 
 ### Label Display Options
 
@@ -111,7 +111,7 @@ Register this card with a flow view's node type provider.
 |-----------|------|-------------|
 | `pFlowView` | PictViewFlow | The flow view instance |
 
-**Returns:** `boolean` — whether registration succeeded.
+**Returns:** `boolean` -- whether registration succeeded.
 
 ## Examples
 
@@ -211,6 +211,6 @@ tmpCard.registerWithFlowView(flowView);
 
 ## See Also
 
-- [registerNodeType](registerNodeType.md) — Register types directly without PictFlowCard
-- [PictFlowCardPropertiesPanel](PictFlowCardPropertiesPanel.md) — Custom panel types
-- [addNode](addNode.md) — Create nodes from registered types
+- [registerNodeType](registerNodeType.md) -- Register types directly without PictFlowCard
+- [PictFlowCardPropertiesPanel](PictFlowCardPropertiesPanel.md) -- Custom panel types
+- [addNode](addNode.md) -- Create nodes from registered types

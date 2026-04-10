@@ -13,13 +13,13 @@ flowView.marshalFromView();
 
 Load flow data from the AppData address specified in `FlowDataAddress` into the view and render it.
 
-This is the "pull" direction: AppData → Flow View.
+This is the "pull" direction: AppData -> Flow View.
 
 ## marshalFromView
 
 Write the current flow data back to the AppData address specified in `FlowDataAddress`.
 
-This is the "push" direction: Flow View → AppData.
+This is the "push" direction: Flow View -> AppData.
 
 ## Configuration
 
@@ -92,4 +92,4 @@ tmpFlowView._EventHandlerProvider.registerHandler('onFlowChanged',
 
 ## See Also
 
-- [getFlowData / setFlowData](getFlowData.md) — Direct get/set without AppData
+- [getFlowData / setFlowData](getFlowData.md) -- Direct get/set without AppData

@@ -73,5 +73,5 @@ flowView.autoLayout();
 
 ## See Also
 
-- [setZoom / zoomToFit](setZoom.md) — Fit the result in the viewport
-- [saveLayout / restoreLayout](saveLayout.md) — Persist spatial arrangements
+- [setZoom / zoomToFit](setZoom.md) -- Fit the result in the viewport
+- [saveLayout / restoreLayout](saveLayout.md) -- Persist spatial arrangements

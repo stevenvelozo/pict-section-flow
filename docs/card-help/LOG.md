@@ -4,13 +4,13 @@ The **Log Values** node writes incoming data to the console or log output for de
 
 ## Ports
 
-- **Values** (input, multi) — accepts one or more connections carrying values to log
-- **Pass** (output) — passes the last received value through unchanged
+- **Values** (input, multi) -- accepts one or more connections carrying values to log
+- **Pass** (output) -- passes the last received value through unchanged
 
 ## Properties
 
-- **LogLevel** — the severity level for the log entry (e.g. `info`, `warn`, `error`, `trace`)
-- **Format** — an optional format string controlling how values are serialized
+- **LogLevel** -- the severity level for the log entry (e.g. `info`, `warn`, `error`, `trace`)
+- **Format** -- an optional format string controlling how values are serialized
 
 ## Behavior
 

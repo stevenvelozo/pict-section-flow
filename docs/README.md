@@ -2,7 +2,7 @@
 
 An interactive flow diagram section view for the [Pict](https://github.com/stevenvelozo/pict) application framework. Build node-based visual editors, workflow designers, and data pipeline tools with a declarative, configuration-driven API.
 
-Pict-Section-Flow provides a complete graph editing experience — nodes, ports, connections, properties panels, theming, and layout persistence — all composable through the Fable service provider pattern.
+Pict-Section-Flow provides a complete graph editing experience -- nodes, ports, connections, properties panels, theming, and layout persistence -- all composable through the Fable service provider pattern.
 
 ## What It Does
 
@@ -70,7 +70,7 @@ Developers define reusable node types by extending `PictFlowCard`. Each card dec
 
 ### Properties Panels
 
-Nodes can open floating panels tethered to them by a line. Four built-in panel types cover common needs — Template, Markdown, Form, and View — or you can create custom panel types by extending `PictFlowCardPropertiesPanel`.
+Nodes can open floating panels tethered to them by a line. Four built-in panel types cover common needs -- Template, Markdown, Form, and View -- or you can create custom panel types by extending `PictFlowCardPropertiesPanel`.
 
 ### Theming
 
@@ -112,21 +112,21 @@ tmpFlow._EventHandlerProvider.registerHandler('onFlowChanged',
 
 ## Learn More
 
-- **[Getting Started](Getting_Started.md)** — Build your first flow diagram in five minutes
-- **[Architecture](Architecture.md)** — Detailed service/provider design with data flow diagrams
-- **[Implementation Reference](Implementation_Reference.md)** — Complete API surface for every service and provider
-- **[Custom Styling](Custom-Styling.md)** — CSS custom properties reference and theme API
-- **[Layout Persistence](Layout_Persistence.md)** — Save and restore layouts with localStorage or REST
+- **[Getting Started](Getting_Started.md)** -- Build your first flow diagram in five minutes
+- **[Architecture](Architecture.md)** -- Detailed service/provider design with data flow diagrams
+- **[Implementation Reference](Implementation_Reference.md)** -- Complete API surface for every service and provider
+- **[Custom Styling](Custom-Styling.md)** -- CSS custom properties reference and theme API
+- **[Layout Persistence](Layout_Persistence.md)** -- Save and restore layouts with localStorage or REST
 
 ## Ecosystem
 
 Pict-Section-Flow is part of the [Retold](https://github.com/stevenvelozo/retold) module suite:
 
-- [pict](https://github.com/stevenvelozo/pict) — Core MVC application framework
-- [pict-view](https://github.com/stevenvelozo/pict-view) — View base class
-- [pict-provider](https://github.com/stevenvelozo/pict-provider) — Provider base class
-- [pict-section-form](https://github.com/stevenvelozo/pict-section-form) — Form sections (used for Form panel type)
-- [fable](https://github.com/stevenvelozo/fable) — Service infrastructure and dependency injection
+- [pict](https://github.com/stevenvelozo/pict) -- Core MVC application framework
+- [pict-view](https://github.com/stevenvelozo/pict-view) -- View base class
+- [pict-provider](https://github.com/stevenvelozo/pict-provider) -- Provider base class
+- [pict-section-form](https://github.com/stevenvelozo/pict-section-form) -- Form sections (used for Form panel type)
+- [fable](https://github.com/stevenvelozo/fable) -- Service infrastructure and dependency injection
 
 ## License
 

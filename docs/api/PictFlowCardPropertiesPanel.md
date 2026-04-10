@@ -231,5 +231,5 @@ class DataPreviewCard extends libPictFlowCard
 
 ## See Also
 
-- [PictFlowCard](PictFlowCard.md) — Define cards that use panels
-- [openPanel / closePanel](openPanel.md) — Panel lifecycle methods
+- [PictFlowCard](PictFlowCard.md) -- Define cards that use panels
+- [openPanel / closePanel](openPanel.md) -- Panel lifecycle methods

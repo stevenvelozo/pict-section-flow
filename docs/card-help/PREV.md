@@ -4,8 +4,8 @@ The **Data Preview** node displays a tabular summary of the data flowing through
 
 ## Ports
 
-- **Data** (input) — the data object to inspect
-- **Pass** (output) — passes the data through unchanged
+- **Data** (input) -- the data object to inspect
+- **Pass** (output) -- passes the data through unchanged
 
 ## Behavior
 

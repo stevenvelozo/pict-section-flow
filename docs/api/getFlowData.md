@@ -47,7 +47,7 @@ A deep clone of the complete flow state:
 
 ### Events Fired
 
-- `onFlowChanged` — with the new flow data
+- `onFlowChanged` -- with the new flow data
 
 ## Examples
 
@@ -103,10 +103,10 @@ console.log('Zoom:', tmpData.ViewState.Zoom);
 
 ## Related Methods
 
-- `getNode(pNodeHash)` — Retrieve a single node by hash
-- `getConnection(pConnectionHash)` — Retrieve a single connection by hash
+- `getNode(pNodeHash)` -- Retrieve a single node by hash
+- `getConnection(pConnectionHash)` -- Retrieve a single connection by hash
 
 ## See Also
 
-- [marshalToView / marshalFromView](marshalToView.md) — AppData two-way binding
-- [addNode](addNode.md) — Add individual nodes
+- [marshalToView / marshalFromView](marshalToView.md) -- AppData two-way binding
+- [addNode](addNode.md) -- Add individual nodes

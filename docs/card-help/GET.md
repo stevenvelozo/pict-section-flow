@@ -4,8 +4,8 @@ The **Get Value** node retrieves a named variable from the flow context and emit
 
 ## Ports
 
-- **In** (input) — trigger to read the value
-- **Value** (output) — the retrieved value
+- **In** (input) -- trigger to read the value
+- **Value** (output) -- the retrieved value
 
 ## Behavior
 

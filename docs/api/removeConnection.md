@@ -16,12 +16,12 @@ flowView.removeConnection(pConnectionHash)
 
 ## Returns
 
-`boolean` — `true` if the connection was found and removed, `false` otherwise.
+`boolean` -- `true` if the connection was found and removed, `false` otherwise.
 
 ## Events Fired
 
-- `onConnectionRemoved` — with the removed connection object
-- `onFlowChanged` — with the updated flow data
+- `onConnectionRemoved` -- with the removed connection object
+- `onFlowChanged` -- with the updated flow data
 
 ## Examples
 
@@ -53,5 +53,5 @@ tmpFlowData.Connections.forEach((pConn) =>
 
 ## See Also
 
-- [addConnection](addConnection.md) — Create a connection
-- [removeNode](removeNode.md) — Remove a node (cascades connections)
+- [addConnection](addConnection.md) -- Create a connection
+- [removeNode](removeNode.md) -- Remove a node (cascades connections)

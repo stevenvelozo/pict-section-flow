@@ -4,13 +4,13 @@ The **Set Value** node assigns a value to a named variable in the flow context.
 
 ## Ports
 
-- **In** (input) — trigger to perform the assignment
-- **Out** (output) — fires after the value has been set
+- **In** (input) -- trigger to perform the assignment
+- **Out** (output) -- fires after the value has been set
 
 ## Properties
 
-- **Variable Name** — the key under which the value will be stored
-- **Value Expression** — the expression to evaluate and assign
+- **Variable Name** -- the key under which the value will be stored
+- **Value Expression** -- the expression to evaluate and assign
 
 ## Behavior
 
@@ -22,6 +22,6 @@ Open the properties panel to configure the variable name and value expression us
 
 ## Tips
 
-- Variable names are case-sensitive — use consistent naming conventions
+- Variable names are case-sensitive -- use consistent naming conventions
 - Value expressions have access to the current flow context
 - Use Set Value at the beginning of a flow to initialize default variables

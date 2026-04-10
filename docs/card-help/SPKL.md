@@ -4,8 +4,8 @@ The **Sparkline** node renders a live sparkline chart visualizing numeric throug
 
 ## Ports
 
-- **Values** (input) — a numeric array or stream of values to plot
-- **Stats** (output) — emits computed statistics (min, max, mean) for the data set
+- **Values** (input) -- a numeric array or stream of values to plot
+- **Stats** (output) -- emits computed statistics (min, max, mean) for the data set
 
 ## Behavior
 

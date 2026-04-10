@@ -4,9 +4,9 @@ The **If-Then-Else** node evaluates a boolean condition expression and routes th
 
 ## Ports
 
-- **In** (input) — trigger that starts the evaluation
-- **Then** (output) — activated when the condition is **true**
-- **Else** (output) — activated when the condition is **false**
+- **In** (input) -- trigger that starts the evaluation
+- **Then** (output) -- activated when the condition is **true**
+- **Else** (output) -- activated when the condition is **false**
 
 ## Behavior
 

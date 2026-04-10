@@ -4,9 +4,9 @@ The **Status Monitor** node monitors the health status of upstream services and 
 
 ## Ports
 
-- **Check** (input, multi) — accepts connections from one or more services to monitor
-- **Healthy** (output) — fires when all monitored services report healthy
-- **Degraded** (output) — fires when one or more services report degraded status
+- **Check** (input, multi) -- accepts connections from one or more services to monitor
+- **Healthy** (output) -- fires when all monitored services report healthy
+- **Degraded** (output) -- fires when one or more services report degraded status
 
 ## Behavior
 

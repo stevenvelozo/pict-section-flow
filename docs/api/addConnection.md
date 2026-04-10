@@ -45,8 +45,8 @@ The connection object on success, or `false` if validation failed (e.g. duplicat
 
 ## Events Fired
 
-- `onConnectionCreated` — with the new connection object
-- `onFlowChanged` — with the complete flow data
+- `onConnectionCreated` -- with the new connection object
+- `onFlowChanged` -- with the complete flow data
 
 ## Examples
 
@@ -97,5 +97,5 @@ flowView.addConnection(tmpDecision.Hash, tmpNoPort.Hash, tmpFailure.Hash, tmpFai
 
 ## See Also
 
-- [removeConnection](removeConnection.md) — Delete a connection
-- [addNode](addNode.md) — Create nodes to connect
+- [removeConnection](removeConnection.md) -- Delete a connection
+- [addNode](addNode.md) -- Create nodes to connect

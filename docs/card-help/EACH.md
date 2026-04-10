@@ -4,9 +4,9 @@ The **Each** node iterates over a collection, executing connected downstream nod
 
 ## Ports
 
-- **Collection** (input) — an array or iterable to loop over
-- **Item** (output) — fires once per element with the current item
-- **Done** (output) — fires after all items have been processed
+- **Collection** (input) -- an array or iterable to loop over
+- **Item** (output) -- fires once per element with the current item
+- **Done** (output) -- fires after all items have been processed
 
 ## Behavior
 

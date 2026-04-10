@@ -64,7 +64,7 @@ Retrieve a node type configuration by hash. Returns the default type if the hash
 
 ## getNodeTypes
 
-**Returns:** Map of all registered node types (hash → config).
+**Returns:** Map of all registered node types (hash -> config).
 
 ## getNodeTypeList
 
@@ -138,5 +138,5 @@ flowView._NodeTypeProvider.removeNodeType('FREAD');
 
 ## See Also
 
-- [PictFlowCard](PictFlowCard.md) — Higher-level card class (recommended approach)
-- [addNode](addNode.md) — Create nodes from registered types
+- [PictFlowCard](PictFlowCard.md) -- Higher-level card class (recommended approach)
+- [addNode](addNode.md) -- Create nodes from registered types

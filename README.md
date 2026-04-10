@@ -5,17 +5,17 @@
 
 An interactive flow diagram section view for the Pict application framework. Build node-based visual editors, workflow designers, and data pipeline tools with a declarative, configuration-driven API.
 
-Pict-Section-Flow provides a complete graph editing experience — nodes, ports, connections, properties panels, theming, and layout persistence — all composable through the Fable service provider pattern.
+Pict-Section-Flow provides a complete graph editing experience -- nodes, ports, connections, properties panels, theming, and layout persistence -- all composable through the Fable service provider pattern.
 
 ## Features
 
-- **Node-Based Graph Editor** — Drag-and-drop nodes with typed input/output ports and bezier or orthogonal connections
-- **Custom Card Types** — Define reusable node types with the `PictFlowCard` base class; register categories, icons, port constraints, and body content
-- **Properties Panels** — On-graph panels with four built-in types: Template, Markdown, Form, and View
-- **Theming** — Six built-in themes plus a CSS custom properties API with 70+ design tokens
-- **Layout Persistence** — Save and restore spatial arrangements to localStorage or any backend
-- **Event System** — Hook into 20+ lifecycle events for custom behavior without modifying core code
-- **Viewport Controls** — Pan, zoom, fullscreen, grid snap, zoom-to-fit, and auto-layout
+- **Node-Based Graph Editor** -- Drag-and-drop nodes with typed input/output ports and bezier or orthogonal connections
+- **Custom Card Types** -- Define reusable node types with the `PictFlowCard` base class; register categories, icons, port constraints, and body content
+- **Properties Panels** -- On-graph panels with four built-in types: Template, Markdown, Form, and View
+- **Theming** -- Six built-in themes plus a CSS custom properties API with 70+ design tokens
+- **Layout Persistence** -- Save and restore spatial arrangements to localStorage or any backend
+- **Event System** -- Hook into 20+ lifecycle events for custom behavior without modifying core code
+- **Viewport Controls** -- Pan, zoom, fullscreen, grid snap, zoom-to-fit, and auto-layout
 
 ## Installation
 
@@ -128,11 +128,11 @@ The `|| false` fallback ensures the build never fails if a markdown file is miss
 
 Full documentation is available at [https://stevenvelozo.github.io/pict-section-flow/](https://stevenvelozo.github.io/pict-section-flow/)
 
-- [Getting Started](https://stevenvelozo.github.io/pict-section-flow/#/Getting_Started) — First flow diagram in five minutes
-- [Architecture](https://stevenvelozo.github.io/pict-section-flow/#/Architecture) — Service/provider design and data flow
-- [Implementation Reference](https://stevenvelozo.github.io/pict-section-flow/#/Implementation_Reference) — Complete API surface
-- [Custom Styling](https://stevenvelozo.github.io/pict-section-flow/#/Custom-Styling) — CSS custom properties and theme API
-- [Layout Persistence](https://stevenvelozo.github.io/pict-section-flow/#/Layout_Persistence) — Save/restore with localStorage or REST
+- [Getting Started](https://stevenvelozo.github.io/pict-section-flow/#/Getting_Started) -- First flow diagram in five minutes
+- [Architecture](https://stevenvelozo.github.io/pict-section-flow/#/Architecture) -- Service/provider design and data flow
+- [Implementation Reference](https://stevenvelozo.github.io/pict-section-flow/#/Implementation_Reference) -- Complete API surface
+- [Custom Styling](https://stevenvelozo.github.io/pict-section-flow/#/Custom-Styling) -- CSS custom properties and theme API
+- [Layout Persistence](https://stevenvelozo.github.io/pict-section-flow/#/Layout_Persistence) -- Save/restore with localStorage or REST
 
 ## API Reference (Function Docs)
 
@@ -161,11 +161,11 @@ Detailed per-function documentation with code snippets:
 
 ## Related Packages
 
-- [pict](https://github.com/stevenvelozo/pict) — MVC application framework
-- [pict-view](https://github.com/stevenvelozo/pict-view) — View base class
-- [pict-provider](https://github.com/stevenvelozo/pict-provider) — Provider base class
-- [pict-section-form](https://github.com/stevenvelozo/pict-section-form) — Form sections (used for Form panels)
-- [fable](https://github.com/stevenvelozo/fable) — Service infrastructure
+- [pict](https://github.com/stevenvelozo/pict) -- MVC application framework
+- [pict-view](https://github.com/stevenvelozo/pict-view) -- View base class
+- [pict-provider](https://github.com/stevenvelozo/pict-provider) -- Provider base class
+- [pict-section-form](https://github.com/stevenvelozo/pict-section-form) -- Form sections (used for Form panels)
+- [fable](https://github.com/stevenvelozo/fable) -- Service infrastructure
 
 ## License
 

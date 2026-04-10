@@ -13,7 +13,7 @@ flowView.exitFullscreen();
 
 Toggles between normal and fullscreen modes.
 
-**Returns:** `boolean` — the new fullscreen state (`true` if now fullscreen).
+**Returns:** `boolean` -- the new fullscreen state (`true` if now fullscreen).
 
 ## exitFullscreen
 
@@ -65,4 +65,4 @@ setTimeout(() =>
 
 ## See Also
 
-- [setZoom / zoomToFit](setZoom.md) — Viewport controls
+- [setZoom / zoomToFit](setZoom.md) -- Viewport controls
