@@ -22,6 +22,7 @@
         "chai": "^6.2.2",
         "mocha": "^11.7.5",
         "pict": "^1.0.359",
+        "pict-docuserve": "^0.1.5",
         "pict-router": "^1.0.9",
         "quackage": "^1.1.0"
     }
