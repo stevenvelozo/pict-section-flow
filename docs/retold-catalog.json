@@ -1,169 +1,220 @@
 {
-	"Generated": "2026-04-10T17:25:15.652Z",
+	"Generated": "2026-05-22T05:45:03.613Z",
+	"Mode": "module",
 	"GitHubOrg": "stevenvelozo",
 	"DefaultBranch": "master",
-	"Groups": [
-		{
-			"Name": "Dist",
-			"Key": "dist",
-			"Description": "",
-			"Modules": [
-				{
-					"Name": "indoctrinate_content_staging",
-					"Repo": "indoctrinate_content_staging",
-					"Group": "dist",
-					"Branch": "master",
-					"HasDocs": false,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": []
-				}
-			]
-		},
-		{
-			"Name": "Docs",
-			"Key": "docs",
-			"Description": "",
-			"Modules": [
-				{
-					"Name": "api",
-					"Repo": "api",
-					"Group": "docs",
-					"Branch": "master",
-					"HasDocs": true,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": [
-						"api/PictFlowCard.md",
-						"api/PictFlowCardPropertiesPanel.md",
-						"api/addConnection.md",
-						"api/addNode.md",
-						"api/autoLayout.md",
-						"api/getFlowData.md",
-						"api/marshalToView.md",
-						"api/openPanel.md",
-						"api/registerHandler.md",
-						"api/registerNodeType.md",
-						"api/removeConnection.md",
-						"api/removeNode.md",
-						"api/saveLayout.md",
-						"api/screenToSVGCoords.md",
-						"api/selectNode.md",
-						"api/setTheme.md",
-						"api/setZoom.md",
-						"api/toggleFullscreen.md"
-					]
-				},
-				{
-					"Name": "card-help",
-					"Repo": "card-help",
-					"Group": "docs",
-					"Branch": "master",
-					"HasDocs": true,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": [
-						"card-help/EACH.md",
-						"card-help/FREAD.md",
-						"card-help/FWRITE.md",
-						"card-help/GET.md",
-						"card-help/ITE.md",
-						"card-help/LOG.md",
-						"card-help/NOTE.md",
-						"card-help/PREV.md",
-						"card-help/SET.md",
-						"card-help/SPKL.md",
-						"card-help/STAT.md",
-						"card-help/SW.md"
-					]
-				},
-				{
-					"Name": "css",
-					"Repo": "css",
-					"Group": "docs",
-					"Branch": "master",
-					"HasDocs": true,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": [
-						"css/docuserve.css"
-					]
-				}
-			]
-		},
-		{
-			"Name": "Example_applications",
-			"Key": "example_applications",
-			"Description": "",
-			"Modules": [
-				{
-					"Name": ".data",
-					"Repo": ".data",
-					"Group": "example_applications",
-					"Branch": "master",
-					"HasDocs": false,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": []
-				},
-				{
-					"Name": "simple_cards",
-					"Repo": "simple_cards",
-					"Group": "example_applications",
-					"Branch": "master",
-					"HasDocs": false,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": []
-				}
-			]
-		},
-		{
-			"Name": "Source",
-			"Key": "source",
-			"Description": "",
-			"Modules": [
-				{
-					"Name": "panels",
-					"Repo": "panels",
-					"Group": "source",
-					"Branch": "master",
-					"HasDocs": false,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": []
-				},
-				{
-					"Name": "providers",
-					"Repo": "providers",
-					"Group": "source",
-					"Branch": "master",
-					"HasDocs": false,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": []
-				},
-				{
-					"Name": "services",
-					"Repo": "services",
-					"Group": "source",
-					"Branch": "master",
-					"HasDocs": false,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": []
-				},
-				{
-					"Name": "views",
-					"Repo": "views",
-					"Group": "source",
-					"Branch": "master",
-					"HasDocs": false,
-					"HasCover": false,
-					"Sidebar": [],
-					"DocFiles": []
-				}
-			]
-		}
-	]
+	"Module": {
+		"Name": "pict-section-flow",
+		"Repo": "pict-section-flow",
+		"Group": "",
+		"Branch": "master",
+		"HasDocs": true,
+		"HasCover": true,
+		"Sidebar": [
+			{
+				"Title": "Getting Started",
+				"Children": [
+					{
+						"Title": "Overview",
+						"Path": "README.md"
+					},
+					{
+						"Title": "Quick Start",
+						"Path": "Getting_Started.md"
+					},
+					{
+						"Title": "Custom Styling",
+						"Path": "Custom-Styling.md"
+					},
+					{
+						"Title": "Theme Integration",
+						"Path": "Theme_Integration.md"
+					}
+				]
+			},
+			{
+				"Title": "Architecture",
+				"Children": [
+					{
+						"Title": "Design Overview",
+						"Path": "Architecture.md"
+					},
+					{
+						"Title": "Data Model",
+						"Path": "Data_Model.md"
+					},
+					{
+						"Title": "Event System",
+						"Path": "Event_System.md"
+					}
+				]
+			},
+			{
+				"Title": "Reference",
+				"Children": [
+					{
+						"Title": "Implementation Reference",
+						"Path": "Implementation_Reference.md"
+					},
+					{
+						"Title": "Layout Persistence",
+						"Path": "Layout_Persistence.md"
+					}
+				]
+			},
+			{
+				"Title": "API -- Data Management",
+				"Children": [
+					{
+						"Title": "addNode",
+						"Path": "api/addNode.md"
+					},
+					{
+						"Title": "removeNode",
+						"Path": "api/removeNode.md"
+					},
+					{
+						"Title": "addConnection",
+						"Path": "api/addConnection.md"
+					},
+					{
+						"Title": "removeConnection",
+						"Path": "api/removeConnection.md"
+					},
+					{
+						"Title": "getFlowData / setFlowData",
+						"Path": "api/getFlowData.md"
+					},
+					{
+						"Title": "marshalToView / marshalFromView",
+						"Path": "api/marshalToView.md"
+					}
+				]
+			},
+			{
+				"Title": "API -- Selection & Viewport",
+				"Children": [
+					{
+						"Title": "selectNode / deselectAll",
+						"Path": "api/selectNode.md"
+					},
+					{
+						"Title": "setZoom / zoomToFit",
+						"Path": "api/setZoom.md"
+					},
+					{
+						"Title": "autoLayout",
+						"Path": "api/autoLayout.md"
+					},
+					{
+						"Title": "screenToSVGCoords",
+						"Path": "api/screenToSVGCoords.md"
+					},
+					{
+						"Title": "toggleFullscreen",
+						"Path": "api/toggleFullscreen.md"
+					}
+				]
+			},
+			{
+				"Title": "API -- Panels",
+				"Children": [
+					{
+						"Title": "openPanel / closePanel / togglePanel",
+						"Path": "api/openPanel.md"
+					}
+				]
+			},
+			{
+				"Title": "API -- Theming & Events",
+				"Children": [
+					{
+						"Title": "setTheme / registerTheme",
+						"Path": "api/setTheme.md"
+					},
+					{
+						"Title": "registerHandler / fireEvent",
+						"Path": "api/registerHandler.md"
+					}
+				]
+			},
+			{
+				"Title": "API -- Layout Persistence",
+				"Children": [
+					{
+						"Title": "saveLayout / restoreLayout",
+						"Path": "api/saveLayout.md"
+					}
+				]
+			},
+			{
+				"Title": "API -- Extension Points",
+				"Children": [
+					{
+						"Title": "PictFlowCard",
+						"Path": "api/PictFlowCard.md"
+					},
+					{
+						"Title": "PictFlowCardPropertiesPanel",
+						"Path": "api/PictFlowCardPropertiesPanel.md"
+					},
+					{
+						"Title": "registerNodeType",
+						"Path": "api/registerNodeType.md"
+					}
+				]
+			}
+		],
+		"DocFiles": [
+			".nojekyll",
+			"Architecture.md",
+			"Custom-Styling.md",
+			"Data_Model.md",
+			"Event_System.md",
+			"Getting_Started.md",
+			"Implementation_Reference.md",
+			"Layout_Persistence.md",
+			"README.md",
+			"Theme_Integration.md",
+			"_brand.json",
+			"_cover.md",
+			"_sidebar.md",
+			"_topbar.md",
+			"_version.json",
+			"api/PictFlowCard.md",
+			"api/PictFlowCardPropertiesPanel.md",
+			"api/addConnection.md",
+			"api/addNode.md",
+			"api/autoLayout.md",
+			"api/getFlowData.md",
+			"api/marshalToView.md",
+			"api/openPanel.md",
+			"api/registerHandler.md",
+			"api/registerNodeType.md",
+			"api/removeConnection.md",
+			"api/removeNode.md",
+			"api/saveLayout.md",
+			"api/screenToSVGCoords.md",
+			"api/selectNode.md",
+			"api/setTheme.md",
+			"api/setZoom.md",
+			"api/toggleFullscreen.md",
+			"card-help/EACH.md",
+			"card-help/FREAD.md",
+			"card-help/FWRITE.md",
+			"card-help/GET.md",
+			"card-help/ITE.md",
+			"card-help/LOG.md",
+			"card-help/NOTE.md",
+			"card-help/PREV.md",
+			"card-help/SET.md",
+			"card-help/SPKL.md",
+			"card-help/STAT.md",
+			"card-help/SW.md",
+			"index.html",
+			"retold-catalog.json",
+			"retold-keyword-index.json"
+		]
+	},
+	"Groups": []
 }
