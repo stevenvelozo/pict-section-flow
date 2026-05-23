@@ -1,5 +1,5 @@
 {
-	"Generated": "2026-05-22T05:45:03.613Z",
+	"Generated": "2026-05-23T01:50:57.746Z",
 	"Mode": "module",
 	"GitHubOrg": "stevenvelozo",
 	"DefaultBranch": "master",
@@ -163,6 +163,15 @@
 						"Path": "api/registerNodeType.md"
 					}
 				]
+			},
+			{
+				"Title": "Examples",
+				"Children": [
+					{
+						"Title": "Simple Cards",
+						"Path": "#/page/examples/simple_cards/README"
+					}
+				]
 			}
 		],
 		"DocFiles": [
@@ -211,6 +220,10 @@
 			"card-help/SPKL.md",
 			"card-help/STAT.md",
 			"card-help/SW.md",
+			"examples/README.md",
+			"examples/simple_cards/README.md",
+			"examples/simple_cards/index.html",
+			"examples/simple_cards/pict-section-flow-example-simple-cards.compatible.min.js",
 			"index.html",
 			"retold-catalog.json",
 			"retold-keyword-index.json"

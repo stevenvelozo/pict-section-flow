@@ -51,3 +51,7 @@
   - [PictFlowCard](api/PictFlowCard.md)
   - [PictFlowCardPropertiesPanel](api/PictFlowCardPropertiesPanel.md)
   - [registerNodeType](api/registerNodeType.md)
+
+- Examples
+
+  - [Simple Cards](#/page/examples/simple_cards/README)

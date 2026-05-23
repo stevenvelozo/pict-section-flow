@@ -9,3 +9,9 @@
 
 [GitHub](https://github.com/stevenvelozo/pict-section-flow)
 [Get Started](#pict-section-flow)
+
+<!-- docuserve:examples:start -->
+| Example | Complexity | Launch |
+|---------|------------|--------|
+| [Simple Cards](examples/simple%5Fcards/README.md) | Basic | [&#9654; Launch](examples/simple%5Fcards/index.html) |
+<!-- docuserve:examples:end -->

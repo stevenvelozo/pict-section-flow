@@ -3,6 +3,14 @@
 	"version": "0.0.1",
 	"description": "Pict Section Flow - Simple Cards Example Application",
 	"main": "source/Pict-Application-FlowExample.js",
+	"retold": {
+		"ExampleApplication": {
+			"Stage": true,
+			"Title": "Simple Cards",
+			"Summary": "Twelve custom PictFlowCard subclasses across six categories — every panel type (Markdown / Template / Form / View), every BodyContent renderer (SVG / HTML / Canvas), wrapped in a multi-page Pict shell with router-driven navigation and a curated sample-graph catalog.",
+			"Complexity": "Basic"
+		}
+	},
 	"scripts": {
 		"start": "node source/Pict-Application-FlowExample.js",
 		"prebuild": "node ../../scripts/generate-card-help.js",
