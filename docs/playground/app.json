@@ -1,0 +1,6 @@
+{
+	"Name": "Flow Playground",
+	"Hash": "FlowPlayground",
+	"MainViewportViewIdentifier": "Flow",
+	"AutoRenderMainViewportViewAfterInitialize": true
+}

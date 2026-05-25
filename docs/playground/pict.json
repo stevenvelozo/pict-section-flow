@@ -1,0 +1,17 @@
+{
+	"Product": "FlowPlayground",
+	"FlowViewConfig":
+	{
+		"FlowDataAddress":         "AppData.FlowData",
+		"EnableToolbar":           true,
+		"EnableCardPalette":       true,
+		"IncludeDefaultNodeTypes": true,
+		"EnablePanning":           true,
+		"EnableZooming":           true,
+		"EnableNodeDragging":      true,
+		"EnableConnectionCreation":true,
+		"EnableLayoutMenu":        true,
+		"DefaultLayoutAlgorithm":  "Custom",
+		"DefaultEdgeTheme":        "Bezier"
+	}
+}

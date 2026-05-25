@@ -1,0 +1,85 @@
+{
+	"FlowData":
+	{
+		"Nodes":
+		[
+			{
+				"Hash":   "node-source",
+				"Type":   "default",
+				"X":      120,
+				"Y":      160,
+				"Width":  160,
+				"Height": 80,
+				"Title":  "Read CSV",
+				"TitleBarColor": "#42a5f5",
+				"BodyStyle":     { "fill": "#eaf2f8", "stroke": "#42a5f5" },
+				"Ports":
+				[
+					{ "Hash": "node-source-trigger", "Direction": "input",  "Side": "left",  "Label": "Run",    "PortType": "event-in" },
+					{ "Hash": "node-source-rows",   "Direction": "output", "Side": "right", "Label": "Rows",   "PortType": "value" },
+					{ "Hash": "node-source-error",  "Direction": "output", "Side": "right", "Label": "Error",  "PortType": "error" }
+				],
+				"Data": { "FilePath": "/tmp/sample.csv" }
+			},
+			{
+				"Hash":   "node-transform",
+				"Type":   "default",
+				"X":      420,
+				"Y":      120,
+				"Width":  170,
+				"Height": 80,
+				"Title":  "Normalize",
+				"TitleBarColor": "#ec407a",
+				"BodyStyle":     { "fill": "#fce4ec", "stroke": "#ec407a" },
+				"Ports":
+				[
+					{ "Hash": "node-transform-in",  "Direction": "input",  "Side": "left",  "Label": "Rows", "PortType": "value" },
+					{ "Hash": "node-transform-out", "Direction": "output", "Side": "right", "Label": "Rows", "PortType": "value" }
+				],
+				"Data": { "TrimWhitespace": true, "Lowercase": true }
+			},
+			{
+				"Hash":   "node-sink",
+				"Type":   "default",
+				"X":      720,
+				"Y":      160,
+				"Width":  160,
+				"Height": 80,
+				"Title":  "Write JSON",
+				"TitleBarColor": "#66bb6a",
+				"BodyStyle":     { "fill": "#e8f5e9", "stroke": "#66bb6a" },
+				"Ports":
+				[
+					{ "Hash": "node-sink-in",   "Direction": "input",  "Side": "left",  "Label": "Rows", "PortType": "value" },
+					{ "Hash": "node-sink-done", "Direction": "output", "Side": "right", "Label": "Done", "PortType": "event-out" }
+				],
+				"Data": { "FilePath": "/tmp/output.json" }
+			}
+		],
+		"Connections":
+		[
+			{
+				"Hash":           "edge-source-to-transform",
+				"SourceNodeHash": "node-source",
+				"SourcePortHash": "node-source-rows",
+				"TargetNodeHash": "node-transform",
+				"TargetPortHash": "node-transform-in",
+				"Data": {}
+			},
+			{
+				"Hash":           "edge-transform-to-sink",
+				"SourceNodeHash": "node-transform",
+				"SourcePortHash": "node-transform-out",
+				"TargetNodeHash": "node-sink",
+				"TargetPortHash": "node-sink-in",
+				"Data": {}
+			}
+		],
+		"OpenPanels":       [],
+		"SavedLayouts":     [],
+		"ViewState":        { "PanX": 0, "PanY": 0, "Zoom": 1, "SelectedNodeHash": null, "SelectedConnectionHash": null, "SelectedTetherHash": null },
+		"LayoutAlgorithm":  "Custom",
+		"LayoutParameters": {},
+		"LayoutAutoApply":  false
+	}
+}
