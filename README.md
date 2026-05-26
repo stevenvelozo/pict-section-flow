@@ -126,13 +126,13 @@ The `|| false` fallback ensures the build never fails if a markdown file is miss
 
 ## Documentation
 
-Full documentation is available at [https://stevenvelozo.github.io/pict-section-flow/](https://stevenvelozo.github.io/pict-section-flow/)
+Full documentation is available at [https://fable-retold.github.io/pict-section-flow/](https://fable-retold.github.io/pict-section-flow/)
 
-- [Getting Started](https://stevenvelozo.github.io/pict-section-flow/#/Getting_Started) -- First flow diagram in five minutes
-- [Architecture](https://stevenvelozo.github.io/pict-section-flow/#/Architecture) -- Service/provider design and data flow
-- [Implementation Reference](https://stevenvelozo.github.io/pict-section-flow/#/Implementation_Reference) -- Complete API surface
-- [Custom Styling](https://stevenvelozo.github.io/pict-section-flow/#/Custom-Styling) -- CSS custom properties and theme API
-- [Layout Persistence](https://stevenvelozo.github.io/pict-section-flow/#/Layout_Persistence) -- Save/restore with localStorage or REST
+- [Getting Started](https://fable-retold.github.io/pict-section-flow/#/Getting_Started) -- First flow diagram in five minutes
+- [Architecture](https://fable-retold.github.io/pict-section-flow/#/Architecture) -- Service/provider design and data flow
+- [Implementation Reference](https://fable-retold.github.io/pict-section-flow/#/Implementation_Reference) -- Complete API surface
+- [Custom Styling](https://fable-retold.github.io/pict-section-flow/#/Custom-Styling) -- CSS custom properties and theme API
+- [Layout Persistence](https://fable-retold.github.io/pict-section-flow/#/Layout_Persistence) -- Save/restore with localStorage or REST
 
 ## API Reference (Function Docs)
 
@@ -161,11 +161,11 @@ Detailed per-function documentation with code snippets:
 
 ## Related Packages
 
-- [pict](https://github.com/stevenvelozo/pict) -- MVC application framework
-- [pict-view](https://github.com/stevenvelozo/pict-view) -- View base class
-- [pict-provider](https://github.com/stevenvelozo/pict-provider) -- Provider base class
-- [pict-section-form](https://github.com/stevenvelozo/pict-section-form) -- Form sections (used for Form panels)
-- [fable](https://github.com/stevenvelozo/fable) -- Service infrastructure
+- [pict](https://github.com/fable-retold/pict) -- MVC application framework
+- [pict-view](https://github.com/fable-retold/pict-view) -- View base class
+- [pict-provider](https://github.com/fable-retold/pict-provider) -- Provider base class
+- [pict-section-form](https://github.com/fable-retold/pict-section-form) -- Form sections (used for Form panels)
+- [fable](https://github.com/fable-retold/fable) -- Service infrastructure
 
 ## License
 

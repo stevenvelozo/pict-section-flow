@@ -7,7 +7,7 @@
 - Six built-in themes with 70+ CSS design tokens
 - Layout persistence to localStorage or any backend
 
-[GitHub](https://github.com/stevenvelozo/pict-section-flow)
+[GitHub](https://github.com/fable-retold/pict-section-flow)
 [Get Started](#pict-section-flow)
 
 <!-- docuserve:examples:start -->

@@ -5,4 +5,4 @@
 - [Architecture](Architecture.md)
 - [API Reference](Implementation_Reference.md)
 - [Custom Styling](Custom-Styling.md)
-- [GitHub](https://github.com/stevenvelozo/pict-section-flow)
+- [GitHub](https://github.com/fable-retold/pict-section-flow)

@@ -1,6 +1,6 @@
 # Pict-Section-Flow
 
-An interactive flow diagram section view for the [Pict](https://github.com/stevenvelozo/pict) application framework. Build node-based visual editors, workflow designers, and data pipeline tools with a declarative, configuration-driven API.
+An interactive flow diagram section view for the [Pict](https://github.com/fable-retold/pict) application framework. Build node-based visual editors, workflow designers, and data pipeline tools with a declarative, configuration-driven API.
 
 Pict-Section-Flow provides a complete graph editing experience -- nodes, ports, connections, properties panels, theming, and layout persistence -- all composable through the Fable service provider pattern.
 
@@ -122,11 +122,11 @@ tmpFlow._EventHandlerProvider.registerHandler('onFlowChanged',
 
 Pict-Section-Flow is part of the [Retold](https://github.com/stevenvelozo/retold) module suite:
 
-- [pict](https://github.com/stevenvelozo/pict) -- Core MVC application framework
-- [pict-view](https://github.com/stevenvelozo/pict-view) -- View base class
-- [pict-provider](https://github.com/stevenvelozo/pict-provider) -- Provider base class
-- [pict-section-form](https://github.com/stevenvelozo/pict-section-form) -- Form sections (used for Form panel type)
-- [fable](https://github.com/stevenvelozo/fable) -- Service infrastructure and dependency injection
+- [pict](https://github.com/fable-retold/pict) -- Core MVC application framework
+- [pict-view](https://github.com/fable-retold/pict-view) -- View base class
+- [pict-provider](https://github.com/fable-retold/pict-provider) -- Provider base class
+- [pict-section-form](https://github.com/fable-retold/pict-section-form) -- Form sections (used for Form panel type)
+- [fable](https://github.com/fable-retold/fable) -- Service infrastructure and dependency injection
 
 ## License
 

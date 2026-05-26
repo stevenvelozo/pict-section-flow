@@ -44,8 +44,8 @@ const _ViewConfiguration =
 <div class="flowexample-bottombar">
 	<span>Pict Section Flow Example &copy; 2025</span>
 	<div class="flowexample-bottombar-links">
-		<a href="https://github.com/stevenvelozo/pict" target="_blank">Pict</a>
-		<a href="https://github.com/stevenvelozo/fable" target="_blank">Fable</a>
+		<a href="https://github.com/fable-retold/pict" target="_blank">Pict</a>
+		<a href="https://github.com/fable-retold/fable" target="_blank">Fable</a>
 		<a onclick="{~P~}.PictApplication.navigateTo('/About')">About</a>
 	</div>
 </div>
