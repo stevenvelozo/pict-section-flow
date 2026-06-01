@@ -1,7 +1,7 @@
-# Simple Cards — Every Flow Card Type, Every Panel Type
+# Simple Cards - Every Flow Card Type, Every Panel Type
 
 <!-- docuserve:example-launch:start -->
-> **[&#9654; Launch the live app](examples/simple%5Fcards/index.html)** — runs in your browser, opens in a new tab.
+> **[Launch the live app](examples/simple%5Fcards/index.html)** - runs in your browser, opens in a new tab.
 <!-- docuserve:example-launch:end -->
 
 Simple Cards is the **reference example** for `pict-section-flow`. It
@@ -12,11 +12,11 @@ properties panels, ships a curated catalog of sample flows that
 exercise each layout algorithm, and provides a fully-functional
 multi-page shell (Home / About / Documentation) around the canvas.
 
-If you are looking for "what does a card class look like?" — read
+If you are looking for "what does a card class look like?" - read
 `source/cards/`. If you are looking for "how do I host the flow
-view inside an application?" — read
+view inside an application?" - read
 `source/views/PictView-FlowExample-MainWorkspace.js`. If you are
-looking for "what does a real seed graph look like?" — see
+looking for "what does a real seed graph look like?" - see
 `source/Pict-Application-FlowExample.js`, which inlines a 16-node
 flow with every card type, every panel type, and an error branch.
 
@@ -24,16 +24,16 @@ flow with every card type, every panel type, and an error branch.
 
 | Capability | Where you see it |
 |------------|------------------|
-| Custom `PictFlowCard` subclasses | `source/cards/FlowCard-*.js` — 12 cards across 6 categories |
-| Properties panel type: `Markdown` | If-Then-Else card — static markdown blurb |
-| Properties panel type: `Template` | Log Values card — `pict-template` over `Record.Data.*` |
-| Properties panel type: `Form` | Set Value card — full `pict-section-form` manifest inside the panel |
-| Properties panel type: `View` | File Write card — host-registered Pict view rendered into the panel |
-| `BodyContent` rendering type: SVG | Status Monitor card — inline SVG circles + labels |
-| `BodyContent` rendering type: HTML | Data Preview / Note cards — HTML table / multi-line text |
-| `BodyContent` rendering type: Canvas | Sparkline card — `RenderCallback(canvas, ...)` paints a 2D chart |
-| Pre-registered node types | `NodeTypes: this._buildFlowCardNodeTypes()` — toolbar palette ready on first render |
-| Seed flow data on `AppData` | `AppData.FlowExample.SampleFlow` — 16 nodes, 18 connections, an error branch |
+| Custom `PictFlowCard` subclasses | `source/cards/FlowCard-*.js` - 12 cards across 6 categories |
+| Properties panel type: `Markdown` | If-Then-Else card - static markdown blurb |
+| Properties panel type: `Template` | Log Values card - `pict-template` over `Record.Data.*` |
+| Properties panel type: `Form` | Set Value card - full `pict-section-form` manifest inside the panel |
+| Properties panel type: `View` | File Write card - host-registered Pict view rendered into the panel |
+| `BodyContent` rendering type: SVG | Status Monitor card - inline SVG circles + labels |
+| `BodyContent` rendering type: HTML | Data Preview / Note cards - HTML table / multi-line text |
+| `BodyContent` rendering type: Canvas | Sparkline card - `RenderCallback(canvas, ...)` paints a 2D chart |
+| Pre-registered node types | `NodeTypes: this._buildFlowCardNodeTypes()` - toolbar palette ready on first render |
+| Seed flow data on `AppData` | `AppData.FlowExample.SampleFlow` - 16 nodes, 18 connections, an error branch |
 | Sample-graph catalog + layout algorithm hint | Dropdown above the canvas; each sample suggests a `Recommended` layout |
 | Multi-page routing inside the shell | `pict-router` with `/Home`, `/About`, `/Documentation` routes |
 | `LayoutAlgorithm` driven re-layout | `setFlowData(...)` carries `LayoutAlgorithm`; the toolbar's Algorithm popup compares them live |
@@ -41,32 +41,32 @@ flow with every card type, every panel type, and an error branch.
 
 ## Key files
 
-- `source/Pict-Application-FlowExample.js` — application class.
+- `source/Pict-Application-FlowExample.js` - application class.
   Registers the router + every page view, declares the seed
   `SampleFlow` with one of every card type, and exposes
   `navigateTo()` / `showView()` for the router callbacks.
-- `source/Pict-Application-FlowExample-Configuration.json` — Pict
+- `source/Pict-Application-FlowExample-Configuration.json` - Pict
   config: product name, main viewport, auto-render flags.
-- `source/providers/PictRouter-FlowExample-Configuration.json` —
+- `source/providers/PictRouter-FlowExample-Configuration.json` -
   route map. Each route's `template` calls into
   `Pict.PictApplication.showView('FlowExample-...')`.
-- `source/views/PictView-FlowExample-Layout.js` — top-level shell.
+- `source/views/PictView-FlowExample-Layout.js` - top-level shell.
   Renders the topbar, content, and bottombar containers, then
   resolves the router so the current hash lands on the right page.
 - `source/views/PictView-FlowExample-TopBar.js` /
-  `PictView-FlowExample-BottomBar.js` — branded chrome views with
+  `PictView-FlowExample-BottomBar.js` - branded chrome views with
   inline navigation links.
-- `source/views/PictView-FlowExample-MainWorkspace.js` — the page
+- `source/views/PictView-FlowExample-MainWorkspace.js` - the page
   that hosts the flow canvas. Builds the FlowCard node type map,
   instantiates the flow view, wires the help toggle and the
   sample-graph selector.
 - `source/views/PictView-FlowExample-About.js` /
-  `PictView-FlowExample-Documentation.js` — the two other pages.
-- `source/views/PictView-FlowExample-FileWriteInfo.js` — the host
+  `PictView-FlowExample-Documentation.js` - the two other pages.
+- `source/views/PictView-FlowExample-FileWriteInfo.js` - the host
   view that the File Write card's `View`-type panel renders.
-- `source/cards/FlowCard-*.js` — twelve card classes. Each is
+- `source/cards/FlowCard-*.js` - twelve card classes. Each is
   one file, each extends `pict-section-flow.PictFlowCard`.
-- `source/sample-flows.js` — the curated catalog of sample graphs
+- `source/sample-flows.js` - the curated catalog of sample graphs
   that the dropdown above the canvas exposes.
 
 ## The seed flow
@@ -105,10 +105,10 @@ the flow view's `NodeTypeProvider` knows how to paint them.
 
 ---
 
-## Feature 1 — Defining a custom card class
+## Feature 1 - Defining a custom card class
 
 A custom card is a `PictFlowCard` subclass. The constructor passes
-its declarative configuration into the parent class — title,
+its declarative configuration into the parent class - title,
 description, ports, sizing, colors, optional panel, optional body
 content. Here is the If-Then-Else card in full:
 
@@ -154,7 +154,7 @@ class FlowCardIfThenElse extends libPictFlowCard
 module.exports = FlowCardIfThenElse;
 ```
 
-`Code` is the wire-shape identifier — what each node in the flow
+`Code` is the wire-shape identifier - what each node in the flow
 data carries as its `Type`. `Category` groups the card in the
 toolbar palette. `Inputs` and `Outputs` declare port slots with
 their side (top/right/bottom/left) and cardinality
@@ -166,7 +166,7 @@ This is the entire card. Twelve such files cover the example.
 
 ---
 
-## Feature 2 — Pre-registered node types
+## Feature 2 - Pre-registered node types
 
 The host workspace view builds a `NodeTypes` map by instantiating
 each card class once, calling its `getNodeTypeConfiguration()`, and
@@ -200,7 +200,7 @@ The flow view receives `NodeTypes` as part of its options, which
 means the `NodeTypeProvider` is fully populated **before the
 toolbar renders**. Without pre-registration, the toolbar palette
 would show an empty list on first paint and fill in only after a
-later `registerNodeType(...)` call — visible flicker, no benefit.
+later `registerNodeType(...)` call - visible flicker, no benefit.
 
 ```js
 this._FlowView = this.pict.addView('FlowExample-FlowDiagram',
@@ -227,7 +227,7 @@ back; mutations from the host (`setFlowData(...)`) re-render.
 
 ---
 
-## Feature 3 — Properties panel types: Markdown, Template, Form, View
+## Feature 3 - Properties panel types: Markdown, Template, Form, View
 
 The four built-in `PropertiesPanel.PanelType` values cover most of
 what a node-editing UI needs. The example demonstrates one of
@@ -273,7 +273,7 @@ PropertiesPanel:
 }
 ```
 
-`pict-template` syntax — `{~D:Record.Data.LogLevel~}` resolves
+`pict-template` syntax - `{~D:Record.Data.LogLevel~}` resolves
 against the node's `Data` block. Read-only viewer surfaced from a
 template hash; ideal for showing computed or formatted state.
 
@@ -331,23 +331,23 @@ PropertiesPanel:
 The application registers `FlowExample-FileWriteInfo` as a Pict
 view (any host-defined view), and the panel renders it. This is the
 escape hatch for "I need something none of the built-in panels
-cover" — a third-party widget, a custom editor, an embedded
+cover" - a third-party widget, a custom editor, an embedded
 preview.
 
-The four types cover the gradient from "static" (Markdown) →
-"templated read-only" (Template) → "structured editing" (Form) →
+The four types cover the gradient from "static" (Markdown) ->
+"templated read-only" (Template) -> "structured editing" (Form) ->
 "anything you can build" (View).
 
 ---
 
-## Feature 4 — BodyContent: SVG / HTML / Canvas
+## Feature 4 - BodyContent: SVG / HTML / Canvas
 
 Every card has an optional `BodyContent` block that paints inside
 the node's body (between the title bar and the port row). Three
 content types cover the spectrum from static vector art to live
 rendered visualizations:
 
-**SVG** — declarative shapes inline in the node:
+**SVG** - declarative shapes inline in the node:
 
 ```js
 // FlowCard-StatusMonitor.js
@@ -367,7 +367,7 @@ every primitive coordinate is in the node's local space (`0,0` is
 the body top-left). Use this for status indicators, mini-icons,
 glyphs.
 
-**HTML** — `foreignObject`-wrapped markup for rich text and tables:
+**HTML** - `foreignObject`-wrapped markup for rich text and tables:
 
 ```js
 // FlowCard-DataPreview.js
@@ -387,10 +387,10 @@ BodyContent:
 ```
 
 The HTML is wrapped in an SVG `<foreignObject>` and sized to the
-node body. Use it for the things SVG `<text>` can't do — tables,
+node body. Use it for the things SVG `<text>` can't do - tables,
 multi-line wrapping, real CSS.
 
-**Canvas** — programmatic drawing via a render callback:
+**Canvas** - programmatic drawing via a render callback:
 
 ```js
 // FlowCard-Sparkline.js
@@ -432,10 +432,10 @@ visualizations of data the node carries, any non-trivial 2D rendering.
 
 ---
 
-## Feature 5 — Host shell + multi-page routing
+## Feature 5 - Host shell + multi-page routing
 
-The application has three top-level pages — Home (the canvas),
-About, and Documentation — wired through `pict-router`. The route
+The application has three top-level pages - Home (the canvas),
+About, and Documentation - wired through `pict-router`. The route
 configuration JSON lives next to the application:
 
 ```json
@@ -452,7 +452,7 @@ configuration JSON lives next to the application:
 }
 ```
 
-The `{~LV:...~}` is the live-value template tag — it evaluates
+The `{~LV:...~}` is the live-value template tag - it evaluates
 the expression every time the route matches, calling the
 application's `showView(viewIdentifier)` method. That method
 swaps the content container's view in place:
@@ -474,11 +474,11 @@ showView(pViewIdentifier)
 ```
 
 The topbar and bottombar are siblings of the content container in
-the layout shell — they don't re-render on route change. The
+the layout shell - they don't re-render on route change. The
 brand link calls `Pict.PictApplication.navigateTo('/Home')`, which
 in turn calls the router's `navigate(...)`; the router fires the
 template; the host calls `showView(...)`. Same path as a direct hash
-URL — `#/Documentation` works the same way.
+URL - `#/Documentation` works the same way.
 
 The flow view re-initializes its SVG primitives whenever the
 workspace re-renders, so navigating away to About and back to Home
@@ -492,7 +492,7 @@ this._FlowView.render();
 
 ---
 
-## Feature 6 — Sample-graph catalog with layout-algorithm hints
+## Feature 6 - Sample-graph catalog with layout-algorithm hints
 
 The dropdown above the canvas surfaces a curated set of graphs
 shaped to exercise the flow view's seven layout algorithms (the
@@ -530,7 +530,7 @@ _loadSample(pKey, pDescEl, pRecoEl)
     {
         this._FlowView.setFlowData(this.pict.AppData.FlowExample.SampleFlow);
         pDescEl.innerHTML = 'The full reference flow with all card types, properties panels, and an error branch.' +
-                            ' Originally designed by hand — set <code>LayoutAlgorithm</code> to <em>Layered</em>' +
+                            ' Originally designed by hand - set <code>LayoutAlgorithm</code> to <em>Layered</em>' +
                             ' to see how the auto-layout compares.';
         pRecoEl.style.display = 'none';
         return;
@@ -555,13 +555,13 @@ _loadSample(pKey, pDescEl, pRecoEl)
 
 Picking a sample swaps the canvas instantly. Opening the toolbar's
 Algorithm popup lets you flip between layouts and watch the same
-graph re-arrange — which is the whole point of the catalog. Some
+graph re-arrange - which is the whole point of the catalog. Some
 shapes shine under Layered; some under Force-Directed; the
 `Recommended` hint is the curator's pick.
 
 ---
 
-## Feature 7 — Help overlay rendered from a CSS grid
+## Feature 7 - Help overlay rendered from a CSS grid
 
 The "?" button in the workspace header toggles a hint panel built
 as a CSS grid. The panel itself is part of the workspace template;
@@ -580,8 +580,8 @@ if (tmpHelpToggle && tmpHelpPanel)
 }
 ```
 
-The eight hints — Add / Connect / Move / Pan & Zoom / Delete /
-Auto Layout / Properties / Save Layouts — are static `<div>`s in
+The eight hints - Add / Connect / Move / Pan & Zoom / Delete /
+Auto Layout / Properties / Save Layouts - are static `<div>`s in
 the workspace template, each with a heading and short description:
 
 ```html
@@ -599,7 +599,7 @@ the workspace template, each with a heading and short description:
 ```
 
 `grid-template-columns: repeat(auto-fill, minmax(220px, 1fr))` makes
-the grid reflow without media queries — the hints arrange themselves
+the grid reflow without media queries - the hints arrange themselves
 across whatever width the viewport gives them.
 
 ---
@@ -615,25 +615,25 @@ npm run build
 
 The `prebuild` script generates `card-help/*.md` documentation
 from the card sources into `docs/card-help/`. The build itself is
-`npx quack build && npx quack copy` — emits the application
+`npx quack build && npx quack copy` - emits the application
 bundle and copies the html/css/pict assets into `dist/`.
 
 ## Things to try in the running app
 
-- **Drop in the Hello World flow** — the canvas opens to it. Pan
+- **Drop in the Hello World flow** - the canvas opens to it. Pan
   around; every card type is on the page.
-- **Open a properties panel** — double-click the Set Value node
+- **Open a properties panel** - double-click the Set Value node
   for the Form panel; the Log Values node for the Template panel;
   the If-Then-Else node for the Markdown panel; the File Write
   node for the View panel.
-- **Switch sample graphs** — pick "Linear Chain" or "Fan-Out". The
+- **Switch sample graphs** - pick "Linear Chain" or "Fan-Out". The
   canvas swaps to the new shape. Open the toolbar's Algorithm
   popup and try `Layered` vs `Force-Directed`.
-- **Toggle the help overlay** — click the `?` button in the header.
+- **Toggle the help overlay** - click the `?` button in the header.
   The eight hint cards appear in a responsive grid.
-- **Navigate** — click `About` in the topbar, then back to `Home`.
+- **Navigate** - click `About` in the topbar, then back to `Home`.
   The flow re-renders cleanly; the topbar/bottombar stay put.
-- **Inspect the BodyContent showcase** — at the bottom-left of the
+- **Inspect the BodyContent showcase** - at the bottom-left of the
   Hello World graph are four cards: Status Monitor (SVG circles),
   Data Preview (HTML table), Throughput (canvas-rendered sparkline),
   Note (HTML text). Each demonstrates one rendering type.
@@ -660,18 +660,18 @@ bundle and copies the html/css/pict assets into `dist/`.
 
 ## Related documentation
 
-- [Getting Started](../../Getting_Started.md) — minimum-viable flow
+- [Getting Started](../../Getting_Started.md) - minimum-viable flow
   view; build the first card from scratch.
-- [Architecture](../../Architecture.md) — service / provider /
+- [Architecture](../../Architecture.md) - service / provider /
   view layering of the section.
-- [Implementation Reference](../../Implementation_Reference.md) —
+- [Implementation Reference](../../Implementation_Reference.md) -
   full API surface.
-- [Data Model](../../Data_Model.md) — the `_FlowData` shape used
+- [Data Model](../../Data_Model.md) - the `_FlowData` shape used
   by the seed flow and the sample catalog.
-- [PictFlowCard](../../api/PictFlowCard.md) — the card base class.
+- [PictFlowCard](../../api/PictFlowCard.md) - the card base class.
 - [PictFlowCardPropertiesPanel](../../api/PictFlowCardPropertiesPanel.md)
-  — the panel base class extending to custom panel types.
-- [registerNodeType](../../api/registerNodeType.md) — the
+  - the panel base class extending to custom panel types.
+- [registerNodeType](../../api/registerNodeType.md) - the
   alternative to passing `NodeTypes` at construction time.
-- [setTheme / registerTheme](../../api/setTheme.md) — the theming
+- [setTheme / registerTheme](../../api/setTheme.md) - the theming
   surface every card respects.

@@ -2,8 +2,8 @@
 
 `pict-section-flow` participates in the host application's theme system in two layers:
 
-1. **Host theme (light/dark/palette)** — provided by `pict-provider-theme` via `--theme-color-*` CSS custom properties on `:root` and a `theme-light` / `theme-dark` class on `<html>`.
-2. **Flow visual theme (sketch, blueprint, mono, retro-80s, retro-90s, whiteboard, default)** — provided by the editor's own `PictProvider-Flow-Theme` and applied as scope-local overrides on `.pict-flow-container`.
+1. **Host theme (light/dark/palette)** - provided by `pict-provider-theme` via `--theme-color-*` CSS custom properties on `:root` and a `theme-light` / `theme-dark` class on `<html>`.
+2. **Flow visual theme (sketch, blueprint, mono, retro-80s, retro-90s, whiteboard, default)** - provided by the editor's own `PictProvider-Flow-Theme` and applied as scope-local overrides on `.pict-flow-container`.
 
 Both layers cooperate. The flow editor's `--pf-*` tokens default to the matching `--theme-color-*` token, so when the host swaps light/dark or palette, all neutral flow chrome (panels, toolbars, text, connections, grid) updates with no JS work. Visual themes that intentionally diverge from the host palette (e.g. blueprint's deep blue canvas, retro-80s neon) override the relevant `--pf-*` tokens explicitly.
 
@@ -18,7 +18,7 @@ pict.providers.Theme.registerTheme(require('pict-provider-theme/source/themes/pi
 pict.providers.Theme.applyTheme('pict-default', 'system');
 ```
 
-…the flow editor automatically detects it during `onBeforeInitialize` (duck-typed via `applyTheme`/`onApply`/`listThemes`) and subscribes to its `onApply` hook. On every host theme change the editor:
+...the flow editor automatically detects it during `onBeforeInitialize` (duck-typed via `applyTheme`/`onApply`/`listThemes`) and subscribes to its `onApply` hook. On every host theme change the editor:
 
 - Re-runs `_CSSProvider.registerCSS()` so CSS layered on top by the active flow visual theme stays in the cascade.
 - Calls `_reinjectMarkerDefs()` so SVG `<marker>` arrowhead polygons rebuild with the new fills.
@@ -28,7 +28,7 @@ No code changes are required in host apps beyond installing and applying `pict-p
 
 ## Token mapping
 
-| Flow token (`--pf-…`) | Host token (`--theme-color-…`) | Hardcoded fallback |
+| Flow token (`--pf-...`) | Host token (`--theme-color-...`) | Hardcoded fallback |
 |---|---|---|
 | `--pf-text-primary` | `text-primary` | `#2c3e50` |
 | `--pf-text-secondary` | `text-secondary` | `#7f8c8d` |
@@ -83,7 +83,7 @@ The five default node types ship with roles wired up:
 | `halt` | `error` |
 | `decision` | `warning` |
 
-Their hex `TitleBarColor` / `BodyStyle` fields remain as fallbacks for code paths that bypass CSS (legacy consumers, exports). When the role's CSS class is in effect, those hex presentation attributes are overridden by the role rules — host themes propagate, but the hex values keep the editor presentable in unstyled contexts.
+Their hex `TitleBarColor` / `BodyStyle` fields remain as fallbacks for code paths that bypass CSS (legacy consumers, exports). When the role's CSS class is in effect, those hex presentation attributes are overridden by the role rules - host themes propagate, but the hex values keep the editor presentable in unstyled contexts.
 
 ### Custom card types
 
@@ -91,7 +91,7 @@ Their hex `TitleBarColor` / `BodyStyle` fields remain as fallbacks for code path
 flowView._NodeTypeProvider.registerNodeType('my-card-type', {
     Hash: 'my-card-type',
     Label: 'My Card',
-    DefaultPorts: [ /* … */ ],
+    DefaultPorts: [ /* ... */ ],
     ColorRole: 'info',                     // theme-aware
     TitleBarColor: '#3498db',              // optional fallback
     BodyStyle: { fill: '#ebf5fb' }         // optional fallback
@@ -109,7 +109,7 @@ flowData.Nodes.push({
     Hash: 'node-special',
     Type: 'my-card-type',
     ColorRole: 'warning',                  // override the type's role
-    // …
+    // ...
 });
 ```
 
@@ -137,14 +137,14 @@ To define new roles, add `--pf-color-<role>` / `--pf-color-<role>-soft` tokens a
 
 ## Arrowhead markers
 
-`<marker>` elements live inside `<defs>` and don't pick up the same CSS variable cascade as regular SVG content in every browser. To make them theme-tracking, each generated polygon now carries a class (`pict-flow-arrowhead-default`, `pict-flow-arrowhead-selected`, `pict-flow-arrowhead-event-in`, …) and the corresponding CSS rule sets `fill` to the matching `--pf-…` token. The `fill="…"` attribute remains on the polygon as a graceful fallback when CSS can't reach it.
+`<marker>` elements live inside `<defs>` and don't pick up the same CSS variable cascade as regular SVG content in every browser. To make them theme-tracking, each generated polygon now carries a class (`pict-flow-arrowhead-default`, `pict-flow-arrowhead-selected`, `pict-flow-arrowhead-event-in`, ...) and the corresponding CSS rule sets `fill` to the matching `--pf-...` token. The `fill="..."` attribute remains on the polygon as a graceful fallback when CSS can't reach it.
 
 ## Flow visual themes
 
-The seven flow themes (`default`, `sketch`, `blueprint`, `mono`, `retro-80s`, `retro-90s`, `whiteboard`) ship with explicit `CSSVariables` and `AdditionalCSS` blocks. They layer on top of the host theme by emitting their overrides into `.pict-flow-container { … }`. Because `:root`-scoped host tokens have lower specificity than `.pict-flow-container`-scoped flow tokens, the visual theme always wins where it sets a value, and the host theme controls everything it doesn't.
+The seven flow themes (`default`, `sketch`, `blueprint`, `mono`, `retro-80s`, `retro-90s`, `whiteboard`) ship with explicit `CSSVariables` and `AdditionalCSS` blocks. They layer on top of the host theme by emitting their overrides into `.pict-flow-container { ... }`. Because `:root`-scoped host tokens have lower specificity than `.pict-flow-container`-scoped flow tokens, the visual theme always wins where it sets a value, and the host theme controls everything it doesn't.
 
-The `default` flow theme intentionally sets no overrides — it lets the host theme drive the look.
+The `default` flow theme intentionally sets no overrides - it lets the host theme drive the look.
 
 ## Disabling host integration
 
-If a host wants the flow editor to ignore the host theme (e.g. to keep a fixed Sketch-style appearance regardless of the surrounding page), don't apply a host theme provider — or unsubscribe after construction by calling the dispose function returned via `flowView._HostThemeUnsubscribe`. This is rarely needed; flow visual themes already win where they care.
+If a host wants the flow editor to ignore the host theme (e.g. to keep a fixed Sketch-style appearance regardless of the surrounding page), don't apply a host theme provider - or unsubscribe after construction by calling the dispose function returned via `flowView._HostThemeUnsubscribe`. This is rarely needed; flow visual themes already win where they care.

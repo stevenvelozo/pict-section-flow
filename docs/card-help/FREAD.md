@@ -21,4 +21,4 @@ When triggered, the node reads the file at the configured path. On success, the 
 
 - Use a Get Value node upstream to dynamically set the file path
 - Pair with a Data Preview node to inspect the file contents
-- Connect the **Error** output to logging or notification nodes for robust error handling
+- Connect the **Error** output to logging or notification nodes for reliable error handling
