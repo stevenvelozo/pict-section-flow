@@ -4,143 +4,22 @@ Pict-Section-Flow follows the standard Pict layered architecture -- Views for re
 
 ## High-Level Design
 
-```mermaid
-graph TB
-    subgraph Application["Your Application"]
-        AppCode[Application Code]
-        AppData[Pict AppData Store]
-    end
-
-    subgraph FlowView["PictViewFlow (Main Entry Point)"]
-        direction TB
-        FV[PictViewFlow]
-    end
-
-    subgraph Views["Views (Rendering)"]
-        NodeView[Flow Node View]
-        ToolbarView[Toolbar View]
-        FloatingToolbar[Floating Toolbar View]
-        PanelView[Properties Panel View]
-    end
-
-    subgraph Services["Services (Business Logic)"]
-        DM[DataManager]
-        RM[RenderManager]
-        SM[SelectionManager]
-        VM[ViewportManager]
-        PM[PanelManager]
-        IM[InteractionManager]
-        LS[Layout Service]
-        CR[ConnectionRenderer]
-        PG[PathGenerator]
-        PR[PortRenderer]
-        CHM[ConnectionHandleManager]
-        TM[Tether Service]
-    end
-
-    subgraph Providers["Providers (Configuration)"]
-        NTP[NodeTypes Provider]
-        EHP[EventHandler Provider]
-        LP[Layouts Provider]
-        TP[Theme Provider]
-        CP[CSS Provider]
-        GP[Geometry Provider]
-        NP[Noise Provider]
-        SVG[SVGHelpers Provider]
-        CSP[ConnectorShapes Provider]
-        IP[Icons Provider]
-        PCP[PanelChrome Provider]
-    end
-
-    subgraph Extension["Extension Points"]
-        FC[PictFlowCard]
-        FCP[PictFlowCardPropertiesPanel]
-        PT[Panel: Template]
-        PMD[Panel: Markdown]
-        PF[Panel: Form]
-        PVW[Panel: View]
-    end
-
-    AppCode --> FV
-    FV <--> AppData
-    FV --> Views
-    FV --> Services
-    FV --> Providers
-
-    DM <--> AppData
-    RM --> NodeView
-    RM --> CR
-    PM --> PanelView
-    IM --> SM
-    IM --> VM
-    CR --> PG
-    CR --> PR
-
-    FC --> NTP
-    FCP --> PM
-    PT --> PanelView
-    PMD --> PanelView
-    PF --> PanelView
-    PVW --> PanelView
-
-    EHP --> AppCode
-
-    style Application fill:#e8f5e9,stroke:#42b983,color:#333
-    style FlowView fill:#e3f2fd,stroke:#42a5f5,color:#333
-    style Views fill:#fce4ec,stroke:#ef5350,color:#333
-    style Services fill:#fff3e0,stroke:#ffa726,color:#333
-    style Providers fill:#f3e5f5,stroke:#ab47bc,color:#333
-    style Extension fill:#e0f2f1,stroke:#26a69a,color:#333
-```
+<!-- bespoke diagram: edit diagrams/high-level-design.mmd or .hints.json, then: npx pict-renderer-graph build modules/pict/pict-section-flow/docs -->
+![High-Level Design](diagrams/high-level-design.svg)
 
 ## Data Flow
 
 All mutations flow through a predictable pipeline:
 
-```mermaid
-sequenceDiagram
-    participant App as Application
-    participant FV as PictViewFlow
-    participant DM as DataManager
-    participant EH as EventHandler
-    participant RM as RenderManager
-
-    App->>FV: addNode('start', 50, 100, 'Begin')
-    FV->>DM: addNode(pType, pX, pY, pTitle, pData)
-    DM->>DM: Create node object with UUID hash
-    DM->>DM: Merge default ports from NodeType
-    DM->>EH: fireEvent('onNodeAdded', node)
-    DM->>EH: fireEvent('onFlowChanged', flowData)
-    DM->>RM: renderFlow()
-    RM->>RM: Render SVG nodes, connections, tethers, panels
-    DM-->>FV: Return node object
-    FV-->>App: Return node object
-```
+<!-- bespoke diagram: edit diagrams/data-flow.mmd or .hints.json, then: npx pict-renderer-graph build modules/pict/pict-section-flow/docs -->
+![Data Flow](diagrams/data-flow.svg)
 
 ## SVG Layer Structure
 
 The rendering system uses SVG group elements in a specific z-order:
 
-```mermaid
-graph TB
-    subgraph SVG["SVG Canvas"]
-        Grid["Grid Background (pattern)"]
-        subgraph Viewport["Viewport Group (pan/zoom transform)"]
-            Connections["Connections Layer (bezier/orthogonal paths)"]
-            Nodes["Nodes Layer (rect + ports + labels)"]
-            Tethers["Tethers Layer (panel-to-node lines)"]
-            Panels["Panels Layer (foreignObject panels)"]
-        end
-    end
-
-    Grid --> Viewport
-    Connections --> Nodes
-    Nodes --> Tethers
-    Tethers --> Panels
-
-    style SVG fill:#f5f5f5,stroke:#bdbdbd,color:#333
-    style Viewport fill:#e3f2fd,stroke:#42a5f5,color:#333
-```
+<!-- bespoke diagram: edit diagrams/svg-layer-structure.mmd or .hints.json, then: npx pict-renderer-graph build modules/pict/pict-section-flow/docs -->
+![SVG Layer Structure](diagrams/svg-layer-structure.svg)
 
 Connections render behind nodes so lines do not obscure node bodies. Tethers render above nodes so the connecting line from a panel to its node is always visible. Panels render last so they float above everything.
 
@@ -262,27 +141,8 @@ The canonical flow state is a plain JavaScript object:
 
 When PictViewFlow initializes, it follows a declarative registry to instantiate all components:
 
-```mermaid
-sequenceDiagram
-    participant App as Application
-    participant FV as PictViewFlow
-    participant PR as Providers
-    participant SV as Services
-    participant VW as Child Views
-
-    App->>FV: new PictViewFlow(fable, options)
-    FV->>PR: Register & instantiate providers
-    Note over PR: SVGHelpers, Geometry, Noise (no FlowView ref)
-    Note over PR: Theme, CSS, Icons, NodeTypes, EventHandler, Layouts (with FlowView ref)
-    FV->>SV: Register & instantiate services
-    Note over SV: DataManager, RenderManager, SelectionManager, etc.
-    FV->>VW: Register & instantiate child views
-    Note over VW: Node, Toolbar, FloatingToolbar, PropertiesPanel
-
-    App->>FV: render()
-    FV->>SV: DataManager.marshalToView()
-    FV->>SV: RenderManager.renderFlow()
-```
+<!-- bespoke diagram: edit diagrams/service-initialization-sequence.mmd or .hints.json, then: npx pict-renderer-graph build modules/pict/pict-section-flow/docs -->
+![Service Initialization Sequence](diagrams/service-initialization-sequence.svg)
 
 ## Design Patterns
 

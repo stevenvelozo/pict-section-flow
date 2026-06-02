@@ -19,38 +19,8 @@ All interaction is driven by a JSON data structure that represents the flow grap
 
 ## Architecture at a Glance
 
-```mermaid
-graph TD
-    A[Your Application] --> B[PictViewFlow]
-    B --> C[Services]
-    B --> D[Providers]
-    B --> E[Views]
-
-    C --> C1[DataManager]
-    C --> C2[RenderManager]
-    C --> C3[SelectionManager]
-    C --> C4[ViewportManager]
-    C --> C5[PanelManager]
-    C --> C6[InteractionManager]
-    C --> C7[Layout Service]
-
-    D --> D1[NodeTypes]
-    D --> D2[EventHandler]
-    D --> D3[Layouts]
-    D --> D4[Theme]
-    D --> D5[CSS]
-    D --> D6[Geometry]
-
-    E --> E1[Flow Node View]
-    E --> E2[Toolbar View]
-    E --> E3[Properties Panel View]
-
-    style A fill:#e8f5e9,stroke:#42b983,color:#333
-    style B fill:#e3f2fd,stroke:#42a5f5,color:#333
-    style C fill:#fff3e0,stroke:#ffa726,color:#333
-    style D fill:#f3e5f5,stroke:#ab47bc,color:#333
-    style E fill:#fce4ec,stroke:#ef5350,color:#333
-```
+<!-- bespoke diagram: edit diagrams/architecture-at-a-glance.mmd or .hints.json, then: npx pict-renderer-graph build modules/pict/pict-section-flow/docs -->
+![Architecture at a Glance](diagrams/architecture-at-a-glance.svg)
 
 The module follows the standard Pict layered architecture:
 

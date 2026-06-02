@@ -1,0 +1,18 @@
+graph TB
+    subgraph SVG["SVG Canvas"]
+        Grid["Grid Background (pattern)"]
+        subgraph Viewport["Viewport Group (pan/zoom transform)"]
+            Connections["Connections Layer (bezier/orthogonal paths)"]
+            Nodes["Nodes Layer (rect + ports + labels)"]
+            Tethers["Tethers Layer (panel-to-node lines)"]
+            Panels["Panels Layer (foreignObject panels)"]
+        end
+    end
+
+    Grid --> Viewport
+    Connections --> Nodes
+    Nodes --> Tethers
+    Tethers --> Panels
+
+    style SVG fill:#f5f5f5,stroke:#bdbdbd,color:#333
+    style Viewport fill:#e3f2fd,stroke:#42a5f5,color:#333

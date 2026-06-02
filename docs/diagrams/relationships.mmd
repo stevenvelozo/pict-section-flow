@@ -1,0 +1,9 @@
+erDiagram
+    FlowData ||--o{ Node : contains
+    FlowData ||--o{ Connection : contains
+    FlowData ||--o{ Panel : contains
+    FlowData ||--|| ViewState : has
+    Node ||--o{ Port : has
+    Connection }o--|| Port : "source port"
+    Connection }o--|| Port : "target port"
+    Panel }o--|| Node : "attached to"

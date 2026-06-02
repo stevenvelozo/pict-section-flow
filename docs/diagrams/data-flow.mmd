@@ -1,0 +1,17 @@
+sequenceDiagram
+    participant App as Application
+    participant FV as PictViewFlow
+    participant DM as DataManager
+    participant EH as EventHandler
+    participant RM as RenderManager
+
+    App->>FV: addNode('start', 50, 100, 'Begin')
+    FV->>DM: addNode(pType, pX, pY, pTitle, pData)
+    DM->>DM: Create node object with UUID hash
+    DM->>DM: Merge default ports from NodeType
+    DM->>EH: fireEvent('onNodeAdded', node)
+    DM->>EH: fireEvent('onFlowChanged', flowData)
+    DM->>RM: renderFlow()
+    RM->>RM: Render SVG nodes, connections, tethers, panels
+    DM-->>FV: Return node object
+    FV-->>App: Return node object

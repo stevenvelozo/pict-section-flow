@@ -1,0 +1,19 @@
+sequenceDiagram
+    participant App as Application
+    participant FV as PictViewFlow
+    participant PR as Providers
+    participant SV as Services
+    participant VW as Child Views
+
+    App->>FV: new PictViewFlow(fable, options)
+    FV->>PR: Register & instantiate providers
+    Note over PR: SVGHelpers, Geometry, Noise (no FlowView ref)
+    Note over PR: Theme, CSS, Icons, NodeTypes, EventHandler, Layouts (with FlowView ref)
+    FV->>SV: Register & instantiate services
+    Note over SV: DataManager, RenderManager, SelectionManager, etc.
+    FV->>VW: Register & instantiate child views
+    Note over VW: Node, Toolbar, FloatingToolbar, PropertiesPanel
+
+    App->>FV: render()
+    FV->>SV: DataManager.marshalToView()
+    FV->>SV: RenderManager.renderFlow()

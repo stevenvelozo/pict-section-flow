@@ -145,14 +145,5 @@ Viewport and selection state, persisted with the flow data.
 
 ## Relationships
 
-```mermaid
-erDiagram
-    FlowData ||--o{ Node : contains
-    FlowData ||--o{ Connection : contains
-    FlowData ||--o{ Panel : contains
-    FlowData ||--|| ViewState : has
-    Node ||--o{ Port : has
-    Connection }o--|| Port : "source port"
-    Connection }o--|| Port : "target port"
-    Panel }o--|| Node : "attached to"
-```
+<!-- bespoke diagram: edit diagrams/relationships.mmd or .hints.json, then: npx pict-renderer-graph build modules/pict/pict-section-flow/docs -->
+![Relationships](diagrams/relationships.svg)
