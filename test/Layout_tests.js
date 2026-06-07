@@ -6,6 +6,8 @@ const libLayoutService = require('../source/services/PictService-Flow-Layout.js'
 
 const libLayoutCustom           = require('../source/providers/layouts/Layout-Custom.js');
 const libLayoutLayered          = require('../source/providers/layouts/Layout-Layered.js');
+const libLayoutStaggered        = require('../source/providers/layouts/Layout-Staggered.js');
+const libLayoutRank             = require('../source/providers/layouts/Layout-Rank.js');
 const libLayoutForcedFromCenter = require('../source/providers/layouts/Layout-ForcedFromCenter.js');
 const libLayoutGrid             = require('../source/providers/layouts/Layout-Grid.js');
 const libLayoutCircular         = require('../source/providers/layouts/Layout-Circular.js');
@@ -86,15 +88,15 @@ suite
 
 				test
 				(
-					'should register all seven built-in algorithms by default',
+					'should register all eight built-in algorithms by default',
 					function (fDone)
 					{
 						let tmpNames = _LayoutService.getAlgorithmNames();
 						libExpect(tmpNames).to.include.members([
-							'Custom', 'Layered', 'ForcedFromCenter',
+							'Custom', 'Layered', 'Staggered', 'ForcedFromCenter',
 							'Grid', 'Circular', 'Tabular', 'Columnar'
 						]);
-						libExpect(tmpNames.length).to.equal(7);
+						libExpect(tmpNames.length).to.equal(8);
 						fDone();
 					}
 				);
@@ -184,9 +186,10 @@ suite
 					function (fDone)
 					{
 						let tmpAll = _LayoutService.listAlgorithms();
-						libExpect(tmpAll.length).to.equal(7);
+						libExpect(tmpAll.length).to.equal(8);
 						let tmpNames = tmpAll.map((pA) => pA.Name);
 						libExpect(tmpNames).to.include('Custom');
+						libExpect(tmpNames).to.include('Staggered');
 						libExpect(tmpNames).to.include('ForcedFromCenter');
 						fDone();
 					}
@@ -312,6 +315,207 @@ suite
 						libExpect(tmpNodes[0].Y).to.equal(0);
 						libExpect(tmpNodes[1].X).to.equal(180 + 50);
 						libExpect(tmpNodes[1].Y).to.equal(0);
+						fDone();
+					}
+				);
+
+				test
+				(
+					'a back-edge cycle does NOT collapse into one column (regression)',
+					function (fDone)
+					{
+						// n0 -> n1 -> n2 -> n3 -> n4 with a back-edge n4 -> n1.
+						// Plain Kahn's would place n0, then dump n1..n4 into a single
+						// trailing layer (one tall column). The cycle-tolerant ranker
+						// must spread them across columns instead.
+						let tmpNodes = makeNodes(5);
+						let tmpConns = makeChain(5);
+						tmpConns.push({ Hash: 'c-back', SourceNodeHash: 'n-4', TargetNodeHash: 'n-1' });
+
+						libLayoutLayered.Apply(tmpNodes, tmpConns, libLayoutLayered.DefaultParameters);
+
+						let tmpColumns = {};
+						let tmpMaxPerColumn = 0;
+						for (let i = 0; i < tmpNodes.length; i++)
+						{
+							let tmpX = tmpNodes[i].X;
+							tmpColumns[tmpX] = (tmpColumns[tmpX] || 0) + 1;
+							tmpMaxPerColumn = Math.max(tmpMaxPerColumn, tmpColumns[tmpX]);
+						}
+						// Five distinct columns, one node each — no tower.
+						libExpect(Object.keys(tmpColumns).length).to.equal(5);
+						libExpect(tmpMaxPerColumn).to.equal(1);
+						fDone();
+					}
+				);
+
+				test
+				(
+					'a self-loop does not strand a node in a trailing column',
+					function (fDone)
+					{
+						// n0 -> n1 -> n2 with a self-loop on n1.
+						let tmpNodes = makeNodes(3);
+						let tmpConns = makeChain(3);
+						tmpConns.push({ Hash: 'c-self', SourceNodeHash: 'n-1', TargetNodeHash: 'n-1' });
+
+						libLayoutLayered.Apply(tmpNodes, tmpConns, libLayoutLayered.DefaultParameters);
+
+						// Clean chain: three columns left to right, one node each.
+						libExpect(tmpNodes[0].X).to.be.below(tmpNodes[1].X);
+						libExpect(tmpNodes[1].X).to.be.below(tmpNodes[2].X);
+						fDone();
+					}
+				);
+			}
+		);
+
+		// ── Rank (shared ranker) ──────────────────────────────────────
+
+		suite
+		(
+			'Layout-Rank ranker',
+			function ()
+			{
+				test
+				(
+					'a chain ranks one node per rank, in order',
+					function (fDone)
+					{
+						let tmpNodes = makeNodes(4);
+						let tmpRanks = libLayoutRank.toRanks(tmpNodes, makeChain(4));
+						libExpect(tmpRanks.length).to.equal(4);
+						libExpect(tmpRanks[0]).to.deep.equal(['n-0']);
+						libExpect(tmpRanks[3]).to.deep.equal(['n-3']);
+						fDone();
+					}
+				);
+
+				test
+				(
+					'unconnected nodes share the first rank',
+					function (fDone)
+					{
+						let tmpNodes = makeNodes(3);
+						let tmpRanks = libLayoutRank.toRanks(tmpNodes, []);
+						libExpect(tmpRanks.length).to.equal(1);
+						libExpect(tmpRanks[0].length).to.equal(3);
+						fDone();
+					}
+				);
+
+				test
+				(
+					'toOrder visits every node exactly once even with a cycle',
+					function (fDone)
+					{
+						let tmpNodes = makeNodes(5);
+						let tmpConns = makeChain(5);
+						tmpConns.push({ Hash: 'c-back', SourceNodeHash: 'n-4', TargetNodeHash: 'n-1' });
+						let tmpOrder = libLayoutRank.toOrder(tmpNodes, tmpConns);
+						libExpect(tmpOrder.length).to.equal(5);
+						let tmpSeen = {};
+						for (let i = 0; i < tmpOrder.length; i++) tmpSeen[tmpOrder[i]] = true;
+						libExpect(Object.keys(tmpSeen).length).to.equal(5);
+						fDone();
+					}
+				);
+
+				test
+				(
+					'empty input returns an empty rank list',
+					function (fDone)
+					{
+						libExpect(libLayoutRank.toRanks([], [])).to.deep.equal([]);
+						libExpect(libLayoutRank.toOrder(null, null)).to.deep.equal([]);
+						fDone();
+					}
+				);
+			}
+		);
+
+		// ── Staggered ─────────────────────────────────────────────────
+
+		suite
+		(
+			'Staggered algorithm',
+			function ()
+			{
+				test
+				(
+					'two rows zigzag: X strictly increases, Y alternates',
+					function (fDone)
+					{
+						let tmpNodes = makeNodes(4);
+						let tmpConns = makeChain(4);
+						libLayoutStaggered.Apply(tmpNodes, tmpConns, { Rows: 2, ColumnSpacing: 80, RowOffset: 150, StartX: 0, StartY: 0 });
+
+						// Topological order is n0..n3; column pitch = 180 + 80 = 260.
+						libExpect(tmpNodes[0].X).to.equal(0);
+						libExpect(tmpNodes[1].X).to.equal(260);
+						libExpect(tmpNodes[2].X).to.equal(520);
+						libExpect(tmpNodes[3].X).to.equal(780);
+						// Rows=2 → row pattern 0,1,0,1 → Y 0,150,0,150.
+						libExpect(tmpNodes[0].Y).to.equal(0);
+						libExpect(tmpNodes[1].Y).to.equal(150);
+						libExpect(tmpNodes[2].Y).to.equal(0);
+						libExpect(tmpNodes[3].Y).to.equal(150);
+						fDone();
+					}
+				);
+
+				test
+				(
+					'three rows make a triangle-wave stairstep (down then up)',
+					function (fDone)
+					{
+						let tmpNodes = makeNodes(6);
+						let tmpConns = makeChain(6);
+						libLayoutStaggered.Apply(tmpNodes, tmpConns, { Rows: 3, RowOffset: 100, StartX: 0, StartY: 0 });
+
+						// period = 4 → row phases 0,1,2,1,0,1 → Y 0,100,200,100,0,100.
+						let tmpRows = tmpNodes.map((pN) => pN.Y / 100);
+						libExpect(tmpRows).to.deep.equal([0, 1, 2, 1, 0, 1]);
+						fDone();
+					}
+				);
+
+				test
+				(
+					'column pitch follows the widest node',
+					function (fDone)
+					{
+						let tmpNodes = makeNodes(3);
+						tmpNodes[1].Width = 400; // widest
+						libLayoutStaggered.Apply(tmpNodes, makeChain(3), { ColumnSpacing: 50, StartX: 0 });
+						// pitch = 400 + 50 = 450
+						libExpect(tmpNodes[1].X).to.equal(450);
+						libExpect(tmpNodes[2].X).to.equal(900);
+						fDone();
+					}
+				);
+
+				test
+				(
+					'Rows=1 places every node on a single row',
+					function (fDone)
+					{
+						let tmpNodes = makeNodes(4);
+						libLayoutStaggered.Apply(tmpNodes, makeChain(4), { Rows: 1, StartY: 42 });
+						for (let i = 0; i < tmpNodes.length; i++)
+						{
+							libExpect(tmpNodes[i].Y).to.equal(42);
+						}
+						fDone();
+					}
+				);
+
+				test
+				(
+					'empty node list does not throw',
+					function (fDone)
+					{
+						libExpect(function () { libLayoutStaggered.Apply([], [], {}); }).to.not.throw();
 						fDone();
 					}
 				);

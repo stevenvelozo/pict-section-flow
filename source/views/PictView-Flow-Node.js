@@ -529,8 +529,44 @@ class PictViewFlowNode extends libPictView
 	 * @param {number} pTitleBarHeight
 	 * @param {Object} pNodeTypeConfig
 	 */
+	// Append a CSS fragment to an SVG element's inline style (which wins over the stylesheet), keeping
+	// any existing inline style.
+	_appendElementStyle(pElement, pStyleFragment)
+	{
+		let tmpExisting = pElement.getAttribute('style') || '';
+		if (tmpExisting && tmpExisting.charAt(tmpExisting.length - 1) !== ';') { tmpExisting += ';'; }
+		pElement.setAttribute('style', tmpExisting + pStyleFragment);
+	}
+
+	/**
+	 * Height of the strip that squares off the bottom corners of the title bar. It must cover the
+	 * bottom rounded corners (so the title bar meets the body in a straight seam) but must never reach
+	 * the top ones, so it is capped at half the title bar height. Without the cap a corner radius
+	 * larger than the title bar (a capsule card: radius 24 on a 22px bar) yields a strip taller than
+	 * the whole title bar, which paints over the rounded TOP corners and makes the card read as square
+	 * on top and rounded only on the bottom.
+	 *
+	 * @param {number|null} pCornerRadius - the card corner radius, or null for the theme default
+	 * @param {number} pTitleBarHeight - the title bar height in user units
+	 * @returns {number}
+	 */
+	static titleBarBottomStripHeight(pCornerRadius, pTitleBarHeight)
+	{
+		let tmpRadius = (typeof pCornerRadius === 'number') ? pCornerRadius : 0;
+		return Math.min(Math.max(8, tmpRadius), Math.floor(pTitleBarHeight / 2));
+	}
+
 	_renderRectNodeBody(pGroup, pNodeData, pWidth, pHeight, pTitleBarHeight, pNodeTypeConfig)
 	{
+		// Per-card corner radius (a node-data or node-type override of the theme default), so a card
+		// type can read as a rounded rectangle, a capsule, or a sharp box. null leaves the
+		// theme/CSS default in place. Set as the --pf-node-body-radius custom property on the node
+		// group; the body and title-bar both read it through their `rx: var(--pf-node-body-radius)`,
+		// and it inherits to both, so one assignment rounds the whole card.
+		let tmpCornerRadius = (typeof pNodeData.CornerRadius === 'number') ? pNodeData.CornerRadius
+			: ((pNodeTypeConfig && typeof pNodeTypeConfig.CornerRadius === 'number') ? pNodeTypeConfig.CornerRadius : null);
+		if (tmpCornerRadius != null) { this._appendElementStyle(pGroup, '--pf-node-body-radius:' + tmpCornerRadius + 'px'); }
+
 		// Node body (main rectangle)
 		let tmpBody = this._FlowView._SVGHelperProvider.createSVGElement('rect');
 		tmpBody.setAttribute('class', 'pict-flow-node-body');
@@ -598,16 +634,17 @@ class PictViewFlowNode extends libPictView
 		{
 			tmpTitleBar.setAttribute('fill', pNodeData.TitleBarColor);
 		}
-
 		pGroup.appendChild(tmpTitleBar);
 
-		// Title bar bottom fill (to square off the rounded corners at the bottom of the title bar)
+		// Title bar bottom fill: squares off the rounded corners at the bottom of the title bar so it
+		// meets the body in a straight seam. See titleBarBottomStripHeight for why it is capped.
+		let tmpBottomStripHeight = PictViewFlowNode.titleBarBottomStripHeight(tmpCornerRadius, pTitleBarHeight);
 		let tmpTitleBarBottom = this._FlowView._SVGHelperProvider.createSVGElement('rect');
 		tmpTitleBarBottom.setAttribute('class', 'pict-flow-node-title-bar-bottom');
 		tmpTitleBarBottom.setAttribute('x', '0');
-		tmpTitleBarBottom.setAttribute('y', String(pTitleBarHeight - 8));
+		tmpTitleBarBottom.setAttribute('y', String(pTitleBarHeight - tmpBottomStripHeight));
 		tmpTitleBarBottom.setAttribute('width', String(pWidth));
-		tmpTitleBarBottom.setAttribute('height', '8');
+		tmpTitleBarBottom.setAttribute('height', String(tmpBottomStripHeight));
 		tmpTitleBarBottom.setAttribute('data-node-hash', pNodeData.Hash);
 		tmpTitleBarBottom.setAttribute('data-element-type', 'node-body');
 

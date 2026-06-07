@@ -2,6 +2,7 @@ const libFableServiceProviderBase = require('fable-serviceproviderbase');
 
 const libLayoutCustom           = require('../providers/layouts/Layout-Custom.js');
 const libLayoutLayered          = require('../providers/layouts/Layout-Layered.js');
+const libLayoutStaggered        = require('../providers/layouts/Layout-Staggered.js');
 const libLayoutForcedFromCenter = require('../providers/layouts/Layout-ForcedFromCenter.js');
 const libLayoutGrid             = require('../providers/layouts/Layout-Grid.js');
 const libLayoutCircular         = require('../providers/layouts/Layout-Circular.js');
@@ -20,6 +21,7 @@ const _BUILTIN_ALGORITHMS =
 [
 	libLayoutCustom,
 	libLayoutLayered,
+	libLayoutStaggered,
 	libLayoutForcedFromCenter,
 	libLayoutGrid,
 	libLayoutCircular,

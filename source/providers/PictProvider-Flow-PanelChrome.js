@@ -40,7 +40,8 @@ class PictProviderFlowPanelChrome extends libFableServiceProviderBase
 		let tmpFO = tmpSVGHelper.createSVGElement('foreignObject');
 		tmpFO.setAttribute('class', 'pict-flow-panel-foreign-object');
 		tmpFO.setAttribute('data-panel-hash', pPanelData.Hash);
-		tmpFO.setAttribute('data-node-hash', pPanelData.NodeHash);
+		tmpFO.setAttribute('data-node-hash', pPanelData.NodeHash || '');
+		if (pPanelData.ConnectionHash) { tmpFO.setAttribute('data-connection-hash', pPanelData.ConnectionHash); }
 		tmpFO.setAttribute('x', String(pPanelData.X));
 		tmpFO.setAttribute('y', String(pPanelData.Y));
 		tmpFO.setAttribute('width', String(pPanelData.Width));

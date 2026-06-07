@@ -113,6 +113,36 @@ The `|| false` fallback ensures the build never fails if a markdown file is miss
 | `MinZoom` | number | `0.1` | Minimum zoom level |
 | `MaxZoom` | number | `5.0` | Maximum zoom level |
 | `Theme` | string | `'default'` | Active theme key |
+| `ConnectionPropertiesPanel` | object/false | `false` | Properties panel config for connections (edges). When set, double-clicking a connection opens an on-graph panel for it. |
+
+## Connection (edge) panels
+
+Nodes carry a `PropertiesPanel` on their card type; connections are not typed, so a single
+`ConnectionPropertiesPanel` on the view config serves them all. Its shape matches a card's
+properties panel (`PanelType`, `DefaultWidth`, `DefaultHeight`, `Title`, `Configuration`) and any
+panel type works — a `Form` panel binds to the connection (editing `Record.Data.*`), a `Template`
+panel renders against it. When it is set, double-clicking a connection opens the panel near the
+edge midpoint and tethers to it; when it is not set, double-clicking a connection adds a bezier
+handle as before, so existing apps are unaffected.
+
+```javascript
+_Pict.addView('MyFlow',
+	{
+		ConnectionPropertiesPanel:
+		{
+			PanelType: 'Form',
+			Title: 'Connection',
+			DefaultWidth: 320,
+			Configuration: { Manifest: { /* sections + descriptors over Record.Data.* */ } }
+		}
+	},
+	libPictSectionFlow);
+
+// Programmatic control mirrors the node-panel API:
+tmpFlowView.openConnectionPanel(connectionHash);
+tmpFlowView.toggleConnectionPanel(connectionHash);
+tmpFlowView.closePanelForConnection(connectionHash);
+```
 
 ## Built-in Themes
 

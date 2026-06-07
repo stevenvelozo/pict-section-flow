@@ -1,9 +1,10 @@
 const libCoerce = require('./Layout-Coerce.js');
+const libRank = require('./Layout-Rank.js');
 
 /**
  * Layout-Layered
  *
- * Topological-sort (Kahn's algorithm) left-to-right layered layout.
+ * Cycle-tolerant left-to-right layered layout.
  *
  * This is the original `autoLayout` behavior of pict-section-flow,
  * extracted into a layout-algorithm descriptor. Calling
@@ -34,100 +35,45 @@ module.exports =
 
 		let tmpConnections = Array.isArray(pConnections) ? pConnections : [];
 
-		// Build adjacency information
 		let tmpNodeMap = {};
-		let tmpInDegree = {};
-		let tmpOutEdges = {};
-
 		for (let i = 0; i < pNodes.length; i++)
 		{
-			let tmpNode = pNodes[i];
-			tmpNodeMap[tmpNode.Hash] = tmpNode;
-			tmpInDegree[tmpNode.Hash] = 0;
-			tmpOutEdges[tmpNode.Hash] = [];
+			tmpNodeMap[pNodes[i].Hash] = pNodes[i];
 		}
 
-		for (let i = 0; i < tmpConnections.length; i++)
+		// Rank the nodes into layers, left to right, with cycle breaking. The
+		// shared ranker keeps back-edged graphs (workflows, state machines) from
+		// collapsing into one tall column the way plain Kahn's topological sort
+		// would. See Layout-Rank.js.
+		let tmpLayers = libRank.toRanks(pNodes, tmpConnections);
+
+		// Measure each layer's stacked height so layers can be centered on one
+		// shared horizontal axis. Without centering every layer top-aligns at
+		// StartY, so a one-node layer beside a five-node layer reads as a
+		// diagonal drift down the page instead of a balanced band.
+		let tmpLayerHeights = [];
+		let tmpMaxLayerHeight = 0;
+		for (let l = 0; l < tmpLayers.length; l++)
 		{
-			let tmpConn = tmpConnections[i];
-			if (tmpInDegree.hasOwnProperty(tmpConn.TargetNodeHash))
+			let tmpHeight = 0;
+			for (let i = 0; i < tmpLayers[l].length; i++)
 			{
-				tmpInDegree[tmpConn.TargetNodeHash]++;
+				let tmpNode = tmpNodeMap[tmpLayers[l][i]];
+				tmpHeight += (tmpNode && tmpNode.Height) ? tmpNode.Height : 80;
+				if (i > 0) tmpHeight += tmpVerticalSpacing;
 			}
-			if (tmpOutEdges.hasOwnProperty(tmpConn.SourceNodeHash))
-			{
-				tmpOutEdges[tmpConn.SourceNodeHash].push(tmpConn.TargetNodeHash);
-			}
+			tmpLayerHeights.push(tmpHeight);
+			if (tmpHeight > tmpMaxLayerHeight) tmpMaxLayerHeight = tmpHeight;
 		}
 
-		// Topological sort (Kahn's algorithm)
-		let tmpLayers = [];
-		let tmpQueue = [];
-		let tmpAssigned = {};
-
-		for (let tmpHash in tmpInDegree)
-		{
-			if (tmpInDegree[tmpHash] === 0)
-			{
-				tmpQueue.push(tmpHash);
-			}
-		}
-
-		while (tmpQueue.length > 0)
-		{
-			let tmpCurrentLayer = [];
-			let tmpNextQueue = [];
-
-			for (let i = 0; i < tmpQueue.length; i++)
-			{
-				let tmpNodeHash = tmpQueue[i];
-				if (tmpAssigned[tmpNodeHash]) continue;
-
-				tmpAssigned[tmpNodeHash] = true;
-				tmpCurrentLayer.push(tmpNodeHash);
-
-				let tmpEdges = tmpOutEdges[tmpNodeHash] || [];
-				for (let j = 0; j < tmpEdges.length; j++)
-				{
-					let tmpTargetHash = tmpEdges[j];
-					tmpInDegree[tmpTargetHash]--;
-					if (tmpInDegree[tmpTargetHash] <= 0 && !tmpAssigned[tmpTargetHash])
-					{
-						tmpNextQueue.push(tmpTargetHash);
-					}
-				}
-			}
-
-			if (tmpCurrentLayer.length > 0)
-			{
-				tmpLayers.push(tmpCurrentLayer);
-			}
-
-			tmpQueue = tmpNextQueue;
-		}
-
-		// Handle cycles or disconnected nodes
-		let tmpRemainingNodes = [];
-		for (let i = 0; i < pNodes.length; i++)
-		{
-			if (!tmpAssigned[pNodes[i].Hash])
-			{
-				tmpRemainingNodes.push(pNodes[i].Hash);
-			}
-		}
-		if (tmpRemainingNodes.length > 0)
-		{
-			tmpLayers.push(tmpRemainingNodes);
-		}
-
-		// Assign positions based on layers
+		// Assign positions: one column per layer, each layer vertically centered.
 		let tmpCurrentX = tmpStartX;
 
 		for (let tmpLayerIndex = 0; tmpLayerIndex < tmpLayers.length; tmpLayerIndex++)
 		{
 			let tmpLayer = tmpLayers[tmpLayerIndex];
 			let tmpMaxWidth = 0;
-			let tmpCurrentY = tmpStartY;
+			let tmpCurrentY = tmpStartY + ((tmpMaxLayerHeight - tmpLayerHeights[tmpLayerIndex]) / 2);
 
 			for (let i = 0; i < tmpLayer.length; i++)
 			{

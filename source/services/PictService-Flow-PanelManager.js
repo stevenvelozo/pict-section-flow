@@ -153,6 +153,98 @@ class PictServiceFlowPanelManager extends libFableServiceProviderBase
 	}
 
 	/**
+	 * Open a properties panel for a connection (edge). The panel config comes from the FlowView's
+	 * ConnectionPropertiesPanel option (connections are not typed, so one config serves them all);
+	 * the panel is placed near the connection's midpoint and tethers to it. Returns false when no
+	 * ConnectionPropertiesPanel is configured, so a host that has not opted in keeps the default
+	 * edge behavior (double-click adds a bezier handle).
+	 * @param {string} pConnectionHash
+	 * @returns {Object|false} The panel data, or false
+	 */
+	openConnectionPanel(pConnectionHash)
+	{
+		let tmpConnection = this._FlowView.getConnection(pConnectionHash);
+		if (!tmpConnection) return false;
+
+		let tmpPanelConfig = this._FlowView.options.ConnectionPropertiesPanel;
+		if (!tmpPanelConfig) return false;
+
+		let tmpExisting = this._FlowView._FlowData.OpenPanels.find((pPanel) => pPanel.ConnectionHash === pConnectionHash);
+		if (tmpExisting) return tmpExisting;
+
+		let tmpMidpoint = this._FlowView.getConnectionMidpoint(pConnectionHash) || { x: 0, y: 0 };
+		let tmpWidth = tmpPanelConfig.DefaultWidth || 300;
+		let tmpHeight = tmpPanelConfig.DefaultHeight || 200;
+
+		let tmpPanelData =
+		{
+			Hash: `panel-${this.fable.getUUID()}`,
+			ConnectionHash: pConnectionHash,
+			NodeHash: null,
+			PanelType: tmpPanelConfig.PanelType || 'Base',
+			Title: tmpPanelConfig.Title || 'Connection',
+			X: tmpMidpoint.x + 40,
+			Y: tmpMidpoint.y + 20,
+			Width: tmpWidth,
+			Height: tmpHeight
+		};
+
+		this._FlowView._FlowData.OpenPanels.push(tmpPanelData);
+		this._FlowView.renderFlow();
+		this._FlowView.marshalFromView();
+
+		if (this._FlowView._EventHandlerProvider)
+		{
+			this._FlowView._EventHandlerProvider.fireEvent('onPanelOpened', tmpPanelData);
+			this._FlowView._EventHandlerProvider.fireEvent('onFlowChanged', this._FlowView._FlowData);
+		}
+
+		return tmpPanelData;
+	}
+
+	/**
+	 * Toggle a properties panel for a connection (open if closed, close if open).
+	 * @param {string} pConnectionHash
+	 * @returns {Object|false}
+	 */
+	toggleConnectionPanel(pConnectionHash)
+	{
+		let tmpExisting = this._FlowView._FlowData.OpenPanels.find((pPanel) => pPanel.ConnectionHash === pConnectionHash);
+		if (tmpExisting)
+		{
+			this.closePanel(tmpExisting.Hash);
+			return false;
+		}
+		return this.openConnectionPanel(pConnectionHash);
+	}
+
+	/**
+	 * Close all panels for a given connection.
+	 * @param {string} pConnectionHash
+	 * @returns {boolean}
+	 */
+	closePanelForConnection(pConnectionHash)
+	{
+		let tmpPanelsToClose = this._FlowView._FlowData.OpenPanels.filter((pPanel) => pPanel.ConnectionHash === pConnectionHash);
+		if (tmpPanelsToClose.length === 0) return false;
+
+		for (let i = 0; i < tmpPanelsToClose.length; i++)
+		{
+			let tmpIndex = this._FlowView._FlowData.OpenPanels.indexOf(tmpPanelsToClose[i]);
+			if (tmpIndex >= 0)
+			{
+				this._FlowView._FlowData.OpenPanels.splice(tmpIndex, 1);
+			}
+			if (this._FlowView._PropertiesPanelView)
+			{
+				this._FlowView._PropertiesPanelView.destroyPanel(tmpPanelsToClose[i].Hash);
+			}
+		}
+
+		return true;
+	}
+
+	/**
 	 * Update a panel's position (for drag).
 	 * @param {string} pPanelHash
 	 * @param {number} pX
@@ -180,8 +272,20 @@ class PictServiceFlowPanelManager extends libFableServiceProviderBase
 			}
 		}
 
-		// Update the tether for this panel
-		this._FlowView._renderTethersForNode(tmpPanel.NodeHash);
+		// Update the tether for this panel. A node panel refreshes just its node's tethers; a
+		// connection panel has no node, so reconcile the panels layer (redraws all tethers, which
+		// is where the connection-midpoint tether is recomputed).
+		if (tmpPanel.ConnectionHash)
+		{
+			if (this._FlowView._PropertiesPanelView && this._FlowView._PanelsLayer && this._FlowView._TethersLayer)
+			{
+				this._FlowView._PropertiesPanelView.renderPanels(this._FlowView._FlowData.OpenPanels, this._FlowView._PanelsLayer, this._FlowView._TethersLayer, this._FlowView._FlowData.ViewState.SelectedTetherHash);
+			}
+		}
+		else
+		{
+			this._FlowView._renderTethersForNode(tmpPanel.NodeHash);
+		}
 	}
 }
 

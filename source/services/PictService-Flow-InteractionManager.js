@@ -322,7 +322,16 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 				{
 					this._LastConnectionClickTime = 0;
 					this._LastConnectionClickHash = null;
-					this._addBezierHandle(tmpTarget, pEvent);
+					// When the host configured a connection properties panel, double-click opens it;
+					// otherwise keep the default behavior of adding a bezier handle.
+					if (this._FlowView.options.ConnectionPropertiesPanel && tmpConnectionHash)
+					{
+						this._FlowView.toggleConnectionPanel(tmpConnectionHash);
+					}
+					else
+					{
+						this._addBezierHandle(tmpTarget, pEvent);
+					}
 				}
 				else
 				{

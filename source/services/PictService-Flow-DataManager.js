@@ -328,6 +328,12 @@ class PictServiceFlowDataManager extends libFableServiceProviderBase
 
 		let tmpRemovedConnection = this._FlowView._FlowData.Connections.splice(tmpConnectionIndex, 1)[0];
 
+		// Close any properties panel open for this connection.
+		if (typeof this._FlowView.closePanelForConnection === 'function')
+		{
+			this._FlowView.closePanelForConnection(pConnectionHash);
+		}
+
 		if (this._FlowView._FlowData.ViewState.SelectedConnectionHash === pConnectionHash)
 		{
 			this._FlowView._FlowData.ViewState.SelectedConnectionHash = null;

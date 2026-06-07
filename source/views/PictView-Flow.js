@@ -71,6 +71,11 @@ const _DefaultConfiguration =
 	DefaultNodeWidth: 180,
 	DefaultNodeHeight: 80,
 
+	// Properties panel for connections (edges). Connections are not typed, so one config serves
+	// them all: { PanelType, DefaultWidth, DefaultHeight, Title, Configuration }. When set, a
+	// double-click on a connection opens this panel; when false, double-click adds a bezier handle.
+	ConnectionPropertiesPanel: false,
+
 	// Layout-algorithm subsystem defaults
 	DefaultLayoutAlgorithm: 'Custom',
 	DefaultLayoutParameters: {},
@@ -1326,6 +1331,54 @@ class PictViewFlow extends libPictView
 	togglePanel(pNodeHash)
 	{
 		return this._PanelManager.togglePanel(pNodeHash);
+	}
+
+	/**
+	 * Open a properties panel for a connection (edge). Requires the ConnectionPropertiesPanel
+	 * option; returns false otherwise.
+	 * @param {string} pConnectionHash
+	 * @returns {Object|false}
+	 */
+	openConnectionPanel(pConnectionHash)
+	{
+		return this._PanelManager.openConnectionPanel(pConnectionHash);
+	}
+
+	/**
+	 * Toggle a properties panel for a connection.
+	 * @param {string} pConnectionHash
+	 * @returns {Object|false}
+	 */
+	toggleConnectionPanel(pConnectionHash)
+	{
+		return this._PanelManager.toggleConnectionPanel(pConnectionHash);
+	}
+
+	/**
+	 * Close all panels for a given connection.
+	 * @param {string} pConnectionHash
+	 * @returns {boolean}
+	 */
+	closePanelForConnection(pConnectionHash)
+	{
+		return this._PanelManager.closePanelForConnection(pConnectionHash);
+	}
+
+	/**
+	 * The midpoint of a connection in SVG coordinates, averaged from its two endpoint ports. Used
+	 * to place and tether a connection's properties panel. Returns null if the connection or
+	 * either port can not be resolved.
+	 * @param {string} pConnectionHash
+	 * @returns {{x: number, y: number}|null}
+	 */
+	getConnectionMidpoint(pConnectionHash)
+	{
+		let tmpConnection = this.getConnection(pConnectionHash);
+		if (!tmpConnection) return null;
+		let tmpSource = this.getPortPosition(tmpConnection.SourceNodeHash, tmpConnection.SourcePortHash);
+		let tmpTarget = this.getPortPosition(tmpConnection.TargetNodeHash, tmpConnection.TargetPortHash);
+		if (!tmpSource || !tmpTarget) return null;
+		return { x: (tmpSource.x + tmpTarget.x) / 2, y: (tmpSource.y + tmpTarget.y) / 2 };
 	}
 
 	/**

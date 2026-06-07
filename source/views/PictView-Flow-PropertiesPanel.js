@@ -242,6 +242,13 @@ class PictViewFlowPropertiesPanel extends libPictView
 	 */
 	_renderPanelContent(pPanelData, pBodyContainer)
 	{
+		// Connection (edge) panels resolve their config and data differently from node panels.
+		if (pPanelData.ConnectionHash)
+		{
+			this._renderConnectionPanelContent(pPanelData, pBodyContainer);
+			return;
+		}
+
 		let tmpNodeData = this._FlowView.getNode(pPanelData.NodeHash);
 		if (!tmpNodeData) return;
 
@@ -296,6 +303,54 @@ class PictViewFlowPropertiesPanel extends libPictView
 		// event inputs, event outputs, and state outputs.
 		// SettingsInputs are already visible as form fields above.
 		this._renderPortSummary(pBodyContainer, tmpNodeTypeConfig);
+	}
+
+	/**
+	 * Render the content of a connection (edge) panel. The config is the FlowView's single
+	 * ConnectionPropertiesPanel (connections are not typed); the panel-type instance renders
+	 * against the connection object, so a Form panel edits Connection.Data.* and a Template panel
+	 * renders against the connection.
+	 *
+	 * @param {Object} pPanelData
+	 * @param {HTMLDivElement} pBodyContainer
+	 */
+	_renderConnectionPanelContent(pPanelData, pBodyContainer)
+	{
+		let tmpConnectionData = this._FlowView.getConnection(pPanelData.ConnectionHash);
+		if (!tmpConnectionData) return;
+
+		let tmpPanelConfig = this._FlowView.options.ConnectionPropertiesPanel;
+		if (!tmpPanelConfig)
+		{
+			pBodyContainer.innerHTML = '<em>No connection properties panel configured.</em>';
+			return;
+		}
+
+		let tmpPanelType = tmpPanelConfig.PanelType || 'Base';
+		let tmpServiceName = `PictFlowCardPropertiesPanel-${tmpPanelType}`;
+		let tmpInstance = this._PanelInstances[pPanelData.Hash];
+
+		if (!tmpInstance)
+		{
+			if (this.fable.servicesMap.hasOwnProperty(tmpServiceName))
+			{
+				tmpInstance = this.fable.instantiateServiceProviderWithoutRegistration(tmpServiceName, tmpPanelConfig);
+			}
+			else if (this.fable.servicesMap.hasOwnProperty('PictFlowCardPropertiesPanel'))
+			{
+				tmpInstance = this.fable.instantiateServiceProviderWithoutRegistration('PictFlowCardPropertiesPanel', tmpPanelConfig);
+			}
+			if (tmpInstance)
+			{
+				tmpInstance._FlowView = this._FlowView;
+				this._PanelInstances[pPanelData.Hash] = tmpInstance;
+			}
+		}
+
+		if (tmpInstance)
+		{
+			tmpInstance.render(pBodyContainer, tmpConnectionData);
+		}
 	}
 
 	/**
@@ -716,11 +771,23 @@ class PictViewFlowPropertiesPanel extends libPictView
 		let tmpTetherService = this._FlowView._TetherService;
 		if (!tmpTetherService) return;
 
-		let tmpNodeData = this._FlowView.getNode(pPanelData.NodeHash);
-		if (!tmpNodeData) return;
+		// A connection panel tethers to the edge midpoint; model it as a zero-size anchor at that
+		// point so the same tether geometry applies. A node panel tethers to its node.
+		let tmpAnchorData;
+		if (pPanelData.ConnectionHash)
+		{
+			let tmpMidpoint = this._FlowView.getConnectionMidpoint(pPanelData.ConnectionHash);
+			if (!tmpMidpoint) return;
+			tmpAnchorData = { X: tmpMidpoint.x, Y: tmpMidpoint.y, Width: 0, Height: 0 };
+		}
+		else
+		{
+			tmpAnchorData = this._FlowView.getNode(pPanelData.NodeHash);
+			if (!tmpAnchorData) return;
+		}
 
 		let tmpViewIdentifier = this._FlowView.options.ViewIdentifier;
-		tmpTetherService.renderTether(pPanelData, tmpNodeData, pTethersLayer, pIsSelected, tmpViewIdentifier);
+		tmpTetherService.renderTether(pPanelData, tmpAnchorData, pTethersLayer, pIsSelected, tmpViewIdentifier);
 	}
 
 	/**
