@@ -768,6 +768,19 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 			cursor: pointer;
 			transition: stroke 0.15s;
 		}
+		/* A connection's label (Data.Label), drawn at the midpoint. The white halo (paint-order) keeps it
+		   legible where it crosses the line. */
+		.pict-flow-connection-label {
+			font-size: 12px;
+			font-family: inherit;
+			fill: var(--pf-text-primary, #2c3e50);
+			paint-order: stroke;
+			stroke: var(--theme-color-background-primary, #ffffff);
+			stroke-width: 3px;
+			stroke-linejoin: round;
+			pointer-events: none;
+			user-select: none;
+		}
 		.pict-flow-connection:hover {
 			stroke: var(--pf-connection-stroke-hover);
 			stroke-width: 3;
@@ -1284,6 +1297,19 @@ class PictProviderFlowCSS extends libFableServiceProviderBase
 		.pict-flow-toolbar-group:last-child {
 			border-right: none;
 			padding-right: 0;
+		}
+		/* The host-supplied extra-button group (ToolbarExtraButtons) renders even
+		   when empty; collapse it so consumers that pass no buttons see no gap. */
+		.pict-flow-toolbar-group:empty {
+			display: none;
+		}
+		.pict-flow-toolbar-btn-active {
+			background-color: var(--pf-button-active-bg);
+			border-color: var(--pf-button-hover-border);
+		}
+		/* An icon-only host button (ToolbarExtraButtons with no Label) renders an empty text span. */
+		.pict-flow-toolbar-btn-text:empty {
+			display: none;
 		}
 		.pict-flow-toolbar-btn {
 			display: inline-flex;

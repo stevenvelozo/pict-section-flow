@@ -45,6 +45,14 @@ const _DefaultIcons =
 
 	// ── UI Icons ───────────────────────────────────────────────────────────
 
+	'edit': '<svg xmlns="http://www.w3.org/2000/svg" width="{FlowIconSize}" height="{FlowIconSize}" viewBox="0 0 24 24" fill="none" stroke="var(--theme-color-text-primary, #2c3e50)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+
+	'check': '<svg xmlns="http://www.w3.org/2000/svg" width="{FlowIconSize}" height="{FlowIconSize}" viewBox="0 0 24 24" fill="none" stroke="var(--theme-color-text-primary, #2c3e50)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+
+	'background': '<svg xmlns="http://www.w3.org/2000/svg" width="{FlowIconSize}" height="{FlowIconSize}" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" fill="var(--theme-color-background-secondary, #d5e8f7)" stroke="var(--theme-color-text-primary, #2c3e50)" stroke-width="2"/></svg>',
+
+	'connect': '<svg xmlns="http://www.w3.org/2000/svg" width="{FlowIconSize}" height="{FlowIconSize}" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M8 8l8 8" stroke="var(--theme-color-text-primary, #2c3e50)" stroke-width="2"/><circle cx="6" cy="6" r="3" fill="var(--theme-color-background-secondary, #d5e8f7)" stroke="var(--theme-color-text-primary, #2c3e50)" stroke-width="2"/><circle cx="18" cy="18" r="3" fill="var(--theme-color-background-secondary, #d5e8f7)" stroke="var(--theme-color-text-primary, #2c3e50)" stroke-width="2"/></svg>',
+
 	'fullscreen': '<svg xmlns="http://www.w3.org/2000/svg" width="{FlowIconSize}" height="{FlowIconSize}" viewBox="0 0 24 24" fill="none" stroke="var(--theme-color-text-primary, #2c3e50)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>',
 
 	'exit-fullscreen': '<svg xmlns="http://www.w3.org/2000/svg" width="{FlowIconSize}" height="{FlowIconSize}" viewBox="0 0 24 24" fill="none" stroke="var(--theme-color-text-primary, #2c3e50)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6"/><path d="M20 10h-6V4"/><path d="M14 10l7-7"/><path d="M3 21l7-7"/></svg>',

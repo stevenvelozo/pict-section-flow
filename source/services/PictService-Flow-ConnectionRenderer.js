@@ -116,12 +116,13 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 
 		// Hit area (wider invisible path for easier selection)
 		let tmpShapeProvider = this._FlowView._ConnectorShapesProvider;
+		let tmpPathElement = null;
 		if (tmpShapeProvider)
 		{
 			let tmpHitArea = tmpShapeProvider.createConnectionHitAreaElement(tmpPath, pConnection.Hash);
 			pConnectionsLayer.appendChild(tmpHitArea);
 
-			let tmpPathElement = tmpShapeProvider.createConnectionPathElement(
+			tmpPathElement = tmpShapeProvider.createConnectionPathElement(
 				tmpPath, pConnection.Hash, pIsSelected, tmpViewIdentifier);
 			if (tmpConnTypeClass)
 			{
@@ -145,7 +146,7 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 			tmpHitArea.setAttribute('data-element-type', 'connection-hitarea');
 			pConnectionsLayer.appendChild(tmpHitArea);
 
-			let tmpPathElement = this._FlowView._SVGHelperProvider.createSVGElement('path');
+			tmpPathElement = this._FlowView._SVGHelperProvider.createSVGElement('path');
 			tmpPathElement.setAttribute('class', `pict-flow-connection${tmpConnTypeClass} ${pIsSelected ? 'selected' : ''}`);
 			tmpPathElement.setAttribute('d', tmpPath);
 			tmpPathElement.setAttribute('data-connection-hash', pConnection.Hash);
@@ -160,14 +161,25 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 			pConnectionsLayer.appendChild(tmpPathElement);
 		}
 
+		// Per-connection host styling (a moodboard styles its own edges): stroke color / width / dash and
+		// the end markers, applied only when the connection's Data carries them so default (workflow)
+		// connections are untouched. A label, when set, is drawn at the midpoint.
+		let tmpHasMarkers = (typeof tmpData.SourceMarker !== 'undefined' || typeof tmpData.TargetMarker !== 'undefined');
+		this._applyConnectionStyle(tmpPathElement, tmpData, tmpViewIdentifier);
+		this._renderConnectionLabel(pConnection, tmpData, pConnectionsLayer, tmpSourcePos, tmpTargetPos);
+
 		// Render the colored endpoint dot at each end of the connection
 		// into the dedicated endpoints layer (sits *above* the nodes
 		// layer so the dot doesn't get hidden under the card chrome
 		// when an edge theme places it on the node's perimeter).
 		// PortRenderer suppresses its own circle for any port that
-		// participates in a connection — we own the dot here.
+		// participates in a connection — we own the dot here. Skipped when the
+		// connection supplies its own end markers (those own the endpoints).
 		let tmpEndpointsLayer = this._FlowView._EndpointsLayer || pConnectionsLayer;
-		this._renderEndpointDots(pConnection, tmpEndpointsLayer, tmpSourcePos, tmpTargetPos);
+		if (!tmpHasMarkers)
+		{
+			this._renderEndpointDots(pConnection, tmpEndpointsLayer, tmpSourcePos, tmpTargetPos);
+		}
 
 		// When the resolved attachment differs from the card-defined port
 		// position (e.g. a Perimeter theme moved the dot to the edge of the
@@ -185,6 +197,66 @@ class PictServiceFlowConnectionRenderer extends libFableServiceProviderBase
 		{
 			this._renderHandles(pConnection, pConnectionsLayer, tmpSourcePos, tmpTargetPos);
 		}
+	}
+
+	// Apply per-connection host styling to the path element from the connection's Data: StrokeColor,
+	// StrokeWidth, StrokeStyle ('solid' | 'dashed' | 'dotted') and SourceMarker / TargetMarker
+	// ('none' | 'arrow' | 'dot' | 'square'). Each is applied only when present, so connections that do
+	// not carry these keys render exactly as before.
+	_applyConnectionStyle(pPathElement, pData, pViewIdentifier)
+	{
+		if (!pPathElement || !pData || !pPathElement.style) { return; }
+		// Stroke color / width / dash go through inline style, NOT SVG presentation attributes: the
+		// .pict-flow-connection CSS rule sets stroke + stroke-width, and a stylesheet rule beats a
+		// presentation attribute, so an attribute would be silently ignored. Inline style outranks the
+		// stylesheet, so the per-connection appearance wins.
+		if (pData.StrokeColor) { pPathElement.style.stroke = pData.StrokeColor; }
+		if (pData.StrokeWidth) { pPathElement.style.strokeWidth = String(pData.StrokeWidth); }
+		if (pData.StrokeStyle)
+		{
+			pPathElement.style.strokeDasharray = (pData.StrokeStyle === 'dashed') ? '7,5' : ((pData.StrokeStyle === 'dotted') ? '1.5,4' : 'none');
+		}
+		// Markers are not styled by CSS, so attributes are correct (they reference the marker defs).
+		if (typeof pData.TargetMarker !== 'undefined')
+		{
+			let tmpEnd = this._connectionMarkerId(pData.TargetMarker, 'end', pViewIdentifier);
+			if (tmpEnd) { pPathElement.setAttribute('marker-end', 'url(#' + tmpEnd + ')'); }
+			else { pPathElement.removeAttribute('marker-end'); }
+		}
+		if (typeof pData.SourceMarker !== 'undefined')
+		{
+			let tmpStart = this._connectionMarkerId(pData.SourceMarker, 'start', pViewIdentifier);
+			if (tmpStart) { pPathElement.setAttribute('marker-start', 'url(#' + tmpStart + ')'); }
+			else { pPathElement.removeAttribute('marker-start'); }
+		}
+	}
+
+	// Resolve a marker name + end ('start' | 'end') to its SVG marker def id; null for 'none'/unknown.
+	_connectionMarkerId(pMarker, pEnd, pViewIdentifier)
+	{
+		if (pMarker === 'arrow') { return 'flow-marker-arrow-' + pEnd + '-' + pViewIdentifier; }
+		if (pMarker === 'dot') { return 'flow-marker-dot-' + pViewIdentifier; }
+		if (pMarker === 'square') { return 'flow-marker-square-' + pViewIdentifier; }
+		return null;
+	}
+
+	// Draw a connection's label (Data.Label) at the midpoint of its endpoints. A white halo (paint-order
+	// stroke, set in CSS) keeps it legible over the line. Skipped when there is no label.
+	_renderConnectionLabel(pConnection, pData, pLayer, pSourcePos, pTargetPos)
+	{
+		// Render when a Label key is present (even ''), so a host that edits the label in place has an
+		// element to update; a connection with no Label key (a default workflow edge) gets none.
+		if (!pData || typeof pData.Label === 'undefined' || !pSourcePos || !pTargetPos) { return; }
+		if (!this._FlowView._SVGHelperProvider) { return; }
+		let tmpText = this._FlowView._SVGHelperProvider.createSVGElement('text');
+		tmpText.setAttribute('class', 'pict-flow-connection-label');
+		tmpText.setAttribute('x', String((pSourcePos.x + pTargetPos.x) / 2));
+		tmpText.setAttribute('y', String((pSourcePos.y + pTargetPos.y) / 2));
+		tmpText.setAttribute('text-anchor', 'middle');
+		tmpText.setAttribute('dominant-baseline', 'middle');
+		tmpText.setAttribute('data-connection-hash', pConnection.Hash);
+		tmpText.textContent = pData.Label;
+		pLayer.appendChild(tmpText);
 	}
 
 	/**
