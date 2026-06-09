@@ -52,6 +52,13 @@ class PictViewFlowNode extends libPictView
 		{
 			tmpClassList += ' pict-flow-node-color-' + tmpColorRole;
 		}
+		// A host can stamp an extra CSS class onto a node via node.NodeClass (e.g. a moodboard marks a
+		// card whose connection points should stay visible on a read-only board). Survives re-renders
+		// because it lives on the node data.
+		if (typeof pNodeData.NodeClass === 'string' && pNodeData.NodeClass)
+		{
+			tmpClassList += ' ' + pNodeData.NodeClass;
+		}
 		tmpGroup.setAttribute('class', tmpClassList);
 		tmpGroup.setAttribute('transform', `translate(${pNodeData.X}, ${pNodeData.Y})`);
 		tmpGroup.setAttribute('data-node-hash', pNodeData.Hash);

@@ -226,12 +226,34 @@ class PictViewFlowPropertiesPanel extends libPictView
 		let tmpFO = pPanelsLayer.querySelector(`[data-panel-hash="${pPanelData.Hash}"]`);
 		if (tmpFO)
 		{
-			// Render appearance and help tabs. Tab-switching click handlers
-			// are inline `onclick=` attributes in Flow-PanelChrome-Template
-			// that call FlowView._handlePanelTabClick → switchPanelTab.
-			this._renderAppearanceTab(pPanelData, tmpFO);
-			this._renderHelpTab(pPanelData, tmpFO);
+			// The Appearance tab edits a node's body/title appearance, which a connection (edge) has none
+			// of -- so for a connection panel, hide that tab (and the now-single-tab bar) and leave just
+			// the connection's own panel. Node panels keep the appearance + help tabs.
+			if (pPanelData.ConnectionHash)
+			{
+				this._hidePanelTabsForConnection(tmpFO);
+			}
+			else
+			{
+				// Tab-switching click handlers are inline `onclick=` attributes in Flow-PanelChrome-Template
+				// that call FlowView._handlePanelTabClick → switchPanelTab.
+				this._renderAppearanceTab(pPanelData, tmpFO);
+				this._renderHelpTab(pPanelData, tmpFO);
+			}
 		}
+	}
+
+	// Hide the node-oriented Appearance (and Help) tabs plus the tab bar for a connection panel, so it
+	// shows only its single Properties pane with no lone tab.
+	_hidePanelTabsForConnection(pForeignObject)
+	{
+		if (!pForeignObject) { return; }
+		let tmpAppearanceTab = pForeignObject.querySelector('.pict-flow-panel-tab[data-tab-target="appearance"]');
+		if (tmpAppearanceTab) { tmpAppearanceTab.style.display = 'none'; }
+		let tmpAppearancePane = pForeignObject.querySelector('.pict-flow-panel-tab-pane[data-tab="appearance"]');
+		if (tmpAppearancePane) { tmpAppearancePane.style.display = 'none'; }
+		let tmpTabbar = pForeignObject.querySelector('.pict-flow-panel-tabbar');
+		if (tmpTabbar) { tmpTabbar.style.display = 'none'; }
 	}
 
 	/**

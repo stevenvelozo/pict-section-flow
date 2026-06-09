@@ -465,6 +465,14 @@ class PictProviderFlowConnectorShapes extends libFableServiceProviderBase
 			+ '<polygon class="pict-flow-arrowhead pict-flow-arrowhead-tether" points="' + tmpTetherMarker.Points + '" fill="' + tmpTetherMarker.Fill + '" />'
 			+ '</marker>';
 
+		// Generic per-connection end markers, selectable per connection via Data.SourceMarker /
+		// Data.TargetMarker (a host like a moodboard styles its own edges). fill="context-stroke" makes
+		// each marker take the connection's own stroke color, so a recolored line recolors its markers.
+		tmpMarkup += '<marker id="flow-marker-arrow-end-' + pViewIdentifier + '" markerWidth="10" markerHeight="10" refX="8.5" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M1,1 L9,5 L1,9 z" fill="context-stroke" /></marker>';
+		tmpMarkup += '<marker id="flow-marker-arrow-start-' + pViewIdentifier + '" markerWidth="10" markerHeight="10" refX="1.5" refY="5" orient="auto-start-reverse" markerUnits="strokeWidth"><path d="M1,1 L9,5 L1,9 z" fill="context-stroke" /></marker>';
+		tmpMarkup += '<marker id="flow-marker-dot-' + pViewIdentifier + '" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto" markerUnits="strokeWidth"><circle cx="4" cy="4" r="3" fill="context-stroke" /></marker>';
+		tmpMarkup += '<marker id="flow-marker-square-' + pViewIdentifier + '" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto" markerUnits="strokeWidth"><rect x="1" y="1" width="6" height="6" fill="context-stroke" /></marker>';
+
 		return tmpMarkup;
 	}
 }

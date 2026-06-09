@@ -11,6 +11,10 @@ const _DefaultConfiguration =
 
 	FlowViewIdentifier: 'Pict-Flow',
 
+	// Host-supplied buttons (mirrors the docked toolbar's ToolbarExtraButtons), so floating mode keeps
+	// the same custom buttons. Each entry is { Hash, Icon, Label?, Tooltip?, Active? }.
+	ToolbarExtraButtons: [],
+
 	CSS: false,
 
 	Templates:
@@ -64,6 +68,7 @@ const _DefaultConfiguration =
 		onclick="_Pict.views['{~D:Record.FlowViewIdentifier~}']._ToolbarView._FloatingToolbarView._handleButtonClick('fullscreen')">
 		<span id="Flow-FloatingIcon-fullscreen-{~D:Record.FlowViewIdentifier~}"></span>
 	</button>
+	{~TS:Flow-FloatingToolbar-Extra-Button:Record.ToolbarExtraButtons~}
 	<div class="pict-flow-floating-separator"></div>
 	<button class="pict-flow-floating-btn" data-flow-action="dock-toolbar" title="Dock Toolbar"
 		onclick="_Pict.views['{~D:Record.FlowViewIdentifier~}']._ToolbarView._FloatingToolbarView._handleButtonClick('dock-toolbar')">
@@ -71,6 +76,15 @@ const _DefaultConfiguration =
 	</button>
 </div>
 `
+		},
+		{
+			Hash: 'Flow-FloatingToolbar-Extra-Button',
+			// Icon-only host button (the floating toolbar is compact). Icon span
+			// is filled post-render by _populateIcons (keyed by Hash).
+			Template: /*html*/`<button class="pict-flow-floating-btn" title="{~D:Record.Tooltip~}" data-flow-action="extra" data-extra-hash="{~D:Record.Hash~}"
+	onclick="_Pict.views['{~D:Record.FlowViewIdentifier~}']._ToolbarView._FloatingToolbarView._handleExtraClick('{~D:Record.Hash~}', this)">
+	<span id="Flow-FloatingExtraIcon-{~D:Record.Hash~}-{~D:Record.FlowViewIdentifier~}"></span>
+</button>`
 		}
 	],
 
@@ -111,7 +125,32 @@ class PictViewFlowFloatingToolbar extends libPictView
 
 	render(pRenderableHash, pRenderDestinationAddress, pTemplateRecordAddress)
 	{
+		// Stamp the owning view onto each host button so its row resolves.
+		let tmpExtraButtons = this.options.ToolbarExtraButtons;
+		if (Array.isArray(tmpExtraButtons))
+		{
+			for (let i = 0; i < tmpExtraButtons.length; i++)
+			{
+				tmpExtraButtons[i].FlowViewIdentifier = this.options.FlowViewIdentifier;
+			}
+		}
 		return super.render(pRenderableHash, pRenderDestinationAddress, this.options);
+	}
+
+	/**
+	 * Handle a click on a host-supplied (ToolbarExtraButtons) floating button.
+	 * Routes to the docked toolbar's _handleExtraAction (the single dispatch
+	 * point that fires the FlowView's onToolbarButton hook).
+	 *
+	 * @param {string} pHash - The button's Hash
+	 * @param {HTMLElement} pElement - The clicked button element
+	 */
+	_handleExtraClick(pHash, pElement)
+	{
+		if (this._ToolbarView)
+		{
+			this._ToolbarView._handleExtraAction(pHash, pElement);
+		}
 	}
 
 	onAfterRender(pRenderable, pRenderDestinationAddress, pRecord, pContent)
@@ -220,6 +259,20 @@ class PictViewFlowFloatingToolbar extends libPictView
 			if (tmpElements.length > 0)
 			{
 				tmpElements[0].innerHTML = tmpIconProvider.getIconSVGMarkup(tmpIconMap[tmpKeys[i]], 16);
+			}
+		}
+
+		// Host-supplied extra buttons (keyed by Hash, icon from the button's Icon key).
+		let tmpExtraButtons = this.options.ToolbarExtraButtons;
+		if (Array.isArray(tmpExtraButtons))
+		{
+			for (let i = 0; i < tmpExtraButtons.length; i++)
+			{
+				let tmpExtraIcon = this.pict.ContentAssignment.getElement(`#Flow-FloatingExtraIcon-${tmpExtraButtons[i].Hash}-${tmpFlowViewIdentifier}`);
+				if (tmpExtraIcon.length > 0)
+				{
+					tmpExtraIcon[0].innerHTML = tmpIconProvider.getIconSVGMarkup(tmpExtraButtons[i].Icon, 16);
+				}
 			}
 		}
 	}

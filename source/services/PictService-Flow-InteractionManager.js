@@ -1163,7 +1163,8 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 
 		if (!tmpNodeHash || !tmpPortHash) return;
 
-		if (tmpPortDirection !== 'output')
+		// A connection normally starts from an output port; undirected mode lets any port start one.
+		if (!this._FlowView.options.EnableUndirectedConnections && tmpPortDirection !== 'output')
 		{
 			return;
 		}
@@ -1217,7 +1218,8 @@ class PictServiceFlowInteractionManager extends libFableServiceProviderBase
 			let tmpTargetNodeHash = tmpTarget.getAttribute('data-node-hash');
 			let tmpTargetPortDirection = tmpTarget.getAttribute('data-port-direction');
 
-			if (tmpTargetPortHash && tmpTargetNodeHash && tmpTargetPortDirection === 'input')
+			// A connection normally completes on an input port; undirected mode lets any port receive it.
+			if (tmpTargetPortHash && tmpTargetNodeHash && (this._FlowView.options.EnableUndirectedConnections || tmpTargetPortDirection === 'input'))
 			{
 				this._FlowView.addConnection(
 					this._ConnectSourceNodeHash,

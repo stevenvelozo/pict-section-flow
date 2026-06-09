@@ -59,6 +59,11 @@ const _DefaultConfiguration =
 	EnableZooming: true,
 	EnableNodeDragging: true,
 	EnableConnectionCreation: true,
+	// When on, a connection can be drawn between ANY two ports (any port can start a drag, any port can
+	// receive it), rather than only output -> input. Off by default so directed graphs (workflows) keep
+	// their source/target semantics; free-form canvases (a moodboard, whose links are undirected) turn it
+	// on so a card's ports connect in any direction.
+	EnableUndirectedConnections: false,
 	// When on, the selected node shows a bottom-right grip that resizes it by drag. Off by default
 	// so existing diagrams are unaffected; free-form canvases (moodboards) turn it on.
 	EnableNodeResizing: false,
@@ -72,6 +77,15 @@ const _DefaultConfiguration =
 	// line up with other nodes. Off by default; free-form canvases turn it on.
 	EnableAlignmentGuides: false,
 	EnableLayoutMenu: true,
+
+	// Host-supplied toolbar buttons. Each entry is { Hash, Icon, Label?, Tooltip?, Active? } where Icon
+	// is a flow icon-provider key (edit, check, background, ...). They render in BOTH the docked and the
+	// floating toolbar (so they survive every toolbar mode) and, on click, fire onToolbarButton below.
+	// Empty by default, so existing consumers are unaffected.
+	ToolbarExtraButtons: [],
+	// Fired when a ToolbarExtraButtons button is clicked: onToolbarButton(pHash, pElement). The element
+	// lets the host anchor a popover next to the button. Off (false) by default.
+	onToolbarButton: false,
 
 	MinZoom: 0.1,
 	MaxZoom: 5.0,
@@ -562,7 +576,8 @@ class PictViewFlow extends libPictView
 						DefaultDestinationAddress: `#Flow-Toolbar-${tmpViewIdentifier}`,
 						FlowViewIdentifier: tmpViewIdentifier,
 						EnableAddNode: this.options.EnableAddNode,
-						EnableCardPalette: this.options.EnableCardPalette
+						EnableCardPalette: this.options.EnableCardPalette,
+						ToolbarExtraButtons: this.options.ToolbarExtraButtons
 					}
 				));
 			// Use the toolbar's render method after it's set up
@@ -1418,6 +1433,27 @@ class PictViewFlow extends libPictView
 		let tmpSource = this.getPortPosition(tmpConnection.SourceNodeHash, tmpConnection.SourcePortHash);
 		let tmpTarget = this.getPortPosition(tmpConnection.TargetNodeHash, tmpConnection.TargetPortHash);
 		if (!tmpSource || !tmpTarget) return null;
+		// A connection renders as a curve, so the straight-line average of its endpoints sits OFF the
+		// line (the panel tether would point into empty space). Prefer the true midpoint of the rendered
+		// path -- getPointAtLength at half its length, which is genuinely on the line. Fall back to the
+		// endpoint average when the path element or SVG geometry is unavailable (e.g. server-side render).
+		if (this._SVGElement && typeof this._SVGElement.querySelector === 'function')
+		{
+			let tmpPathElement = this._SVGElement.querySelector('.pict-flow-connection[data-connection-hash="' + pConnectionHash + '"]');
+			if (tmpPathElement && typeof tmpPathElement.getTotalLength === 'function' && typeof tmpPathElement.getPointAtLength === 'function')
+			{
+				try
+				{
+					let tmpLength = tmpPathElement.getTotalLength();
+					if (tmpLength > 0)
+					{
+						let tmpPoint = tmpPathElement.getPointAtLength(tmpLength / 2);
+						return { x: tmpPoint.x, y: tmpPoint.y };
+					}
+				}
+				catch (pError) { /* fall through to the straight-line midpoint */ }
+			}
+		}
 		return { x: (tmpSource.x + tmpTarget.x) / 2, y: (tmpSource.y + tmpTarget.y) / 2 };
 	}
 

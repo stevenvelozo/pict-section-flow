@@ -15,6 +15,10 @@ const _DefaultConfiguration =
 	EnableAddNode: true,
 	EnableCardPalette: true,
 
+	// Host-supplied buttons (set by the FlowView from its own ToolbarExtraButtons option). Each entry
+	// is { Hash, Icon, Label?, Tooltip?, Active? }. Rendered as a group via Flow-Toolbar-Extra-Button.
+	ToolbarExtraButtons: [],
+
 	CSS: false,
 
 	Templates:
@@ -77,6 +81,7 @@ const _DefaultConfiguration =
 			<span class="pict-flow-toolbar-btn-icon" id="Flow-Toolbar-Icon-zoom-fit-{~D:Record.FlowViewIdentifier~}"></span>
 		</button>
 	</div>
+	<div class="pict-flow-toolbar-group pict-flow-toolbar-extra">{~TS:Flow-Toolbar-Extra-Button:Record.ToolbarExtraButtons~}</div>
 	<div class="pict-flow-toolbar-group pict-flow-toolbar-right">
 		<button class="pict-flow-toolbar-btn" data-flow-action="settings-popup" id="Flow-Toolbar-Settings-{~D:Record.FlowViewIdentifier~}" title="Theme Settings"
 			onclick="_Pict.views['{~D:Record.FlowViewIdentifier~}']._ToolbarView._handleToolbarAction('settings-popup')">
@@ -107,6 +112,18 @@ const _DefaultConfiguration =
 `
 		},
 		{
+			Hash: 'Flow-Toolbar-Extra-Button',
+			// Host-supplied button. The icon span is filled post-render by
+			// _populateToolbarIcons (keyed by Hash), matching how the built-in
+			// button icons are injected. FlowViewIdentifier + ActiveClass are
+			// stamped onto each row in render().
+			Template: /*html*/`<button class="pict-flow-toolbar-btn{~D:Record.ActiveClass~}" id="Flow-Toolbar-Extra-{~D:Record.Hash~}-{~D:Record.FlowViewIdentifier~}" title="{~D:Record.Tooltip~}" data-flow-action="extra" data-extra-hash="{~D:Record.Hash~}"
+	onclick="_Pict.views['{~D:Record.FlowViewIdentifier~}']._ToolbarView._handleExtraAction('{~D:Record.Hash~}', this)">
+	<span class="pict-flow-toolbar-btn-icon" id="Flow-Toolbar-ExtraIcon-{~D:Record.Hash~}-{~D:Record.FlowViewIdentifier~}"></span>
+	<span class="pict-flow-toolbar-btn-text">{~D:Record.Label~}</span>
+</button>`
+		},
+		{
 			Hash: 'Flow-AddNode-List',
 			// Iteration source is `Record.Rows` — the outer call sets the
 			// FlowViewIdentifier on each row so inline handlers resolve their
@@ -121,7 +138,7 @@ const _DefaultConfiguration =
 				+ ' onclick="_Pict.views[\'{~D:Record.FlowViewIdentifier~}\']._ToolbarView._addNodeFromPopup(this.getAttribute(\'data-node-type\'))">'
 				+ '<span class="pict-flow-popup-list-item-icon">{~D:Record.IconHTML~}</span>'
 				+ '<span class="pict-flow-popup-list-item-label">{~D:Record.Label~}</span>'
-				+ '{~NE:Record.Code^<span class="pict-flow-popup-list-item-code">{~D:Record.Code~}</span>~}'
+				+ '{~D:Record.CodeBlock~}'
 				+ '</div>'
 		},
 		{
@@ -137,13 +154,16 @@ const _DefaultConfiguration =
 		},
 		{
 			Hash: 'Flow-Cards-Card',
+			// The icon / swatch / code spans are pre-rendered into complete HTML blocks by
+			// _buildCardsPopup (a block is '' when its piece is absent). The template can't build them
+			// inline: the engine does not parse a nested {~D:~} inside a {~NE:~} (its `~}` terminator
+			// collides with the inner tag's), which left the palette showing raw template literals.
 			Template: '<div class="pict-flow-palette-card{~D:Record.DisabledClass~}" data-card-type="{~D:Record.CardType~}" title="{~D:Record.Tooltip~}"'
 				+ ' onclick="_Pict.views[\'{~D:Record.FlowViewIdentifier~}\']._ToolbarView._addCardFromPopup(this.getAttribute(\'data-card-type\'))">'
-				+ '{~NE:Record.IconHTML^<span class="pict-flow-palette-card-icon">{~D:Record.IconHTML~}</span>~}'
-				+ '{~NE:Record.IconEmoji^<span class="pict-flow-palette-card-icon">{~D:Record.IconEmoji~}</span>~}'
-				+ '{~NE:Record.SwatchColor^<span class="pict-flow-palette-card-swatch" style="background-color: {~D:Record.SwatchColor~};"></span>~}'
+				+ '{~D:Record.IconBlock~}'
+				+ '{~D:Record.SwatchBlock~}'
 				+ '<span class="pict-flow-palette-card-title">{~D:Record.Label~}</span>'
-				+ '{~NE:Record.Code^<span class="pict-flow-palette-card-code">{~D:Record.Code~}</span>~}'
+				+ '{~D:Record.CodeBlock~}'
 				+ '</div>'
 		},
 		{
@@ -212,9 +232,30 @@ class PictViewFlowToolbar extends libPictView
 
 	render(pRenderableHash, pRenderDestinationAddress, pTemplateRecordAddress)
 	{
+		// Stamp the per-row render fields onto each host-supplied button so the
+		// Flow-Toolbar-Extra-Button rows resolve their owning view and active
+		// state (nested {~D:~} addressing inside {~TS:~} is not supported).
+		this._stampExtraButtons();
 		// Pass this.options as the template record so {~D:Record.FlowViewIdentifier~}
 		// resolves correctly in the toolbar template.
 		return super.render(pRenderableHash, pRenderDestinationAddress, this.options);
+	}
+
+	/**
+	 * Stamp FlowViewIdentifier + ActiveClass onto each ToolbarExtraButtons entry
+	 * so the row template can address them.
+	 */
+	_stampExtraButtons()
+	{
+		let tmpExtraButtons = this.options.ToolbarExtraButtons;
+		if (!Array.isArray(tmpExtraButtons)) return;
+		for (let i = 0; i < tmpExtraButtons.length; i++)
+		{
+			tmpExtraButtons[i].FlowViewIdentifier = this.options.FlowViewIdentifier;
+			tmpExtraButtons[i].ActiveClass = tmpExtraButtons[i].Active ? ' pict-flow-toolbar-btn-active' : '';
+			// A label-less (icon-only) button renders an empty text span; CSS (:empty) collapses it.
+			if (typeof tmpExtraButtons[i].Label !== 'string') { tmpExtraButtons[i].Label = ''; }
+		}
 	}
 
 	onAfterRender(pRenderable, pRenderDestinationAddress, pRecord, pContent)
@@ -320,6 +361,20 @@ class PictViewFlowToolbar extends libPictView
 		if (tmpAutoChevron.length > 0)
 		{
 			tmpAutoChevron[0].innerHTML = tmpIconProvider.getIconSVGMarkup('chevron-down', 8);
+		}
+
+		// Host-supplied extra buttons (keyed by Hash, icon from the button's Icon key).
+		let tmpExtraButtons = this.options.ToolbarExtraButtons;
+		if (Array.isArray(tmpExtraButtons))
+		{
+			for (let i = 0; i < tmpExtraButtons.length; i++)
+			{
+				let tmpExtraIcon = this.pict.ContentAssignment.getElement(`#Flow-Toolbar-ExtraIcon-${tmpExtraButtons[i].Hash}-${tmpFlowViewIdentifier}`);
+				if (tmpExtraIcon.length > 0)
+				{
+					tmpExtraIcon[0].innerHTML = tmpIconProvider.getIconSVGMarkup(tmpExtraButtons[i].Icon, 14);
+				}
+			}
 		}
 	}
 
@@ -548,12 +603,16 @@ class PictViewFlowToolbar extends libPictView
 				let tmpResolvedKey = tmpIconProvider.resolveIconKey(tmpMeta);
 				tmpIconHTML = tmpIconProvider.getIconSVGMarkup(tmpResolvedKey, 16);
 			}
+			let tmpRowCode = tmpMeta.Code || '';
 			tmpRows.push(
 			{
 				NodeType: tmpTypeKeys[i],
 				Label: tmpTypeConfig.Label || '',
 				IconHTML: tmpIconHTML,
-				Code: tmpMeta.Code || '',
+				Code: tmpRowCode,
+				// Pre-rendered so the template renders it with {~D:~} (a nested {~D:~} inside {~NE:~} is
+				// not parsed by the engine).
+				CodeBlock: tmpRowCode ? ('<span class="pict-flow-popup-list-item-code">' + tmpRowCode + '</span>') : '',
 				FlowViewIdentifier: tmpFlowViewIdentifier
 			});
 		}
@@ -682,16 +741,27 @@ class PictViewFlowToolbar extends libPictView
 					tmpIconHTML = tmpIconProvider.getIconSVGMarkup('default', 14);
 				}
 
+				// Pre-render each conditional span into a complete HTML block ('' when absent). The
+				// template renders these directly with {~D:~}; it cannot wrap them inline because the
+				// engine does not parse a nested {~D:~} inside a {~NE:~}.
+				let tmpCode = tmpMeta.Code || '';
+				let tmpSwatchColor = (!tmpIconHTML && !tmpIsEmoji && tmpCardConfig.TitleBarColor) ? tmpCardConfig.TitleBarColor : '';
+				let tmpIconBlock = '';
+				if (tmpIconHTML) { tmpIconBlock = '<span class="pict-flow-palette-card-icon">' + tmpIconHTML + '</span>'; }
+				else if (tmpIsEmoji) { tmpIconBlock = '<span class="pict-flow-palette-card-icon">' + tmpMeta.Icon + '</span>'; }
+				let tmpSwatchBlock = tmpSwatchColor ? ('<span class="pict-flow-palette-card-swatch" style="background-color: ' + tmpSwatchColor + ';"></span>') : '';
+				let tmpCodeBlock = tmpCode ? ('<span class="pict-flow-palette-card-code">' + tmpCode + '</span>') : '';
+
 				tmpMatching.push(
 				{
 					CardType: tmpCardConfig.Hash,
 					Label: tmpCardConfig.Label || '',
-					Code: tmpMeta.Code || '',
-					IconHTML: tmpIconHTML,
-					IconEmoji: tmpIsEmoji ? tmpMeta.Icon : '',
+					Code: tmpCode,
+					IconBlock: tmpIconBlock,
+					SwatchBlock: tmpSwatchBlock,
+					CodeBlock: tmpCodeBlock,
 					DisabledClass: (tmpMeta.Enabled === false) ? ' disabled' : '',
 					Tooltip: tmpMeta.Tooltip || tmpMeta.Description || '',
-					SwatchColor: (!tmpIconHTML && !tmpIsEmoji && tmpCardConfig.TitleBarColor) ? tmpCardConfig.TitleBarColor : '',
 					FlowViewIdentifier: tmpFlowViewIdentifier
 				});
 			}
@@ -1677,7 +1747,8 @@ class PictViewFlowToolbar extends libPictView
 					FlowViewIdentifier: tmpFlowViewIdentifier,
 					DefaultDestinationAddress: `#Flow-FloatingToolbar-Container-${tmpFlowViewIdentifier}`,
 					EnableAddNode: this.options.EnableAddNode,
-					EnableCardPalette: this.options.EnableCardPalette
+					EnableCardPalette: this.options.EnableCardPalette,
+					ToolbarExtraButtons: this.options.ToolbarExtraButtons
 				}
 			);
 			this._FloatingToolbarView._ToolbarView = this;
@@ -1742,6 +1813,23 @@ class PictViewFlowToolbar extends libPictView
 	 * Handle a toolbar action
 	 * @param {string} pAction
 	 */
+	/**
+	 * Handle a click on a host-supplied (ToolbarExtraButtons) button. Routes to
+	 * the FlowView's onToolbarButton hook with the button hash and the clicked
+	 * element (so the host can anchor a popover next to it).
+	 *
+	 * @param {string} pHash - The button's Hash
+	 * @param {HTMLElement} pElement - The clicked button element
+	 */
+	_handleExtraAction(pHash, pElement)
+	{
+		if (!this._FlowView) return;
+		if (typeof this._FlowView.options.onToolbarButton === 'function')
+		{
+			this._FlowView.options.onToolbarButton(pHash, pElement);
+		}
+	}
+
 	_handleToolbarAction(pAction)
 	{
 		if (!this._FlowView) return;
